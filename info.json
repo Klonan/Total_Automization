@@ -1,0 +1,11 @@
+{
+  "name": "Team_Factory",
+  "version": "0.1.0",
+  "title": "Team Factory",
+  "author": "Klonan",
+  "contact": "",
+  "homepage": "",
+  "description": "Classes for factorio character",
+  "dependencies": ["base >= 0.16.0"],
+  "factorio_version": "0.16"
+}
