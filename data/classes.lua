@@ -1,5 +1,3 @@
-util = require "data/class_util"
-
 --[[default guy
  type = "player",
     name = "player",

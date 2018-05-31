@@ -13,6 +13,7 @@ recursive_hack_scale = function(array, scale)
     end
   end
 end
+util.recursive_hack_scale = recursive_hack_scale
 
 local recursive_hack_animation_speed
 recursive_hack_animation_speed = function(array, scale)
@@ -37,6 +38,7 @@ recursive_hack_tint = function(array, tint)
     end
   end
 end
+util.recursive_hack_tint = recursive_hack_tint
 
 util.scale_boxes = function(prototype, scale)
   for k, v in pairs {"collision_box", "selection_box"} do
@@ -51,6 +53,17 @@ util.scale_boxes = function(prototype, scale)
     end
   end
 end
+util.recursive_hack_animation_speed = recursive_hack_animation_speed
+
+util.remove_flag = function(prototype, flag)
+  if not prototype.flags then return end
+  for k, v in pairs (prototype.flags) do
+    if v == flag then
+      table.remove(prototype.flags, k)
+      break
+    end
+  end
+end
 
 util.base_player = function()
   
@@ -58,17 +71,9 @@ util.base_player = function()
   player.ticks_to_keep_gun = SU(600)
   player.ticks_to_keep_aiming_direction = SU(100)
   player.ticks_to_stay_in_combat = SU(600)
-  for k, v in pairs (player.flags) do
-    if v == "not-flammable" then
-      table.remove(player.flags, k)
-      break
-    end
-  end
+  util.remove_flag(player, "not-flammable")
   return player
 end
 
-util.recursive_hack_scale = recursive_hack_scale
-util.recursive_hack_animation_speed = recursive_hack_animation_speed
-util.recursive_hack_tint = recursive_hack_tint
 util.copy = util.table.deepcopy
 return util

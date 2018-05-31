@@ -1,35 +1,44 @@
-local classes = require "script/classes/classes"
-local teleporters = require "script/teleporters"
+handler = require("script/event_handler")
 
-on_player_created = function(event)
-  local player = game.players[event.player_index]
-  if player.character then player.character.destroy() end
-  classes.set_class(player, "pyro")
-  local count = 5
-  for name, v in pairs(classes.class_list) do
-    player.surface.create_entity{name = name, position = {player.position.x + count, player.position.y}, force = player.force}
-    count = count + 5
-  end
-  player.surface.create_entity{position = {0, -10}, name = "entry", force = "enemy"}
-end
-
-local events = 
-{
-  [defines.events.on_player_created] = on_player_created
+local libs = {
+  debug = require "script/debug",
+  teleporters = require "script/teleporters",
+  classes = require "script/classes/classes",
 }
 
-on_event = function(event)
-  local action = events[event.name] or function() end
-  action(event)
-  classes.on_event(event)
-  teleporters.on_event(event)
-end
+libs.debug.libs = libs
 
-script.on_event(defines.events, on_event)
-script.on_init(function()
-  game.speed = settings.startup["game-speed"].value
-  for k, surface in pairs (game.surfaces) do
-    surface.always_day = true
+script.on_event(defines.events, function(event)
+  for name, lib in pairs (libs) do
+    if lib.on_event then
+      lib.on_event(event)
+    end
   end
 end)
+
+script.on_init(function()
+  game.speed = settings.startup["game-speed"].value
+  for name, lib in pairs (libs) do
+    if lib.on_init then
+      lib.on_init()
+    end
+  end
+end)
+
+script.on_load(function()
+  for name, lib in pairs (libs) do
+    if lib.on_load then
+      lib.on_load()
+    end
+  end
+end)
+
+script.on_configuration_changed(function(data)
+  for name, lib in pairs (libs) do
+    if lib.on_configuration_changed then
+      lib.on_configuration_changed(data)
+    end
+  end
+end)
+
 --todo control points
