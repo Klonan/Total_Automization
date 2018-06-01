@@ -9,8 +9,8 @@ local on_player_created = function(event)
     player.surface.create_entity{name = name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
-  player.surface.create_entity{position = {0, -10}, name = "entry", force = "enemy"}
   player.insert("entry-item")
+  player.insert("exit-item")
 end
 
 local events = 

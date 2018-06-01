@@ -6,7 +6,7 @@ local entry = util.copy(data.raw["land-mine"]["land-mine"])
 
 entry.name = "entry"
 entry.trigger_radius = 1
-entry.timeout = 5 * 60
+entry.timeout = SU(5 * 60)
 entry.max_health = 200
 entry.shooting_cursor_size = 0
 entry.action =
@@ -25,14 +25,11 @@ entry.action =
       {
         type = "create-entity",
         entity_name = "explosion"
-      },
-      {
-        type = "damage",
-        damage = { amount = 1000, type = "explosion"}
       }
     }
   }
 }
+entry.force_die_on_attack = true
 entry.order = "entry"
 entry.picture_safe =
 {
@@ -57,17 +54,45 @@ util.remove_flag(entry, "placeable-off-grid")
 
 exit = util.copy(entry)
 exit.name = "exit"
+--pushback!
+exit.trigger_radius = 0
+exit.action =
+{
+  {
+    type = "area",
+    radius = 2.5,
+    force = "enemy",
+    action_delivery =
+    {
+     {
+       type = "instant",
+       target_effects =
+       {
+        {
+          type = "push-back",
+          distance = 1.5,
+        }
+       }
+     }
+    }
+  }
+}
+exit.force_die_on_attack = false
 
 local entry_item = util.copy(data.raw.item["land-mine"])
 entry_item.name = "entry-item"
 entry_item.place_result = "entry"
 entry_item.icon = "__Team_Factory__/data/teleporters/teleporter-icon.png"
 entry_item.icon_size = 97
-entry_item.minable = nil
+
+local exit_item = util.copy(entry_item)
+exit_item.name = "exit-item"
+entry_item.place_result = "exit"
 
 data:extend
 {
   entry,
   entry_item,
-  exit
+  exit,
+  exit_item
 }
