@@ -9,6 +9,7 @@ entry.trigger_radius = 1
 entry.timeout = SU(5 * 60)
 entry.max_health = 200
 entry.shooting_cursor_size = 0
+entry.dying_explosion = "big-explosion"
 entry.action =
 {
   type = "direct",
@@ -17,11 +18,6 @@ entry.action =
     type = "instant",
     source_effects =
     {
-      {
-        type = "create-entity",
-        entity_name = "entry",
-        trigger_created_entity = true
-      },
       {
         type = "create-entity",
         entity_name = "explosion"

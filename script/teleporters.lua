@@ -1,20 +1,17 @@
--- TODO 
--- In teleporters and out teleporters
--- hash map of positions
--- check in and out
--- landmine event
--- sends all nearby players
--- trigger effect could spawn next teleporter with a timeout
--- maybe the mine just doesnt die
--- check the event entity on a hash map for partners
+--[[ Players can only have a single pair each
+  So when a teleporter is built, it destroys any that are assigned to that player ID,
+  and stores the data to the new one
 
--- On built, array of player index + hashmap of entity number pointing to player index data
--- I had it working, but actually have a better idea - waiting on some merge
+  Also the unit_number is put into a map,
+  so when the entity dies, we can cheaply lookup which player it belongs to
+
+  If a entry died with itself as a cause, it should teleport people
+]]
+
 local teleporters = {
   data = {
     players = {},
-    owners = {},
-    positions = {}
+    owners = {}
   },
 }
 
@@ -25,10 +22,40 @@ local try_to_link = function(data)
   data.exit.active = true
 end
 
-local entry_died = function(entity)
-  local data = teleporters.data.owners[entity.unit_number]
-  teleporters.owners[entity.unit_number] = nil
-  data.entry = nil  
+local entry_died = function(entity, cause)
+  local owners = teleporters.data.owners
+  local data = owners[entity.unit_number]
+  owners[entity.unit_number] = nil
+  local exit = data.exit
+  if not exit and exit.valid then return end
+  if entity == cause then
+    local surface = entity.surface
+    local origin = entity.position
+    if (exit and exit.valid) then
+      local destination = exit.position
+      local destination_surface = exit.surface
+      for k, character in pairs (surface.find_entities_filtered{type = "player", area = {{origin.x - 2, origin.y - 2},{origin.x + 2, origin.y + 2}}}) do
+        local position = destination_surface.find_non_colliding_position(character.name, destination, 4, 0.5) or destination
+        if character.player then
+          character.player.teleport(position, destination_surface.index)
+        end
+      end
+    end
+    local new = surface.create_entity{name = entity.name, force = entity.force, position = entity.position}
+    data.entry = new
+    owners[new.unit_number] = data
+  else
+    exit.active = false
+  end
+end
+
+local exit_died = function(entity)
+  local owners = teleporters.data.owners
+  local data = owners[entity.unit_number]
+  owners[entity.unit_number] = nil
+  if data.entry then
+    data.entry.active = false
+  end
 end
 
 local entry_built = function(entry, index)
@@ -37,15 +64,10 @@ local entry_built = function(entry, index)
   teleporters.data.players[index] = teleporters.data.players[index] or {}
   local data = teleporters.data.players[index]
   if data.entry and data.entry.valid then
-    entry_died(data.entry)
-    data.entry.destroy()
+    data.entry.die()
   end
   data.entry = entry
-  local map = teleporters.data.owners
-  map[entry.unit_number] = data
-  local positions = teleporters.data.positions
-  positions[entry.position.x] = positions[entry.position.x] or {}
-  positions[entry.position.x][entry.position.y] = data
+  teleporters.data.owners[entry.unit_number] = data
   try_to_link(data)
 end
 
@@ -55,10 +77,10 @@ local exit_built = function(exit, index)
   teleporters.data.players[index] = teleporters.data.players[index] or {}
   local data = teleporters.data.players[index]
   if data.exit and data.exit.valid then
-    exit_removed(data.entry)
-    data.exit.destroy()
+    data.exit.die()
   end
   data.exit = exit
+  teleporters.data.owners[exit.unit_number] = data
   try_to_link(data)
 end
 
@@ -75,28 +97,16 @@ end
 
 local on_entity_died = function(event)
   local entity = event.entity
-  game.print(event.entity == event.cause)
   if not (entity and entity.valid) then return end
-
   if entity.name == "entry" then
-    return entry_died(entity)
+    return entry_died(entity, event.cause)
   end
   if entity.name == "exit" then
     return exit_died(entity)
   end
 end
 
-local on_trigger_created_entity = function(event)
-  local entity = event.entity
-  if not (entity and entity.valid and entity.name == "entry") then
-    return
-  end
-  teleporters.data.positions[entity.position.x][entity.position.y].entry = entity
-  teleporters.data.owners[entity.unit_number] = data
-end
-
 local events = {
-  [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_entity_died] = on_entity_died
 }
