@@ -1,3 +1,4 @@
+local path = util.path("data/pyro/")
 local pyro = util.base_player()
 pyro.name = "pyro"
 pyro.max_health = 200
@@ -5,24 +6,18 @@ pyro.running_speed = SD(0.2)
 pyro.resistances =
 {
   {
-    type = "fire",
+    type = util.damage_type("pyro-fire"),
     percent = 60
   },
 }
-table.insert(pyro.flags, "not-flammable")
+util.add_flag(pyro, "not-flammable")
 --util.recursive_hack_scale(pyro, 1)
 --class_util.recursive_hack_animation_speed(pyro, 0.8)
 
 
-
-pyro_ammo_category = 
-{
-  type = "ammo-category",
-  name = "pyro-ammo-category"
-}
 pyro_gun = util.copy(data.raw.gun.flamethrower)
 pyro_gun.name = "pyro-gun"
-pyro_gun.icon = "__Team_Factory__/data/pyro/pyro-gun.png"
+pyro_gun.icon = path.."pyro-gun.png"
 pyro_gun.icon_size = 81
 pyro_gun.attack_parameters.movement_slow_down_factor = 0
 pyro_gun.attack_parameters.range = 25
@@ -31,7 +26,7 @@ pyro_gun.stack_size = 1
 pyro_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "pyro-ammo-category",
+  ammo_category = util.ammo_category("pyro-fire"),
   cooldown = SU(1),
   movement_slow_down_factor = 0,
   projectile_creation_distance = 1.125,
@@ -41,22 +36,22 @@ pyro_gun.attack_parameters =
     begin_sound =
     {
       {
-        filename = "__base__/sound/fight/flamethrower-start.ogg",
-        volume = 0.7
+        filename = path.."pyro-gun-start.ogg",
+        volume = 1
       }
     },
     middle_sound =
     {
       {
-        filename = "__base__/sound/fight/flamethrower-mid.ogg",
-        volume = 0.7
+        filename = path.."pyro-gun-mid.ogg",
+        volume = 1
       }
     },
     end_sound =
     {
       {
-        filename = "__base__/sound/fight/flamethrower-end.ogg",
-        volume = 0.7
+        filename = path.."pyro-gun-end.ogg",
+        volume = 1
       }
     }
   }
@@ -64,7 +59,7 @@ pyro_gun.attack_parameters =
 
 pyro_ammo = util.copy(data.raw.ammo["flamethrower-ammo"])
 pyro_ammo.name = "pyro-ammo"
-pyro_ammo.icon = "__Team_Factory__/data/pyro/pyro-ammo.png"
+pyro_ammo.icon = path.."pyro-ammo.png"
 pyro_ammo.icon_size = 540
 pyro_ammo.magazine_size = 5000
 pyro_ammo.stack_size = 1
@@ -88,7 +83,7 @@ end
 
 pyro_ammo.ammo_type =
 {
-  category = "pyro-ammo-category",
+  category = util.ammo_category("pyro-fire"),
   target_type = "direction",
   clamp_position = true,
   action =
@@ -139,42 +134,44 @@ pyro_ammo.ammo_type =
 local make_projectile = function(name, animation)
   pyro_fire_projectile = util.copy(data.raw.projectile["shotgun-pellet"])
   pyro_fire_projectile.name = name
-  pyro_fire_projectile.action =
+  pyro_fire_projectile.action = nil
+  pyro_fire_projectile.final_action = 
   {
-    type = "direct",
+    {
+      type = "area",
+      radius = 0.1,
+      collision_mode = "distance-from-center",
+      force = "enemy",
     action_delivery =
     {
       type = "instant",
-      force = "enemy",
       target_effects =
       {
-        {
-          type = "damage",
-          damage = {amount = 2 , type = "fire"}
-        },
         {
           type = "create-sticker",
           sticker = "pyro-fire-sticker"
         }
       }
     }
+    },
+    {
+      type = "area",
+      radius = 0.1,
+      collision_mode = "distance-from-center",
+      --force = "enemy",
+      action_delivery =
+      {
+        type = "instant",
+        target_effects =
+        {
+          {
+            type = "damage",
+            damage = {amount = 2 , type = util.damage_type("pyro-fire")}
   }
-  pyro_fire_projectile.final_action = nil
-  --{
-  --  type = "direct",
-  --  action_delivery =
-  --  {
-  --    type = "instant",
-  --    target_effects =
-  --    {
-  --      {
-  --        type = "create-fire",
-  --        entity_name = "pyro-fire",
-  --        initial_ground_flame_count = 2,
-  --      },      
-  --    }
-  --  }
-  --}
+        }
+      }
+    }
+  }
   pyro_fire_projectile.animation = animation
   data:extend({pyro_fire_projectile})
 end
@@ -309,7 +306,7 @@ pyro_stream.action =
         },
         {
           type = "damage",
-          damage = { amount = 2, type = "fire" },
+          damage = { amount = 2, type = util.damage_type("pyro-fire") },
           apply_damage_to_trees = false
         },
         {
@@ -322,20 +319,14 @@ pyro_stream.action =
   }
 }
 
-pyro_flare_category = 
-{
-  type = "ammo-category",
-  name = "pyro-flare",
-}
-
 pyro_flare_gun = util.copy(pyro_gun)
 pyro_flare_gun.name = "pyro-flare-gun"
-pyro_flare_gun.icon = "__Team_Factory__/data/pyro/pyro-flare-gun.png"
+pyro_flare_gun.icon = path.."pyro-flare-gun.png"
 pyro_flare_gun.icon_size = 56
 pyro_flare_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "pyro-flare",
+  ammo_category = util.ammo_category("pyro-flare"),
   movement_slow_down_factor = 0.3,
   cooldown = SU(100),
   projectile_creation_distance = 0.6,
@@ -345,13 +336,9 @@ pyro_flare_gun.attack_parameters =
   sound =
   {
     {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-1.ogg",
+      filename = path.."pyro-flare-gun.ogg",
       volume = 1
-    },
-    {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-2.ogg",
-      volume = 1
-    },
+    }
   }
 }
 
@@ -359,12 +346,12 @@ pyro_flare_gun.attack_parameters =
 
 pyro_flare_ammo = util.copy(pyro_ammo)
 pyro_flare_ammo.name = "pyro-flare-ammo"
-pyro_flare_ammo.icon = "__Team_Factory__/data/pyro/pyro-flare-ammo.png"
+pyro_flare_ammo.icon = path.."pyro-flare-ammo.png"
 pyro_flare_ammo.icon_size = 120
 pyro_flare_ammo.ammo_type = 
 {
   source_type = "default",
-  category = "pyro-flare",
+  category = util.ammo_category("pyro-flare"),
   target_type = "position",
   clamp_position = true,
 
@@ -410,7 +397,7 @@ pyro_fire_sticker.name = "pyro-fire-sticker"
 
 pyro_fire_sticker.duration_in_ticks = SU(6 * 60)
 pyro_fire_sticker.target_movement_modifier = 1
-pyro_fire_sticker.damage_per_tick = { amount = SD(10 / 60), type = "fire" }
+pyro_fire_sticker.damage_per_tick = { amount = SD(10 / 60), type = util.damage_type("pyro-afterburn") }
 pyro_fire_sticker.spread_fire_entity = "fire-flame-on-tree"
 pyro_fire_sticker.fire_spread_cooldown = SU(30)
 pyro_fire_sticker.fire_spread_radius = 0.75
@@ -459,7 +446,7 @@ pyro_flare_stream =
           {
             type = "create-fire",
             entity_name = "pyro-fire",
-            initial_ground_flame_count = 0
+            initial_ground_flame_count = 2
           },
           {
             type = "create-entity",
@@ -479,7 +466,7 @@ pyro_flare_stream =
         {
           {
             type = "damage",
-            damage = { amount = 15, type = "fire" },
+            damage = { amount = 15, type = util.damage_type("pyro-flare") },
             apply_damage_to_trees = false
           },
           {
@@ -489,7 +476,7 @@ pyro_flare_stream =
           {
             type = "create-fire",
             entity_name = "pyro-fire",
-            initial_ground_flame_count = 1,
+            initial_ground_flame_count = 3,
           }
         }
       }
@@ -505,7 +492,7 @@ pyro_flare_stream =
         {
           {
             type = "damage",
-            damage = { amount = 40, type = "impact" }
+            damage = { amount = 40, type = util.damage_type("pyro-flare") }
           }
         }
       }
@@ -541,13 +528,11 @@ pyro_flare_stream =
 data:extend
 {
   pyro,
-  pyro_ammo_category,
   pyro_ammo,
   pyro_fire_projectile,
   pyro_fire_sticker,
   pyro_fire,
   pyro_flare_ammo,
-  pyro_flare_category,
   pyro_flare_gun,
   pyro_flare_stream,
   pyro_gun,
