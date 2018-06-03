@@ -75,5 +75,17 @@ util.base_player = function()
   return player
 end
 
+util.path = function(str)
+  return "__Team_Factory__/" .. str
+end
+
+util.empty_sound = function()
+  return 
+  {
+    filename = "__Team_Factory__/data/empty-sound.ogg",
+    volume = 0.7
+  }
+end
+
 util.copy = util.table.deepcopy
 return util

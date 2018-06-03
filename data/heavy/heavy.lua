@@ -109,9 +109,15 @@ heavy_ammo.ammo_type =
 }
 heavy_ammo.magazine_size = 200
 
+heavy_projectile_damage_type = 
+{
+  type = "damage-type",
+  name = "heavy-projectile"
+}
+
 heavy_projectile = util.copy(data.raw.projectile["cannon-projectile"])
 heavy_projectile.name = "heavy-projectile"
-heavy_projectile.piercing_damage = 10
+heavy_projectile.piercing_damage = 0
 heavy_projectile.action =
 {
   type = "direct",
@@ -121,13 +127,13 @@ heavy_projectile.action =
     target_effects =
     {
       {
-        type = "damage",
-        damage = {amount = 20 , type = "physical"}
+        type = "create-explosion",
+        entity_name = "explosion-hit"
       },
       {
-        type = "create-explosion",
-        entity_name = "explosion-gunshot"
-      },
+        type = "damage",
+        damage = {amount = 5 , type = "heavy-projectile"}
+      }
     }
   }
 }
@@ -140,5 +146,6 @@ data:extend
   heavy_ammo,
   heavy_gun,
   heavy_projectile,
+  heavy_projectile_damage_type,
   heavy_shell
 }

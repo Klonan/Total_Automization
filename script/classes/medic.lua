@@ -6,5 +6,7 @@ local create = function(player)
   --character.insert("heavy-armor")
   character.insert("medic-gun")
   character.insert("medic-ammo")
+  character.insert("medic-needle-gun")
+  character.insert("medic-needle-ammo")
 end
 return setmetatable(class, {__call = function(self, ...) create(...) end})
