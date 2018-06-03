@@ -13,8 +13,8 @@ demoman_gun.stack_size = 1
 
 demoman_gun.attack_parameters =
 {
-  type = "projectile",
-  ammo_category = "demoman-grenade",
+  type = "stream",
+  ammo_category = util.ammo_category("demoman-grenade"),
   movement_slow_down_factor = 0.3,
   cooldown = SU(35),
   projectile_creation_distance = 0.6,
@@ -34,12 +34,6 @@ demoman_gun.attack_parameters =
   }
 }
 
-local demoman_grenade_category = 
-{
-  type = "ammo-category",
-  name = "demoman-grenade",
-}
-
 local demoman_ammo = util.copy(data.raw.ammo.rocket)
 demoman_ammo.name = "demoman-ammo"
 demoman_ammo.icon = "__Team_Factory__/data/demoman/demoman-bomb.png"
@@ -47,7 +41,7 @@ demoman_ammo.icon_size = 414
 demoman_ammo.ammo_type = 
 {
   source_type = "default",
-  category = "demoman-grenade",
+  category = util.ammo_category("demoman-grenade"),
   target_type = "position",
   clamp_position = true,
 
@@ -60,15 +54,9 @@ demoman_ammo.ammo_type =
       stream = "demoman-stream",
       max_length = 50,
       duration = 160,
+      source_offset = {0, -1},
     }
   }
-}
-
-
-local demoman_sticky_category = 
-{
-  type = "ammo-category",
-  name = "demoman-sticky",
 }
 
 local demoman_sticky_gun = util.copy(demoman_gun)
@@ -77,8 +65,8 @@ demoman_sticky_gun.icon = "__Team_Factory__/data/demoman/demoman-sticky-gun.png"
 demoman_sticky_gun.icon_size = 65
 demoman_sticky_gun.attack_parameters =
 {
-  type = "projectile",
-  ammo_category = "demoman-sticky",
+  type = "stream",
+  ammo_category = util.ammo_category("demoman-sticky-bomb"),
   movement_slow_down_factor = 0.3,
   cooldown = SU(35),
   projectile_creation_distance = 0.6,
@@ -106,7 +94,7 @@ demoman_sticky_ammo.icon_size = 32
 demoman_sticky_ammo.ammo_type = 
 {
   source_type = "default",
-  category = "demoman-sticky",
+  category = util.ammo_category("demoman-sticky-bomb"),
   target_type = "position",
   clamp_position = true,
 
@@ -119,6 +107,7 @@ demoman_sticky_ammo.ammo_type =
       stream = "demoman-sticky-stream",
       max_length = 50,
       duration = 160,
+      source_offset = {0, -1},
       direction_deviation = 0.3,
       range_deviation = 0.3,
     }
@@ -183,7 +172,7 @@ demoman_stream =
         {
           {
             type = "damage",
-            damage = { amount = 40, type = "explosion" }
+            damage = { amount = 40, type = util.damage_type("demoman-grenade") }
           },
           {
             type = "create-entity",
@@ -250,6 +239,10 @@ demoman_sticky_stream.spine_animation =
 
 local demoman_sticky_bomb = util.copy(data.raw["land-mine"]["land-mine"])
 demoman_sticky_bomb.name = "demoman-sticky-bomb"
+util.add_flag(demoman, "not-deconstructable")
+util.add_flag(demoman, "not-blueprintable")
+util.add_flag(demoman, "not-repairable")
+demoman_sticky_bomb.dying_explosion = "explosion"
 demoman_sticky_bomb.picture_set =
 {
   filename = "__Team_Factory__/data/demoman/demoman-sticky-bomb.png",
@@ -259,11 +252,13 @@ demoman_sticky_bomb.picture_set =
   scale = 0.06
 }
 demoman_sticky_bomb.picture_set_enemy = demoman_sticky_bomb.picture_set
-demoman_sticky_bomb.timeout = 0
+demoman_sticky_bomb.picture_safe = demoman_sticky_bomb.picture_set
+demoman_sticky_bomb.timeout = SU(1 * 60)
+demoman_sticky_bomb.alert_when_damaged = false
 demoman_sticky_bomb.order = "demoman"
 demoman_sticky_bomb.corpse = nil
 demoman_sticky_bomb.trigger_radius = 2.5
-demoman_sticky_bomb.ammo_category = "landmine"
+demoman_sticky_bomb.ammo_category = util.ammo_category("demoman-sticky-bomb-mine")
 demoman_sticky_bomb.action =
 {
   type = "direct",
@@ -287,7 +282,7 @@ demoman_sticky_bomb.action =
             {
               {
                 type = "damage",
-                damage = { amount = 30, type = "explosion"}
+                damage = { amount = 30, type = util.damage_type("demoman-sticky")}
               }
             }
           }
@@ -361,8 +356,6 @@ data:extend
   demoman_gun,
   demoman_rocket,
   demoman_stream,
-  demoman_sticky_category,
-  demoman_grenade_category,
   demoman_sticky_ammo,
   demoman_sticky_gun,
   demoman_sticky_stream,

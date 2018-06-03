@@ -19,8 +19,26 @@ end
 
 classes.on_event = function(event)
   for class, data in pairs (class_list) do
-    if class.on_event then
-      class.on_event(event)
+    if data.on_event then
+      data.on_event(event)
+      --error("I work")
+    end
+  end
+end
+
+classes.on_init = function()
+  for class, data in pairs (class_list) do
+    if data.on_init then
+      data.on_init()
+      --error("I work")
+    end
+  end
+end
+classes.on_load = function()
+  for class, data in pairs (class_list) do
+    if data.on_load then
+      data.on_load()
+      --error("I work")
     end
   end
 end

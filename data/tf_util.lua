@@ -65,6 +65,11 @@ util.remove_flag = function(prototype, flag)
   end
 end
 
+util.add_flag = function(prototype, flag)
+  if not prototype.flags then return end
+  table.insert(prototype.flags, flag)
+end
+
 util.base_player = function()
   
   local player = util.table.deepcopy(data.raw.player.player or error("Wat man cmon why"))
@@ -85,6 +90,20 @@ util.empty_sound = function()
     filename = "__Team_Factory__/data/empty-sound.ogg",
     volume = 0.7
   }
+end
+
+util.damage_type = function(name)
+  if not data.raw["damage-type"][name] then
+    data:extend{{type = "damage-type", name = name}}
+  end
+  return name
+end
+
+util.ammo_category = function(name)
+  if not data.raw["ammo-category"][name] then
+    data:extend{{type = "ammo-category", name = name}}
+  end
+  return name
 end
 
 util.copy = util.table.deepcopy

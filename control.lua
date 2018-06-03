@@ -1,3 +1,11 @@
+SU = function(v)
+  return v * settings.startup["game-speed"].value
+end
+
+SD = function(v)
+  return v / settings.startup["game-speed"].value
+end
+
 handler = require("script/event_handler")
 
 local libs = {
