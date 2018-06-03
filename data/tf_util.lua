@@ -106,5 +106,10 @@ util.ammo_category = function(name)
   return name
 end
 
+local base_speed = 0.25
+util.speed = function(multiplier)
+  return multiplier * SD(0.25)
+end
+
 util.copy = util.table.deepcopy
 return util

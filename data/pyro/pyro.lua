@@ -2,7 +2,7 @@ local path = util.path("data/pyro/")
 local pyro = util.base_player()
 pyro.name = "pyro"
 pyro.max_health = 200
-pyro.running_speed = SD(0.2)
+pyro.running_speed = util.speed(1)
 pyro.resistances =
 {
   {

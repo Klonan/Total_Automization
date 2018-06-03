@@ -1,6 +1,8 @@
+local path = util.path("data/heavy/")
 local heavy = util.base_player()
 heavy.name = "heavy"
-heavy.running_speed = SD(0.15)
+heavy.running_speed = util.speed(0.77)
+heavy.max_health = 300
 local scale = 1.8
 util.recursive_hack_scale(heavy, scale)
 util.scale_boxes(heavy, scale)
@@ -9,13 +11,13 @@ util.scale_boxes(heavy, scale)
 heavy_gun = util.copy(data.raw.gun["submachine-gun"])
 heavy_gun.name = "heavy-gun"
 heavy_gun.stack_size = 1
-heavy_gun.icon = "__Team_Factory__/data/heavy/heavy-gun.png"
+heavy_gun.icon = path.."heavy-gun.png"
 heavy_gun.icon_size = 72
 heavy_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "bullet",
-  cooldown = SU(4),
+  ammo_category = util.ammo_category("heavy-gun"),
+  cooldown = SU(4.5),
   movement_slow_down_factor = 0.66,
   movement_slow_down_cooldown = SU(60 * 3),
   shell_particle =
@@ -35,22 +37,19 @@ heavy_gun.attack_parameters =
   {
     begin_sound =
     {
-      {
-        filename = "__Team_Factory__/data/empty-sound.ogg",
-        volume = 0.7
-      }
+      util.empty_sound()
     },
     middle_sound =
     {
       {
-        filename = "__Team_Factory__/data/heavy/heavy-gun-mid.ogg",
+        filename = path.."heavy-gun-mid.ogg",
         volume = 0.7
       }
     },
     end_sound =
     {
       {
-        filename = "__Team_Factory__/data/heavy/heavy-gun-end.ogg",
+        filename = path.."heavy-gun-end.ogg",
         volume = 0.7
       }
     }
@@ -82,7 +81,7 @@ end
 
 heavy_ammo.ammo_type =
 {
-  category = "bullet",
+  category = util.ammo_category("heavy-gun"),
   target_type = "direction",
   clamp_position = true,
   action =
@@ -104,16 +103,9 @@ heavy_ammo.ammo_type =
     make_bullet(1, 0.05, 0.05),
     make_bullet(1.1, 0.05, 0.05),
     make_bullet(1.2, 0.05, 0.05),
-
   }
 }
 heavy_ammo.magazine_size = 200
-
-heavy_projectile_damage_type = 
-{
-  type = "damage-type",
-  name = "heavy-projectile"
-}
 
 heavy_projectile = util.copy(data.raw.projectile["cannon-projectile"])
 heavy_projectile.name = "heavy-projectile"
@@ -132,7 +124,7 @@ heavy_projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 5 , type = "heavy-projectile"}
+        damage = {amount = 5 , type = util.damage_type("heavy-projectile")}
       }
     }
   }
@@ -146,6 +138,5 @@ data:extend
   heavy_ammo,
   heavy_gun,
   heavy_projectile,
-  heavy_projectile_damage_type,
   heavy_shell
 }

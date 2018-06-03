@@ -34,7 +34,7 @@
 
 require("data/pyro/pyro")
 require("data/heavy/heavy")
-require("data/sniper")
+require("data/sniper/sniper")
 require("data/medic/medic")
 require("data/soldier")
 require("data/demoman/demoman")

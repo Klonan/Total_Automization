@@ -1,6 +1,6 @@
 local soldier = util.base_player()
 soldier.name = "soldier"
-soldier.running_speed = SD(0.2)
+soldier.running_speed = util.speed(0.8)
 local scale = 1.3
 util.recursive_hack_scale(soldier, scale)
 util.scale_boxes(soldier, scale)

@@ -2,7 +2,7 @@ local path = util.path("data/medic/")
 
 local medic = util.base_player()
 medic.name = "medic"
-medic.running_speed = SD(0.15)
+medic.running_speed = util.speed(1.07)
 
 local medic_gun = util.copy(data.raw.gun["submachine-gun"])
 medic_gun.name = "medic-gun"
