@@ -23,6 +23,10 @@ local try_to_link = function(data)
   data.exit.active = true
 end
 
+local create_flash = function(surface, position)
+  return surface.create_entity{name = "teleporter-explosion", position = position}
+end
+
 local entry_died = function(entity, cause)
   local owners = teleporters.data.owners
   local data = owners[entity.unit_number]
@@ -35,12 +39,22 @@ local entry_died = function(entity, cause)
     if (exit and exit.valid) then
       local destination = exit.position
       local destination_surface = exit.surface
+      local any = false
       for k, character in pairs (surface.find_entities_filtered{type = "player", area = {{origin.x - 2, origin.y - 2},{origin.x + 2, origin.y + 2}}}) do
+        any = true
         local position = destination_surface.find_non_colliding_position(character.name, destination, 4, 0.5) or destination
         if character.player then
           character.player.teleport(position, destination_surface.index)
         end
       end
+      if any then
+        create_flash(surface, origin)
+        create_flash(destination_surface, exit.position)
+      end
+
+      --Not merged
+      --exit.timeout = entity.prototype.timeout
+
     end
     local new = surface.create_entity{name = entity.name, force = entity.force, position = entity.position}
     data.entry = new
