@@ -1,25 +1,30 @@
+path = util.path("data/soldier/")
 local soldier = util.base_player()
 soldier.name = "soldier"
 soldier.running_speed = util.speed(0.8)
+soldier.max_health = 200
 local scale = 1.3
 util.recursive_hack_scale(soldier, scale)
 util.scale_boxes(soldier, scale)
 
 local soldier_gun = util.copy(data.raw.gun["rocket-launcher"])
 soldier_gun.name = "soldier-gun"
+soldier_gun.icon = path.."soldier-gun.png"
+soldier_gun.icon_size = 66
+soldier_gun.stack_size = 1
 soldier_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "rocket",
+  ammo_category = util.ammo_category("soldier-rocket"),
   movement_slow_down_factor = 0.3,
-  cooldown = SU(35),
+  cooldown = SU(48),
   projectile_creation_distance = 0.6,
-  range = 35,
+  range = 45,
   projectile_center = {-0.17, 0},
   sound =
   {
     {
-      filename = "__base__/sound/fight/rocket-launcher.ogg",
+      filename = path.."soldier-gun.ogg",
       volume = 0.7
     }
   }
@@ -29,8 +34,9 @@ local soldier_ammo = util.copy(data.raw.ammo.rocket)
 soldier_ammo.name = "soldier-ammo"
 soldier_ammo.ammo_type =
 {
-  category = "rocket",
-  target_type = "direction",
+  category = util.ammo_category("soldier-rocket"),
+  target_type = "position",
+  clamp_position = true,
   action =
   {
     type = "direct",
@@ -65,15 +71,13 @@ soldier_rocket.action =
         entity_name = "big-explosion"
       },
       {
-        type = "damage",
-        damage = {amount = 100, type = "explosion"}
-      },
-      {
         type = "nested-result",
         action =
         {
           type = "area",
-          radius = 3.5,
+          radius = 0.1,
+          collision_mode = "distance-from-center",
+          force = "not-same",
           action_delivery =
           {
             type = "instant",
@@ -81,7 +85,27 @@ soldier_rocket.action =
             {
               {
                 type = "damage",
-                damage = {amount = 20, type = "explosion"}
+                damage = {amount = 45, type = util.damage_type("solider-rocket-hit")}
+              }
+            }
+          }
+        }
+      },
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 3,
+          force = "not-same",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "damage",
+                damage = {amount = 45, type = util.damage_type("soldier-rocket-explosion")}
               },
               {
                 type = "create-entity",
@@ -89,11 +113,11 @@ soldier_rocket.action =
               }
             }
           }
-        },
+        }
       }
     }
   }
-},
+}
 
 
 
