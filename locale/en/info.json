@@ -1,0 +1,39 @@
+{
+  "language-name": "English",
+  "font": {
+    "default": 
+    [
+      "__Team_Factory__/fonts/TF2secondary.ttf", 
+      "__core__/fonts/TitilliumWeb-Regular.ttf", 
+      "__core__/fonts/DejaVuSans.ttf", 
+      "__core__/locale/zh-CN/fonts/default-font.ttf", 
+      "__core__/locale/ja/fonts/regular.ttf", 
+      "__core__/locale/ko/malgun.ttf"
+    ],
+    "default-bold": 
+    [
+      "__Team_Factory__/fonts/TF2build.ttf", 
+      "__core__/fonts/TitilliumWeb-Bold.ttf",
+      "__core__/fonts/DejaVuSans-Bold.ttf",
+      "__core__/locale/zh-CN/fonts/default-font.ttf",
+      "__core__/locale/ja/fonts/bold.ttf",
+      "__core__/locale/ko/malgunbd.ttf"
+    ],
+    "default-mono": 
+    [
+      "__core__/fonts/DejaVuSansMono.ttf",
+      "__core__/locale/zh-CN/fonts/default-font.ttf",
+      "__core__/locale/ja/fonts/regular.ttf",
+      "__core__/locale/ko/malgun.ttf"
+    ],
+    "default-semibold": 
+    [
+      "__Team_Factory__/fonts/TF2.ttf", 
+      "__core__/fonts/TitilliumWeb-SemiBold.ttf",
+      "__core__/fonts/DejaVuSans.ttf",
+      "__core__/locale/zh-CN/fonts/default-font.ttf",
+      "__core__/locale/ja/fonts/medium.ttf",
+      "__core__/locale/ko/malgun.ttf"
+    ]
+  }
+}
