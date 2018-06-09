@@ -6,6 +6,6 @@
   "contact": "",
   "homepage": "",
   "description": "Classes for factorio character",
-  "dependencies": ["base >= 0.16.0"],
-  "factorio_version": "0.16"
+  "dependencies": ["base >= 0.17.0"],
+  "factorio_version": "0.17"
 }
