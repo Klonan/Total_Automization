@@ -31,6 +31,7 @@ sniper_gun.stack_size = 1
 
 sniper_ammo = util.copy(data.raw.ammo["railgun-dart"])
 sniper_ammo.name = "sniper-ammo"
+sniper_ammo.stack_size = 25
 sniper_ammo.ammo_type =
 {
   category = util.ammo_category("sniper-ammo"),

@@ -32,6 +32,9 @@ soldier_gun.attack_parameters =
 
 local soldier_ammo = util.copy(data.raw.ammo.rocket)
 soldier_ammo.name = "soldier-ammo"
+soldier_ammo.magazine_size = 4
+soldier_ammo.stack_size = 20 / 4
+soldier_ammo.reload_time = SU(200 - 48)
 soldier_ammo.ammo_type =
 {
   category = util.ammo_category("soldier-rocket"),
@@ -44,7 +47,7 @@ soldier_ammo.ammo_type =
     {
       type = "projectile",
       projectile = "soldier-rocket",
-      starting_speed = SD(0.6),
+      starting_speed = SD(0.35),
       source_effects =
       {
         type = "create-entity",

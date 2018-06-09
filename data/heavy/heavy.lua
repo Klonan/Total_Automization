@@ -17,7 +17,7 @@ heavy_gun.attack_parameters =
 {
   type = "projectile",
   ammo_category = util.ammo_category("heavy-gun"),
-  cooldown = SU(4.5),
+  cooldown = SU(6),
   movement_slow_down_factor = 0.66,
   movement_slow_down_cooldown = SU(60 * 3),
   shell_particle =
@@ -62,6 +62,8 @@ util.recursive_hack_scale(heavy_shell, 2)
 
 heavy_ammo = util.copy(data.raw.ammo["firearm-magazine"])
 heavy_ammo.name = "heavy-ammo"
+heavy_ammo.stack_size = 200
+heavy_ammo.magazine_size = 1
 
 local make_bullet = function(speed, spread, range)
   return
@@ -83,7 +85,6 @@ heavy_ammo.ammo_type =
 {
   category = util.ammo_category("heavy-gun"),
   target_type = "direction",
-  clamp_position = true,
   action =
   {
     {
@@ -100,12 +101,11 @@ heavy_ammo.ammo_type =
         }
       }
     },
-    make_bullet(1, 0.05, 0.05),
-    make_bullet(1.1, 0.05, 0.05),
-    make_bullet(1.2, 0.05, 0.05),
+    make_bullet(1.33, 0.05, 0.05),
+    --make_bullet(1.1, 0.05, 0.05),
+    --make_bullet(1.2, 0.05, 0.05),
   }
 }
-heavy_ammo.magazine_size = 200
 
 heavy_projectile = util.copy(data.raw.projectile["cannon-projectile"])
 heavy_projectile.name = "heavy-projectile"
@@ -121,15 +121,28 @@ heavy_projectile.action =
       {
         type = "create-explosion",
         entity_name = "explosion-hit"
-      },
-      {
-        type = "damage",
-        damage = {amount = 5 , type = util.damage_type("heavy-projectile")}
       }
     }
   }
 }
-heavy_projectile.final_action = nil
+heavy_projectile.final_action = 
+{
+  type = "area",
+  radius = 0.1,
+  collision_mode = "distance-from-center",
+  force = "not-same",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "damage",
+        damage = {amount = 9 , type = util.damage_type("heavy-projectile")}
+      }
+    }
+  }
+}
 
 
 data:extend

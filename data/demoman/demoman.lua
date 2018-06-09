@@ -13,13 +13,13 @@ demoman_gun.stack_size = 1
 
 demoman_gun.attack_parameters =
 {
-  type = "stream",
+  type = "projectile",
   ammo_category = util.ammo_category("demoman-grenade"),
   movement_slow_down_factor = 0.3,
-  cooldown = SU(35),
+  cooldown = SU(36),
   projectile_creation_distance = 0.6,
   range = 35,
-  projectile_center = {-0.17, 0},
+  --projectile_center = {-0.17, 0},
   gun_center_shift = { 0, -1 },
   sound =
   {
@@ -38,6 +38,9 @@ local demoman_ammo = util.copy(data.raw.ammo.rocket)
 demoman_ammo.name = "demoman-ammo"
 demoman_ammo.icon = "__Team_Factory__/data/demoman/demoman-bomb.png"
 demoman_ammo.icon_size = 414
+demoman_ammo.magazine_size = 4
+demoman_ammo.stack_size = 16 / 4
+demoman_ammo.reload_time = SU(182 - 36)
 demoman_ammo.ammo_type = 
 {
   source_type = "default",
@@ -59,63 +62,7 @@ demoman_ammo.ammo_type =
   }
 }
 
-local demoman_sticky_gun = util.copy(demoman_gun)
-demoman_sticky_gun.name = "demoman-sticky-gun"
-demoman_sticky_gun.icon = "__Team_Factory__/data/demoman/demoman-sticky-gun.png"
-demoman_sticky_gun.icon_size = 65
-demoman_sticky_gun.attack_parameters =
-{
-  type = "stream",
-  ammo_category = util.ammo_category("demoman-sticky-bomb"),
-  movement_slow_down_factor = 0.3,
-  cooldown = SU(35),
-  projectile_creation_distance = 0.6,
-  range = 35,
-  projectile_center = {-0.17, 0},
-  gun_center_shift = { 0, -1 },
-  sound =
-  {
-    {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-1.ogg",
-      volume = 1
-    },
-    {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-2.ogg",
-      volume = 1
-    },
-  }
-}
-
-
-local demoman_sticky_ammo = util.copy(demoman_ammo)
-demoman_sticky_ammo.name = "demoman-sticky-ammo"
-demoman_sticky_ammo.icon = "__Team_Factory__/data/demoman/demoman-stream-2.png"
-demoman_sticky_ammo.icon_size = 32
-demoman_sticky_ammo.ammo_type = 
-{
-  source_type = "default",
-  category = util.ammo_category("demoman-sticky-bomb"),
-  target_type = "position",
-  clamp_position = true,
-
-  action =
-  {
-    type = "direct",
-    action_delivery =
-    {
-      type = "stream",
-      stream = "demoman-sticky-stream",
-      max_length = 50,
-      duration = 160,
-      source_offset = {0, -1},
-      direction_deviation = 0.3,
-      range_deviation = 0.3,
-    }
-  }
-}
-
-
-demoman_stream = 
+local demoman_stream = 
 {
   type = "stream",
   name = "demoman-stream",
@@ -164,7 +111,28 @@ demoman_stream =
     },
     {
       type = "area",
-      radius = 5,
+      force = "not-same",
+      radius = 3,
+      action_delivery =
+      {
+        type = "instant",
+        target_effects =
+        {
+          {
+            type = "damage",
+            damage = { amount = 60, type = util.damage_type("demoman-grenade") }
+          },
+          {
+            type = "create-entity",
+            entity_name = "explosion"
+          }
+        }
+      }
+    },
+    {
+      type = "area",
+      force = "not-same",
+      radius = 1.5,
       action_delivery =
       {
         type = "instant",
@@ -173,10 +141,6 @@ demoman_stream =
           {
             type = "damage",
             damage = { amount = 40, type = util.damage_type("demoman-grenade") }
-          },
-          {
-            type = "create-entity",
-            entity_name = "explosion"
           }
         }
       }
@@ -204,6 +168,66 @@ demoman_stream =
     priority = "high",
     scale = 0.5,
     shift = {-0.09 * 0.5, 0.395 * 0.5}
+  }
+}
+
+
+local demoman_sticky_gun = util.copy(demoman_gun)
+demoman_sticky_gun.name = "demoman-sticky-gun"
+demoman_sticky_gun.icon = "__Team_Factory__/data/demoman/demoman-sticky-gun.png"
+demoman_sticky_gun.icon_size = 65
+demoman_sticky_gun.attack_parameters =
+{
+  type = "projectile",
+  ammo_category = util.ammo_category("demoman-sticky-bomb"),
+  movement_slow_down_factor = 0.3,
+  cooldown = SU(36),
+  projectile_creation_distance = 0.6,
+  range = 35,
+  projectile_center = {-0.17, 0},
+  gun_center_shift = { 0, -1 },
+  sound =
+  {
+    {
+      filename = "__Team_Factory__/data/demoman/demoman-gun-1.ogg",
+      volume = 1
+    },
+    {
+      filename = "__Team_Factory__/data/demoman/demoman-gun-2.ogg",
+      volume = 1
+    },
+  }
+}
+
+
+local demoman_sticky_ammo = util.copy(demoman_ammo)
+demoman_sticky_ammo.name = "demoman-sticky-ammo"
+demoman_sticky_ammo.icon = "__Team_Factory__/data/demoman/demoman-stream-2.png"
+demoman_sticky_ammo.icon_size = 32
+demoman_sticky_ammo.magazine_size = 8
+demoman_sticky_ammo.stack_size = 24 / 8
+demoman_sticky_ammo.reload_time = SU(346 - 36)
+
+demoman_sticky_ammo.ammo_type = 
+{
+  source_type = "default",
+  category = util.ammo_category("demoman-sticky-bomb"),
+  target_type = "position",
+  clamp_position = true,
+
+  action =
+  {
+    type = "direct",
+    action_delivery =
+    {
+      type = "stream",
+      stream = "demoman-sticky-stream",
+      max_length = 50,
+      duration = 160,
+      source_offset = {0, -1},
+      direction_deviation = 0.3,
+      range_deviation = 0.3,
+    }
   }
 }
 
@@ -272,17 +296,39 @@ demoman_sticky_bomb.action =
         affects_target = true,
         action =
         {
-          type = "area",
-          radius = 4,
-          force = "enemy",
-          action_delivery =
           {
-            type = "instant",
-            target_effects =
+            type = "area",
+            force = "not-same",
+            radius = 3,
+            action_delivery =
             {
+              type = "instant",
+              target_effects =
               {
-                type = "damage",
-                damage = { amount = 30, type = util.damage_type("demoman-sticky")}
+                {
+                  type = "damage",
+                  damage = { amount = 40, type = util.damage_type("demoman-sticky") }
+                },
+                {
+                  type = "create-entity",
+                  entity_name = "explosion"
+                }
+              }
+            }
+          },
+          {
+            type = "area",
+            force = "not-same",
+            radius = 1.5,
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "damage",
+                  damage = { amount = 80, type = util.damage_type("demoman-sticky") }
+                }
               }
             }
           }

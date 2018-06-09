@@ -47,6 +47,8 @@ end
 
 local scout_ammo = util.copy(data.raw.ammo["shotgun-shell"])
 scout_ammo.name = "scout-ammo"
+scout_ammo.reload_time = SU(213.6 - 37.5) --TODO make it POP POP
+scout_ammo.magazine_size = 6
 scout_ammo.ammo_type =
 {
   category = "shotgun-shell",

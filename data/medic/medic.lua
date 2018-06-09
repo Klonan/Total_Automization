@@ -12,7 +12,7 @@ medic_gun.stack_size = 1
 medic_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "medic-ammo",
+  ammo_category = util.ammo_category("medic-ammo"),
   cooldown = SU(1),
   movement_slow_down_factor = 0,
   projectile_creation_distance = 1.125,
@@ -38,12 +38,6 @@ medic_gun.attack_parameters =
   }
 }
 
-medic_beam_catagory = 
-{
-  type = "damage-type",
-  name = "medic-beam"
-}
-
 local medic_beam = util.copy(data.raw.beam["electric-beam"])
 util.recursive_hack_tint(medic_beam, {g = 1})
 medic_beam.name = "medic-beam"
@@ -63,7 +57,7 @@ medic_beam.action =
         {
           type = "area",
           radius = 4,
-          force = "ally",
+          force = "same",
           action_delivery =
           {
             type = "instant",
@@ -71,7 +65,7 @@ medic_beam.action =
             {
               {
                 type = "damage",
-                damage = { amount = -0.15, type = "medic-beam"}
+                damage = { amount = -0.8, type = util.damage_type("medic-beam")}
               }
             }
           }
@@ -92,15 +86,16 @@ medic_ammo.name = "medic-ammo"
 medic_ammo.icon = path.."medic-ammo.png"
 medic_ammo.icon_size = 825
 medic_ammo.stack_size = 1
-medic_ammo.magazine_size = 999999
+medic_ammo.magazine_size = 1
 medic_ammo.ammo_type =
 {
-  category = "medic-ammo",
+  category = util.ammo_category("medic-ammo"),
+  consumption_modifier = 0, --This means, it doesn't use any ammo
   target_type = "position",
   clamp_position = true,
   action =
   {
-    force = "ally",
+    force = "same",
     type = "direct",
     action_delivery =
     {
@@ -114,20 +109,15 @@ medic_ammo.ammo_type =
   }
 }
 
-local medic_needle_category = 
-{
-  type = "ammo-category",
-  name = "medic-needle-category"
-}
-
 local medic_needle_gun = util.copy(data.raw.gun["submachine-gun"])
 medic_needle_gun.name = "medic-needle-gun"
 medic_needle_gun.icon = path.."medic-needle-gun.png"
 medic_needle_gun.icon_size = 65
+medic_needle_gun.stack_size = 1
 medic_needle_gun.attack_parameters =
 {
   type = "projectile",
-  ammo_category = "medic-needle-category",
+  ammo_category = util.ammo_category("medic-needle-gun"),
   cooldown = SU(6),
   movement_slow_down_factor = 0,
   projectile_creation_distance = 1.125,
@@ -146,9 +136,12 @@ medic_needle_ammo = util.copy(data.raw.ammo["firearm-magazine"])
 medic_needle_ammo.name = "medic-needle-ammo"
 medic_needle_ammo.icon = path.."medic-needle-ammo.png"
 medic_needle_ammo.icon_size = 90
+medic_needle_ammo.magazine_size = 40
+medic_needle_ammo.stack_size = 160 / 40
+medic_needle_ammo.reload_time = SU(96 - 6)
 medic_needle_ammo.ammo_type =
 {
-  category = "medic-needle-category",
+  category = util.ammo_category("medic-needle-gun"),
   target_type = "direction",
   clamp_position = true,
   action =
@@ -159,7 +152,7 @@ medic_needle_ammo.ammo_type =
       {
         type = "projectile",
         projectile = "medic-needle-projectile",
-        starting_speed = SD(1),
+        starting_speed = SD(0.31),
         direction_deviation = 0.02,
         range_deviation = 0.02,
         max_range = 25
@@ -178,7 +171,7 @@ medic_needle_projectile.final_action =
     type = "area",
     radius = 0.1,
     collision_mode = "distance-from-center",
-    force = "enemy",
+    force = "not-same",
     action_delivery =
     {
       type = "instant",
@@ -186,7 +179,7 @@ medic_needle_projectile.final_action =
       {
         {
           type = "damage",
-          damage = { amount = 6, type = "physical"}
+          damage = { amount = 10, type = util.damage_type("medic-needle-gun")}
         }
       }
     }
@@ -206,11 +199,8 @@ data:extend{
   medic,
   medic_gun,
   medic_ammo,
-  medic_ammo_category,
   medic_beam,
-  medic_beam_catagory,
   medic_needle_gun,
-  medic_needle_category,
   medic_needle_ammo,
   medic_needle_projectile
 }
