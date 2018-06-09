@@ -12,3 +12,16 @@ require "data/teleporters/teleporters"
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33
 end
+--[[
+local slot = data.raw["gui-style"].default.slot_button
+slot.width = 64
+slot.height = 64
+]]
+
+local style = data.raw["gui-style"].default
+
+
+style.working_weapon_button.height = 128 + 4
+style.working_weapon_button.width = 128 + 4
+style.not_working_weapon_button.height = 128 + 4
+style.not_working_weapon_button.width = 128 + 4

@@ -8,7 +8,7 @@ util.scale_boxes(demoman, scale)
 local demoman_gun = util.copy(data.raw.gun["rocket-launcher"])
 demoman_gun.name = "demoman-gun"
 demoman_gun.icon = "__Team_Factory__/data/demoman/demoman-gun.png"
-demoman_gun.icon_size = 83
+demoman_gun.icon_size = 512
 demoman_gun.stack_size = 1
 
 demoman_gun.attack_parameters =
@@ -175,7 +175,7 @@ local demoman_stream =
 local demoman_sticky_gun = util.copy(demoman_gun)
 demoman_sticky_gun.name = "demoman-sticky-gun"
 demoman_sticky_gun.icon = "__Team_Factory__/data/demoman/demoman-sticky-gun.png"
-demoman_sticky_gun.icon_size = 65
+demoman_sticky_gun.icon_size = 512
 demoman_sticky_gun.attack_parameters =
 {
   type = "projectile",

@@ -8,7 +8,7 @@ scout.running_speed = util.speed(1.33)
 local scout_gun = util.copy(data.raw.gun.shotgun)
 scout_gun.name = "scout-gun"
 scout_gun.icon = "__Team_Factory__/data/scout/scout-gun.png"
-scout_gun.icon_size = 80
+scout_gun.icon_size = 512
 scout_gun.stack_size = 1
 scout_gun.attack_parameters =
 {

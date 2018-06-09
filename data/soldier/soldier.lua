@@ -10,7 +10,7 @@ util.scale_boxes(soldier, scale)
 local soldier_gun = util.copy(data.raw.gun["rocket-launcher"])
 soldier_gun.name = "soldier-gun"
 soldier_gun.icon = path.."soldier-gun.png"
-soldier_gun.icon_size = 66
+soldier_gun.icon_size = 512
 soldier_gun.stack_size = 1
 soldier_gun.attack_parameters =
 {

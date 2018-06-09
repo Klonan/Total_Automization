@@ -7,7 +7,7 @@ medic.running_speed = util.speed(1.07)
 local medic_gun = util.copy(data.raw.gun["submachine-gun"])
 medic_gun.name = "medic-gun"
 medic_gun.icon = path.."medic-gun.png"
-medic_gun.icon_size = 328
+medic_gun.icon_size = 512
 medic_gun.stack_size = 1
 medic_gun.attack_parameters =
 {
@@ -112,7 +112,7 @@ medic_ammo.ammo_type =
 local medic_needle_gun = util.copy(data.raw.gun["submachine-gun"])
 medic_needle_gun.name = "medic-needle-gun"
 medic_needle_gun.icon = path.."medic-needle-gun.png"
-medic_needle_gun.icon_size = 65
+medic_needle_gun.icon_size = 512
 medic_needle_gun.stack_size = 1
 medic_needle_gun.attack_parameters =
 {

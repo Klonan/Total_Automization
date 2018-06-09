@@ -12,7 +12,7 @@ heavy_gun = util.copy(data.raw.gun["submachine-gun"])
 heavy_gun.name = "heavy-gun"
 heavy_gun.stack_size = 1
 heavy_gun.icon = path.."heavy-gun.png"
-heavy_gun.icon_size = 72
+heavy_gun.icon_size = 512
 heavy_gun.attack_parameters =
 {
   type = "projectile",

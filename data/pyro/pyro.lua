@@ -18,7 +18,7 @@ util.add_flag(pyro, "not-flammable")
 pyro_gun = util.copy(data.raw.gun.flamethrower)
 pyro_gun.name = "pyro-gun"
 pyro_gun.icon = path.."pyro-gun.png"
-pyro_gun.icon_size = 81
+pyro_gun.icon_size = 512
 pyro_gun.attack_parameters.movement_slow_down_factor = 0
 pyro_gun.attack_parameters.range = 25
 pyro_gun.attack_parameters.cooldown = math.ceil(SU(1))
@@ -61,8 +61,8 @@ pyro_ammo = util.copy(data.raw.ammo["flamethrower-ammo"])
 pyro_ammo.name = "pyro-ammo"
 pyro_ammo.icon = path.."pyro-ammo.png"
 pyro_ammo.icon_size = 540
-pyro_ammo.magazine_size = 5000
-pyro_ammo.stack_size = 1
+pyro_ammo.magazine_size = 1
+pyro_ammo.stack_size = 200
 
 local fire = require("data/tf_fire_util")
 local sprites = fire.create_fire_pictures({animation_speed = SD(0.5), scale = 0.8})
@@ -153,7 +153,7 @@ pyro_ammo.ammo_type =
 pyro_flare_gun = util.copy(pyro_gun)
 pyro_flare_gun.name = "pyro-flare-gun"
 pyro_flare_gun.icon = path.."pyro-flare-gun.png"
-pyro_flare_gun.icon_size = 56
+pyro_flare_gun.icon_size = 512
 pyro_flare_gun.attack_parameters =
 {
   type = "projectile",
@@ -177,6 +177,7 @@ pyro_flare_ammo = util.copy(pyro_ammo)
 pyro_flare_ammo.name = "pyro-flare-ammo"
 pyro_flare_ammo.icon = path.."pyro-flare-ammo.png"
 pyro_flare_ammo.icon_size = 120
+pyro_flare_ammo.stack_size = 16
 pyro_flare_ammo.ammo_type = 
 {
   source_type = "default",
