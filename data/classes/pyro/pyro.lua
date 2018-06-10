@@ -1,6 +1,6 @@
-local path = util.path("data/pyro/")
+local path = util.path("data/classes/pyro/")
 local pyro = util.base_player()
-pyro.name = "pyro"
+pyro.name = names.pyro
 pyro.max_health = 175
 pyro.running_speed = util.speed(1)
 pyro.resistances =
@@ -64,7 +64,7 @@ pyro_ammo.icon_size = 540
 pyro_ammo.magazine_size = 1
 pyro_ammo.stack_size = 200
 
-local fire = require("data/tf_fire_util")
+local fire = require("data/tf_util/tf_fire_util")
 local sprites = fire.create_fire_pictures({animation_speed = SD(0.5), scale = 0.8})
 local index = 0
 local sprite = function()
@@ -317,7 +317,7 @@ pyro_flare_stream =
 
   spine_animation =
   {
-    filename = "__Team_Factory__/data/demoman/demoman-grenade-2.png",
+    filename = "__Team_Factory__/data/classes/demoman/demoman-grenade-2.png",
     --tint = {r=1, g=1, b=1, a=1},
     line_length = 1,
     width = 32,

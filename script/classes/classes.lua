@@ -1,3 +1,4 @@
+class_names = require("shared").class_names
 local classes =
 {
   data =

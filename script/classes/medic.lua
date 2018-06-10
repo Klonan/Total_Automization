@@ -1,5 +1,7 @@
-local class = {}
-class.name = "medic"
+local class =
+{
+  name = class_names.medic
+}
 local create = function(player)
   player.create_character(class.name)
   local character = player.character

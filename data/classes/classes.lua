@@ -31,11 +31,11 @@
     maximum_corner_sliding_distance = 0.7,
 ]]
 
-
-require("data/pyro/pyro")
-require("data/heavy/heavy")
-require("data/sniper/sniper")
-require("data/medic/medic")
-require("data/soldier/soldier")
-require("data/demoman/demoman")
-require("data/scout/scout")
+names = require("shared").class_names
+require("data/classes/pyro/pyro")
+require("data/classes/heavy/heavy")
+require("data/classes/sniper/sniper")
+require("data/classes/medic/medic")
+require("data/classes/soldier/soldier")
+require("data/classes/demoman/demoman")
+require("data/classes/scout/scout")

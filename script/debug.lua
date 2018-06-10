@@ -5,8 +5,8 @@ local on_player_created = function(event)
   if player.character then player.character.destroy() end
   debug.libs.classes.set_class(player, "soldier")
   local count = 5
-  for name, v in pairs(debug.libs.classes.class_list) do
-    player.surface.create_entity{name = name, position = {player.position.x + count, player.position.y}, force = player.force}
+  for name, class in pairs(debug.libs.classes.class_list) do
+    player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
   player.insert("entry-item")

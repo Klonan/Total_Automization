@@ -68,7 +68,7 @@ local exit_item = util.copy(entry_item)
 exit_item.name = "exit-item"
 entry_item.place_result = "exit"
 
-local fire = require("data/tf_fire_util")
+local fire = require("data/tf_util/tf_fire_util")
 
 local teleporter_explosion = util.copy(data.raw.explosion.explosion)
 teleporter_explosion.name = "teleporter-explosion"

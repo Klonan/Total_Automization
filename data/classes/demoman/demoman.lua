@@ -1,5 +1,6 @@
+local path = util.path("data/classes/demoman/")
 local demoman = util.base_player()
-demoman.name = "demoman"
+demoman.name = names.demoman
 demoman.running_speed = util.speed(0.93)
 local scale = 1.6
 util.recursive_hack_scale(demoman, scale)
@@ -7,7 +8,7 @@ util.scale_boxes(demoman, scale)
 
 local demoman_gun = util.copy(data.raw.gun["rocket-launcher"])
 demoman_gun.name = "demoman-gun"
-demoman_gun.icon = "__Team_Factory__/data/demoman/demoman-gun.png"
+demoman_gun.icon = path.."demoman-gun.png"
 demoman_gun.icon_size = 512
 demoman_gun.stack_size = 1
 
@@ -24,11 +25,11 @@ demoman_gun.attack_parameters =
   sound =
   {
     {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-1.ogg",
+      filename = path.."demoman-gun-1.ogg",
       volume = 1
     },
     {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-2.ogg",
+      filename = path.."demoman-gun-2.ogg",
       volume = 1
     },
   }
@@ -36,7 +37,7 @@ demoman_gun.attack_parameters =
 
 local demoman_ammo = util.copy(data.raw.ammo.rocket)
 demoman_ammo.name = "demoman-ammo"
-demoman_ammo.icon = "__Team_Factory__/data/demoman/demoman-bomb.png"
+demoman_ammo.icon = path.."demoman-bomb.png"
 demoman_ammo.icon_size = 414
 demoman_ammo.magazine_size = 4
 demoman_ammo.stack_size = 16 / 4
@@ -149,7 +150,7 @@ local demoman_stream =
 
   spine_animation =
   {
-    filename = "__Team_Factory__/data/demoman/demoman-bomb-2.png",
+    filename = path.."demoman-bomb-2.png",
     --tint = {r=1, g=1, b=1, a=1},
     line_length = 1,
     width = 32,
@@ -174,7 +175,7 @@ local demoman_stream =
 
 local demoman_sticky_gun = util.copy(demoman_gun)
 demoman_sticky_gun.name = "demoman-sticky-gun"
-demoman_sticky_gun.icon = "__Team_Factory__/data/demoman/demoman-sticky-gun.png"
+demoman_sticky_gun.icon = path.."demoman-sticky-gun.png"
 demoman_sticky_gun.icon_size = 512
 demoman_sticky_gun.attack_parameters =
 {
@@ -189,11 +190,11 @@ demoman_sticky_gun.attack_parameters =
   sound =
   {
     {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-1.ogg",
+      filename = path.."demoman-gun-1.ogg",
       volume = 1
     },
     {
-      filename = "__Team_Factory__/data/demoman/demoman-gun-2.ogg",
+      filename = path.."demoman-gun-2.ogg",
       volume = 1
     },
   }
@@ -202,7 +203,7 @@ demoman_sticky_gun.attack_parameters =
 
 local demoman_sticky_ammo = util.copy(demoman_ammo)
 demoman_sticky_ammo.name = "demoman-sticky-ammo"
-demoman_sticky_ammo.icon = "__Team_Factory__/data/demoman/demoman-stream-2.png"
+demoman_sticky_ammo.icon = path.."demoman-stream-2.png"
 demoman_sticky_ammo.icon_size = 32
 demoman_sticky_ammo.magazine_size = 8
 demoman_sticky_ammo.stack_size = 24 / 8
@@ -252,7 +253,7 @@ demoman_sticky_stream.action =
 }
 demoman_sticky_stream.spine_animation =
 {
-  filename = "__Team_Factory__/data/demoman/demoman-stream-2.png",
+  filename = path.."demoman-stream-2.png",
   --tint = {r=1, g=1, b=1, a=1},
   line_length = 1,
   width = 32,
@@ -269,7 +270,7 @@ util.add_flag(demoman, "not-repairable")
 demoman_sticky_bomb.dying_explosion = "explosion"
 demoman_sticky_bomb.picture_set =
 {
-  filename = "__Team_Factory__/data/demoman/demoman-sticky-bomb.png",
+  filename = path.."demoman-sticky-bomb.png",
   priority = "medium",
   width = 483,
   height = 479,

@@ -87,8 +87,8 @@ end
 util.empty_sound = function()
   return 
   {
-    filename = "__Team_Factory__/data/empty-sound.ogg",
-    volume = 0.7
+    filename = util.path("data/tf_util/empty-sound.ogg"),
+    volume = 0
   }
 end
 
