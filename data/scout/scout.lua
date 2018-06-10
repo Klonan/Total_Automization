@@ -1,3 +1,4 @@
+local path = util.path("data/scout/")
 local scout = util.base_player()
 scout.name = "scout"
 local scale = 0.8
@@ -7,7 +8,7 @@ scout.running_speed = util.speed(1.33)
 
 local scout_gun = util.copy(data.raw.gun.shotgun)
 scout_gun.name = "scout-gun"
-scout_gun.icon = "__Team_Factory__/data/scout/scout-gun.png"
+scout_gun.icon = path.."scout-gun.png"
 scout_gun.icon_size = 512
 scout_gun.stack_size = 1
 scout_gun.attack_parameters =
@@ -22,8 +23,8 @@ scout_gun.attack_parameters =
   sound =
   {
     {
-      filename = "__base__/sound/pump-shotgun.ogg",
-      volume = 0.5
+      filename = path.."scout-gun.ogg",
+      volume = 1
     }
   }
 }

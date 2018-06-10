@@ -21,7 +21,7 @@ slot.height = 64
 local style = data.raw["gui-style"].default
 
 
-style.working_weapon_button.height = 128 + 4
-style.working_weapon_button.width = 128 + 4
-style.not_working_weapon_button.height = 128 + 4
-style.not_working_weapon_button.width = 128 + 4
+style.working_weapon_button.height = 96 + 4
+style.working_weapon_button.width = 96 + 4
+style.not_working_weapon_button.height = 96 + 4
+style.not_working_weapon_button.width = 96 + 4

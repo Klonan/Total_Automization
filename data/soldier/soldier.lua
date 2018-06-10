@@ -35,6 +35,8 @@ soldier_ammo.name = "soldier-ammo"
 soldier_ammo.magazine_size = 4
 soldier_ammo.stack_size = 20 / 4
 soldier_ammo.reload_time = SU(200 - 48)
+soldier_ammo.icon = path.."soldier-ammo.png"
+soldier_ammo.icon_size = 1106
 soldier_ammo.ammo_type =
 {
   category = util.ammo_category("soldier-rocket"),
