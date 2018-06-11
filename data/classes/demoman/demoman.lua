@@ -1,3 +1,5 @@
+if true then return end
+
 local path = util.path("data/classes/demoman/")
 local demoman = util.base_player()
 demoman.name = names.demoman
@@ -6,174 +8,8 @@ local scale = 1.6
 util.recursive_hack_scale(demoman, scale)
 util.scale_boxes(demoman, scale)
 
-local demoman_gun = util.copy(data.raw.gun["rocket-launcher"])
-demoman_gun.name = "demoman-gun"
-demoman_gun.icon = path.."demoman-gun.png"
-demoman_gun.icon_size = 512
-demoman_gun.stack_size = 1
 
-demoman_gun.attack_parameters =
-{
-  type = "projectile",
-  ammo_category = util.ammo_category("demoman-grenade"),
-  movement_slow_down_factor = 0.3,
-  cooldown = SU(36),
-  projectile_creation_distance = 0.6,
-  range = 35,
-  --projectile_center = {-0.17, 0},
-  gun_center_shift = { 0, -1 },
-  sound =
-  {
-    {
-      filename = path.."demoman-gun-1.ogg",
-      volume = 1
-    },
-    {
-      filename = path.."demoman-gun-2.ogg",
-      volume = 1
-    },
-  }
-}
-
-local demoman_ammo = util.copy(data.raw.ammo.rocket)
-demoman_ammo.name = "demoman-ammo"
-demoman_ammo.icon = path.."demoman-bomb.png"
-demoman_ammo.icon_size = 414
-demoman_ammo.magazine_size = 4
-demoman_ammo.stack_size = 16 / 4
-demoman_ammo.reload_time = SU(182 - 36)
-demoman_ammo.ammo_type = 
-{
-  source_type = "default",
-  category = util.ammo_category("demoman-grenade"),
-  target_type = "position",
-  clamp_position = true,
-
-  action =
-  {
-    type = "direct",
-    action_delivery =
-    {
-      type = "stream",
-      stream = "demoman-stream",
-      max_length = 50,
-      duration = 160,
-      source_offset = {0, -1},
-    }
-  }
-}
-
-local demoman_stream = 
-{
-  type = "stream",
-  name = "demoman-stream",
-  flags = {"not-on-map"},
-
-  smoke_sources = nil,
-  --{
-  --  {
-  --    name = "soft-fire-smoke",
-  --    frequency = 0, --0.25,
-  --    position = {0.0, 0}, -- -0.8},
-  --    starting_frame_deviation = 60
-  --  }
-  --},
-
-  stream_light = {intensity = 0, size = 4 * 0.8},
-  ground_light = {intensity = 0, size = 4 * 0.8},
-
-  particle_buffer_size = 1,
-  particle_spawn_interval = SU(1000),
-  particle_spawn_timeout = SU(1000),
-  particle_vertical_acceleration = SD(0.005 * 2),
-  particle_horizontal_speed = SD(0.45),
-  particle_horizontal_speed_deviation = 0.0035,
-  particle_start_alpha = 0,
-  particle_end_alpha = 1,
-  particle_start_scale = 1,
-  particle_loop_frame_count = SD(100),
-  particle_fade_out_threshold = 0,
-  particle_loop_exit_threshold = 0,
-  action =
-  {
-    {
-      type = "direct",
-      action_delivery =
-      {
-        type = "instant",
-        target_effects =
-        {
-          {
-            type = "create-entity",
-            entity_name = "explosion"
-          }
-        }
-      }
-    },
-    {
-      type = "area",
-      force = "not-same",
-      radius = 3,
-      action_delivery =
-      {
-        type = "instant",
-        target_effects =
-        {
-          {
-            type = "damage",
-            damage = { amount = 60, type = util.damage_type("demoman-grenade") }
-          },
-          {
-            type = "create-entity",
-            entity_name = "explosion"
-          }
-        }
-      }
-    },
-    {
-      type = "area",
-      force = "not-same",
-      radius = 1.5,
-      action_delivery =
-      {
-        type = "instant",
-        target_effects =
-        {
-          {
-            type = "damage",
-            damage = { amount = 40, type = util.damage_type("demoman-grenade") }
-          }
-        }
-      }
-    }
-  },
-
-  spine_animation =
-  {
-    filename = path.."demoman-bomb-2.png",
-    --tint = {r=1, g=1, b=1, a=1},
-    line_length = 1,
-    width = 32,
-    height = 30,
-    frame_count = 1,
-    scale = 1
-  },
-
-  shadow =
-  {
-    filename = "__base__/graphics/entity/acid-projectile-purple/acid-projectile-purple-shadow.png",
-    line_length = 5,
-    width = 28,
-    height = 16,
-    frame_count = 33,
-    priority = "high",
-    scale = 0.5,
-    shift = {-0.09 * 0.5, 0.395 * 0.5}
-  }
-}
-
-
-local demoman_sticky_gun = util.copy(demoman_gun)
+local demoman_sticky_gun = util.base_gun("deom")
 demoman_sticky_gun.name = "demoman-sticky-gun"
 demoman_sticky_gun.icon = path.."demoman-sticky-gun.png"
 demoman_sticky_gun.icon_size = 512
@@ -201,7 +37,7 @@ demoman_sticky_gun.attack_parameters =
 }
 
 
-local demoman_sticky_ammo = util.copy(demoman_ammo)
+local demoman_sticky_ammo = util.base_ammo("hon")
 demoman_sticky_ammo.name = "demoman-sticky-ammo"
 demoman_sticky_ammo.icon = path.."demoman-stream-2.png"
 demoman_sticky_ammo.icon_size = 32
@@ -232,7 +68,7 @@ demoman_sticky_ammo.ammo_type =
   }
 }
 
-local demoman_sticky_stream = util.copy(demoman_stream)
+local demoman_sticky_stream = util.copy()
 demoman_sticky_stream.name = "demoman-sticky-stream"
 demoman_sticky_stream.action =
 {

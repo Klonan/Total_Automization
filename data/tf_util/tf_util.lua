@@ -106,6 +106,29 @@ util.ammo_category = function(name)
   return name
 end
 
+util.base_gun = function(name)
+  return
+  {
+    name = name,
+    localised_name = name,
+    type = "gun",
+    stack_size = 1,
+    flags = {}
+  }
+end
+
+util.base_ammo = function(name)
+  return
+  {
+    name = name,
+    localised_name = name,
+    type = "ammo",
+    stack_size = 1, 
+    magazine_size = 1,
+    flags = {}
+  }
+end
+
 local base_speed = 0.25
 util.speed = function(multiplier)
   return multiplier * SD(0.25)

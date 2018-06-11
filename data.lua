@@ -7,6 +7,8 @@ end
 util = require "data/tf_util/tf_util"
 require "data/classes/classes"
 require "data/weapons/weapons"
+
+--require "data/weapons/grenade_launcher/grenade_launcher"
 require "data/teleporters/teleporters"
 require "data/health_pickup"
 
