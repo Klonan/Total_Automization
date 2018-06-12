@@ -17,19 +17,14 @@ gun.attack_parameters =
   sound =
   {
     {
-      filename = path.."grenade_launcher_1.ogg",
-      volume = 1
-    },
-    {
-      filename = path.."grenade_launcher_2.ogg",
-      volume = 1
-    },
+      filename = path.."grenade_launcher_shoot.ogg"
+    }
   }
 }
 
 local ammo = util.base_ammo(names.grenade_launcher.." Ammo")
 ammo.icon = path.."grenade_launcher_ammo.png"
-ammo.icon_size = 514
+ammo.icon_size = 512
 ammo.magazine_size = 4
 ammo.stack_size = 16 / 4
 ammo.reload_time = SU(182 - 36)
@@ -145,7 +140,7 @@ local stream =
     --tint = {r=1, g=1, b=1, a=1},
     line_length = 1,
     width = 32,
-    height = 30,
+    height = 14,
     frame_count = 1,
     scale = 1
   },

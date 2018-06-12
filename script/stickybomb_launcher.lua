@@ -1,56 +1,62 @@
-local class =
-{
-  name = class_names.demoman,
-  data = {}
-}
-local create = function(player)
-  player.create_character(class.name)
-  local character = player.character
-  character.insert("heavy-armor")
-  character.insert("demoman-gun")
-  character.insert("demoman-ammo")
-  character.insert("demoman-sticky-gun")
-  character.insert("demoman-sticky-ammo")
-end
+local lib = {}
+local data = {}
 
-local demoman_mine_expiry =
+local mine_limit =
 {
-  ["Stickybomb Launcher Mine"] = SU(60 * 15)
+  ["Stickybomb Launcher Mine"] = 8
 }
 
-local on_land_mine_armed = function(event)
-  local mine = event.mine
+local on_trigger_created_entity = function(event)
+  local mine = event.entity
   if not (mine and mine.valid) then return end
-  local expire = demoman_mine_expiry[mine.name]
-  if not expire then return end
-  local data = class.data
-  local tick_to_expire = event.tick + expire
-  data[tick_to_expire] = data[tick_to_expire] or {}
-  table.insert(data[tick_to_expire], mine)
+  local source = event.source
+  if not (source and source.valid) then return end
+  local limit = mine_limit[mine.name]
+  if not limit then return end
+  data[source.unit_number] = data[source.unit_number] or {}
+  local entities = data[source.unit_number]
+  for k = #entities, 1, -1 do
+    if not entities[k].valid then
+      table.remove(entities, k)
+    end
+  end
+  if #entities >= limit then
+    entities[1].die()
+    table.remove(entities, 1)
+  end
+  table.insert(entities, mine)
 end
 
-local on_tick = function(event)
-  local entities = class.data[event.tick]
+local kill_player_mines = function(event)
+  local player = game.players[event.player_index]
+  if not (player and player.valid) then return end
+  local character = player.character
+  if not (character and character.valid) then return end
+  local entities = data[character.unit_number]
   if not entities then return end
   for k, entity in pairs (entities) do
     if entity.valid then
       entity.die()
     end
   end
-  class.data[event.tick] = nil
+  data[character.unit_number] = nil
 end
 
-class.events =
+local events =
 {
-  [defines.events.on_land_mine_armed] = on_land_mine_armed,
-  [defines.events.on_tick] = on_tick
+  [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
+  [defines.events.on_pre_player_died] = kill_player_mines,
+  [defines.events.on_pre_player_left_game] = kill_player_mines
 }
 
-class.on_event = handler(class.events)
-class.on_init = function()
-  global.demoman_destroy_on_tick = global.demoman_destroy_on_tick or class.data
+lib.on_event = handler(events)
+
+lib.on_init = function()
+  global.stickybomb_launcher = data
 end
-class.on_load = function()
-  class.data = global.demoman_destroy_on_tick or class.data
+
+lib.on_load = function()
+  data = global.stickybomb_launcher or data
 end
-return setmetatable(class, {__call = function(self, ...) create(...) end})
+
+return lib

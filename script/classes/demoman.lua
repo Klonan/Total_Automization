@@ -7,6 +7,8 @@ local create = function(player)
   local character = player.character
   character.insert("Stickybomb Launcher")
   character.insert("Stickybomb Launcher Ammo")
+  character.insert("Grenade Launcher")
+  character.insert("Grenade Launcher Ammo")
 end
 
 return setmetatable(class, {__call = function(self, ...) create(...) end})
