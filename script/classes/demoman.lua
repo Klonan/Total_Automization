@@ -1,14 +1,13 @@
 local class =
 {
-  name = class_names.demoman
+  name = class_names.demoman,
+  primary_weapons = 
+  {
+    weapon_names.grenade_launcher
+  },
+  secondary_weapons = 
+  {
+    weapon_names.stickybomb_launcher
+  }
 }
-local create = function(player)
-  player.create_character(class.name)
-  local character = player.character
-  character.insert("Stickybomb Launcher")
-  character.insert("Stickybomb Launcher Ammo")
-  character.insert("Grenade Launcher")
-  character.insert("Grenade Launcher Ammo")
-end
-
-return setmetatable(class, {__call = function(self, ...) create(...) end})
+return class

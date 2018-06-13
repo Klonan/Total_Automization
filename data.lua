@@ -7,10 +7,9 @@ end
 util = require "data/tf_util/tf_util"
 require "data/classes/classes"
 require "data/weapons/weapons"
-
---require "data/weapons/grenade_launcher/grenade_launcher"
 require "data/teleporters/teleporters"
 require "data/health_pickup"
+require "data/stickers/afterburn"
 
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33

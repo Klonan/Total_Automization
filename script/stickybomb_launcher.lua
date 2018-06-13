@@ -1,4 +1,3 @@
-local lib = {}
 local data = {}
 
 local mine_limit =
@@ -48,6 +47,8 @@ local events =
   [defines.events.on_pre_player_died] = kill_player_mines,
   [defines.events.on_pre_player_left_game] = kill_player_mines
 }
+
+local lib = {}
 
 lib.on_event = handler(events)
 

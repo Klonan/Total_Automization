@@ -1,5 +1,6 @@
 names = require("shared").weapon_names
-local path = "data/weapons/"
-
-require(path.."grenade_launcher/grenade_launcher")
-require(path.."stickybomb_launcher/stickybomb_launcher")
+local require = function(string) return require("data/weapons/"..string) end
+require("grenade_launcher/grenade_launcher")
+require("stickybomb_launcher/stickybomb_launcher")
+require("flamethrower/flamethrower")
+require("flare_gun/flare_gun")

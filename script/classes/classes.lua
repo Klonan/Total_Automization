@@ -1,4 +1,5 @@
 class_names = require("shared").class_names
+weapon_names = require("shared").weapon_names
 local classes =
 {
   data =
@@ -21,16 +22,25 @@ local class_list =
 classes.set_class = function(player, name)
   local class = class_list[name]
   if class then
-    class(player)
+    player.create_character(class.name)
+    local character = player.character
+    if class.primary_weapons then
+      character.insert(class.primary_weapons[1])
+      character.insert(class.primary_weapons[1].." Ammo")
+    end
+    if class.secondary_weapons then
+      character.insert(class.secondary_weapons[1])
+      character.insert(class.secondary_weapons[1].." Ammo")
+    end
   end
 end
 
-local join_class_button = function(data)
+local join_class_button = function(name)
   return function(event)
     local player = game.players[event.player_index]
     if not (player and player.index) then return end
     if player.character then player.character.destroy() end
-    return data(player)
+    return classes.set_class(player, name)
   end
 end
 
@@ -42,7 +52,7 @@ local choose_class_gui_init = function(player)
   local table = frame.add{type = "table", column_count = 1}
   for name, data in pairs (class_list) do
     local button = table.add{type = "button", caption = "Be a "..name}
-    classes.data.buttons[button.index] = join_class_button(data)
+    classes.data.buttons[button.index] = join_class_button(name)
   end
 
 end

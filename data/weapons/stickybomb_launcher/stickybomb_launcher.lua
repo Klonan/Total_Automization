@@ -22,7 +22,7 @@ gun.attack_parameters =
 }
 
 
-local ammo = util.base_ammo(names.stickybomb_launcher.. " Ammo")
+local ammo = util.base_ammo(names.stickybomb_launcher)
 ammo.icon = path.."stickybomb_launcher_ammo.png"
 ammo.icon_size = 512
 ammo.magazine_size = 8
