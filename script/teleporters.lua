@@ -51,10 +51,7 @@ local entry_died = function(entity, cause)
         create_flash(surface, origin)
         create_flash(destination_surface, exit.position)
       end
-
-      --Not merged
-      --exit.timeout = entity.prototype.timeout
-
+      exit.timeout = entity.prototype.timeout
     end
     local new = surface.create_entity{name = entity.name, force = entity.force, position = entity.position}
     data.entry = new

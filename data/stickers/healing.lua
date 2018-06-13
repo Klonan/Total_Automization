@@ -14,8 +14,8 @@ sticker.animation =
   height = 825,
   width = 825,
   frame_count = 1,
-  scale = 0.01
+  scale = 0.03
 }
-sticker.stickers_per_meter = 5 --Not merged
+sticker.stickers_per_square_meter = 1
 
 data:extend{sticker}
