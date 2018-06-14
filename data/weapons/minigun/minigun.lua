@@ -8,6 +8,15 @@ gun.attack_parameters =
   type = "projectile",
   ammo_category = util.ammo_category("heavy-gun"),
   cooldown = SU(6),
+  --[[
+    Not merged.
+  warmup = SU(60 * 0.87),
+  warmup_once = false,
+  warmup_sound =
+  {
+    filename = path.."minigun_shoot_start.ogg"
+  },
+  ]]
   movement_slow_down_factor = 0.66,
   movement_slow_down_cooldown = SU(60 * 3),
   projectile_creation_distance = 1.125,
