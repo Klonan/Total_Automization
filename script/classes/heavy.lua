@@ -5,6 +5,9 @@ local class =
   {
     weapon_names.minigun
   },
-  secondary_weapons = nil
+  secondary_weapons =
+  {
+    weapon_names.shotgun
+  }
 }
 return class

@@ -8,9 +8,19 @@ util.recursive_hack_scale(demoman, scale)
 util.scale_boxes(demoman, scale)
 
 
+sprite =
+{
+  type = "sprite",
+  name = names.demoman,
+  filename = path.."demoman.png",
+  width = 750,
+  height = 786,
+  --flags = {}
+}
+
 data:extend
 {
-  demoman
+  demoman, sprite
 }
 
 

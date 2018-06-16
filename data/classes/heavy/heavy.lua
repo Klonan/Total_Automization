@@ -7,7 +7,16 @@ local scale = 1.8
 util.recursive_hack_scale(heavy, scale)
 util.scale_boxes(heavy, scale)
 
+sprite =
+{
+  type = "sprite",
+  name = names.heavy,
+  filename = path.."heavy.png",
+  width = 750,
+  height = 786
+}
+
 data:extend
 {
-  heavy
+  heavy, sprite
 }

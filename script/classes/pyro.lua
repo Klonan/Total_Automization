@@ -7,7 +7,9 @@ local class =
   },
   secondary_weapons = 
   {
-    weapon_names.flare_gun
+    weapon_names.flare_gun,
+    weapon_names.shotgun,
+
   }
 }
 return class

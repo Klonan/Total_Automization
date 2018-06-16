@@ -6,10 +6,18 @@ util.recursive_hack_scale(scout, scale)
 util.scale_boxes(scout, scale)
 scout.running_speed = util.speed(1.33)
 
+sprite =
+{
+  type = "sprite",
+  name = names.scout,
+  filename = path.."scout.png",
+  width = 750,
+  height = 786
+}
 
 data:extend
 {
-  scout
+  scout, sprite
 }
 
 

@@ -42,4 +42,9 @@ data.class_names =
   spy = "Spy"
 }
 
+data.hotkey_names =
+{
+  change_class = "Change class"
+}
+
 return data

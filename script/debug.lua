@@ -3,7 +3,7 @@ local debug = {}
 local on_player_created = function(event)
   local player = game.players[event.player_index]
   if player.character then player.character.destroy() end
-  debug.libs.classes.set_class(player, "pyro")
+  debug.libs.classes.set_class(player, "Pyro")
   local count = 5
   for name, class in pairs(debug.libs.classes.class_list) do
     player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}

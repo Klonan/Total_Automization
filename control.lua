@@ -8,6 +8,15 @@ end
 
 handler = require("script/event_handler")
 
+local hotkeys = require("shared").hotkey_names
+for k, name in pairs (hotkeys) do
+  local event_name = script.generate_event_name()
+  defines.events[name] = event_name
+  script.on_event(name, function(event) script.raise_event(event_name, event) end)
+end
+
+--error(serpent.block(defines.events))
+
 local libs = {
   debug = require "script/debug",
   teleporters = require "script/teleporters",
@@ -49,5 +58,6 @@ script.on_configuration_changed(function(data)
     end
   end
 end)
+
 
 --todo control points

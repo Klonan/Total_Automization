@@ -1,9 +1,9 @@
 local class =
 {
-  name = class_names.scout,
+  name = class_names.engineer,
   primary_weapons = 
   {
-    weapon_names.scattergun,
+    weapon_names.shotgun,
   },
   secondary_weapons =
   {

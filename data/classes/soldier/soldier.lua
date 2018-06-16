@@ -7,11 +7,18 @@ local scale = 1.3
 util.recursive_hack_scale(soldier, scale)
 util.scale_boxes(soldier, scale)
 
-
+sprite =
+{
+  type = "sprite",
+  name = names.soldier,
+  filename = path.."soldier.png",
+  width = 750,
+  height = 786
+}
 
 data:extend
 {
-  soldier
+  soldier, sprite
 }
 
 

@@ -11,6 +11,7 @@ require "data/teleporters/teleporters"
 require "data/health_pickup"
 require "data/stickers/afterburn"
 require "data/stickers/healing"
+require "data/hotkeys"
 
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33

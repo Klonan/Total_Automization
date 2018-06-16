@@ -14,7 +14,16 @@ util.add_flag(pyro, "not-flammable")
 --util.recursive_hack_scale(pyro, 1)
 --class_util.recursive_hack_animation_speed(pyro, 0.8)
 
+sprite =
+{
+  type = "sprite",
+  name = names.pyro,
+  filename = path.."pyro.png",
+  width = 750,
+  height = 786
+}
+
 data:extend
 {
-  pyro
+  pyro, sprite
 }

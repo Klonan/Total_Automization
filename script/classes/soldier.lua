@@ -5,6 +5,9 @@ local class =
   {
     weapon_names.rocket_launcher,
   },
-  secondary_weapons = nil
+  secondary_weapons =
+  {
+    weapon_names.shotgun
+  }
 }
 return class
