@@ -13,8 +13,8 @@ sprite =
   type = "sprite",
   name = names.demoman,
   filename = path.."demoman.png",
-  width = 750,
-  height = 786,
+  width = 955,
+  height = 955,
   --flags = {}
 }
 

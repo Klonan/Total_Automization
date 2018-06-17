@@ -12,8 +12,8 @@ sprite =
   type = "sprite",
   name = names.heavy,
   filename = path.."heavy.png",
-  width = 750,
-  height = 786
+  width = 778,
+  height = 778
 }
 
 data:extend

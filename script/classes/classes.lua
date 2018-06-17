@@ -20,7 +20,8 @@ local class_list =
   heavy = require("script/classes/heavy"),
   engineer = require("script/classes/engineer"),
   medic = require("script/classes/medic"),
-  sniper = require("script/classes/sniper")
+  sniper = require("script/classes/sniper"),
+  spy = require("script/classes/spy")
 }
 
 local set_class = function(player, name, primary, secondary)
@@ -50,10 +51,12 @@ local button_functions =
     local element = event.element
     local data = param.data
     local name = data.name
+    local player = game.players[event.player_index]
     local flow = param.class_flow
     flow.clear()
     local inner = flow.add{type = "flow", direction = "horizontal"}
-    inner.add{type = "sprite", sprite = data.name}
+    inner.style.vertically_squashable = true
+    local sprite = inner.add{type = "sprite", sprite = data.name}
     local character = game.entity_prototypes[data.name]
     local inner_more = inner.add{type = "flow", direction = "vertical"}
     local info = inner_more.add{type = "frame", caption = data.name}
@@ -103,8 +106,12 @@ local choose_class_gui_init = function(player)
   gui.clear()
   local frame = gui.add{type = "frame", direction = "vertical"}
   frame.style = "image_frame"
-  frame.style.width = player.display_resolution.width - 16
-  frame.style.height = player.display_resolution.height - 16
+  frame.style.width = player.display_resolution.width
+  frame.style.height = player.display_resolution.height
+  frame.style.top_padding = 32
+  frame.style.bottom_padding = 32
+  frame.style.left_padding = 32
+  frame.style.right_padding = 32
   frame.style.align = "center"
   frame.style.vertical_align = "top"
   local inner = frame.add{type = "flow", direction = "horizontal"}
@@ -133,7 +140,7 @@ local choose_class_gui_init = function(player)
   end
   
   local support = inner.add{type = "frame", caption = "Support", direction = "horizontal"}
-  for k, name in pairs ({"medic", "sniper"}) do
+  for k, name in pairs ({"medic", "sniper", "spy"}) do
     local data = class_list[name]
     local button = support.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
     button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)

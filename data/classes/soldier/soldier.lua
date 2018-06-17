@@ -12,8 +12,8 @@ sprite =
   type = "sprite",
   name = names.soldier,
   filename = path.."soldier.png",
-  width = 750,
-  height = 786
+  width = 751,
+  height = 751
 }
 
 data:extend
