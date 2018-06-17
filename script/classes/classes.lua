@@ -7,7 +7,7 @@ classes =
 {
   data =
   {
-    buttons = {}
+    elements = {}
   }
 }
 
@@ -40,12 +40,12 @@ end
 
 local stats = 
 {
-  max_health = "Max health",
+  max_health = "Health",
   running_speed = "Movement Speed",
   --etc.
 }
 
-local button_functions = 
+local gui_functions = 
 {
   class_button_action = function(event, param)
     local element = event.element
@@ -55,6 +55,7 @@ local button_functions =
     local flow = param.class_flow
     flow.clear()
     local inner = flow.add{type = "flow", direction = "horizontal"}
+
     inner.style.vertically_squashable = true
     local sprite = inner.add{type = "sprite", sprite = data.name}
     local character = game.entity_prototypes[data.name]
@@ -74,37 +75,57 @@ local button_functions =
     local loadout_table = loadout.add{type = "table", column_count = 2}
     loadout_table.add{type = "label", caption = "Primary: "}
     local primaries = loadout_table.add{type = "drop-down"}
+    local set = false
     for k, name in pairs (data.primary_weapons) do
       primaries.add_item(name)
+      if player.get_item_count(name) > 0 then
+        primaries.selected_index = k
+        set = true
+      end
     end
-    primaries.selected_index = 1
+    if not set then
+      primaries.selected_index = 1
+    end
 
     loadout_table.add{type = "label", caption = "Secondary: "}
     local secondaries = loadout_table.add{type = "drop-down"}
+    set = false
     for k, name in pairs (data.secondary_weapons) do
       secondaries.add_item(name)
+      if player.get_item_count(name) > 0 then
+        secondaries.selected_index = k
+        set = true
+      end
     end
-    secondaries.selected_index = 1
+    if not set then
+      secondaries.selected_index = 1
+    end
 
     local confirm_button = inner_more.add{type = "button", caption = "GO GO GO"}
-    classes.data.buttons[confirm_button.index] = {name = "confirm_button_action", param = {data = data, primaries = primaries, secondaries = secondaries, top_frame = param.top_frame}}
+    classes.data.elements[confirm_button.index] = {name = "confirm_button_action", param = {data = data, primaries = primaries, secondaries = secondaries, top_frame = param.top_frame}}
   end,
   confirm_button_action = function(event, param)
     local element = event.element
     local player = game.players[event.player_index]
     local data = param.data
     set_class(player, data.name, data.primary_weapons[param.primaries.selected_index], data.secondary_weapons[param.secondaries.selected_index])
-    util.deregister_gui(param.top_frame, classes.data.buttons)
+    util.deregister_gui(param.top_frame, classes.data.elements)
     param.top_frame.destroy()
+  end,
+  close_gui = function(event, param)
+    util.deregister_gui(param.gui, classes.data.elements)
+    param.gui.destroy()
   end
 }
 
 local choose_class_gui_init = function(player)
 
   local gui = player.gui.center
-  util.deregister_gui(gui, classes.data.buttons)
+  util.deregister_gui(gui, classes.data.elements)
   gui.clear()
   local frame = gui.add{type = "frame", direction = "vertical"}
+  player.opened = frame
+  classes.data.elements[frame.index] = {name = "close_gui", param = {gui = frame}}
   frame.style = "image_frame"
   frame.style.width = player.display_resolution.width
   frame.style.height = player.display_resolution.height
@@ -127,7 +148,7 @@ local choose_class_gui_init = function(player)
     local button = offense.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
     button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
     button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.buttons[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
   end
   
   local defense = inner.add{type = "frame", caption = "Defence", direction = "horizontal"}
@@ -136,7 +157,7 @@ local choose_class_gui_init = function(player)
     local button = defense.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
     button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
     button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.buttons[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
   end
   
   local support = inner.add{type = "frame", caption = "Support", direction = "horizontal"}
@@ -145,7 +166,7 @@ local choose_class_gui_init = function(player)
     local button = support.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
     button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
     button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.buttons[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
   end
 
 end
@@ -169,9 +190,20 @@ local on_gui_click = function(event)
   if not (button and button.valid) then return end
 
   --I need to think about this, might be hassle or good system...
-  local action = classes.data.buttons[button.index]
+  local action = classes.data.elements[button.index]
   if action then
-    button_functions[action.name](event, action.param)
+    gui_functions[action.name](event, action.param)
+  end
+end
+
+local on_gui_closed = function(event)
+  local gui = event.element
+  if not (gui and gui.valid) then return end
+
+  --I need to think about this, might be hassle or good system...
+  local action = classes.data.elements[gui.index]
+  if action then
+    gui_functions[action.name](event, action.param)
   end
 end
 
@@ -179,6 +211,7 @@ local events =
 {
   --[defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_gui_click] = on_gui_click,
+  [defines.events.on_gui_closed] = on_gui_closed,
   [defines.events[hotkey_names.change_class]] = change_class_hotkey_pressed
 }
 
