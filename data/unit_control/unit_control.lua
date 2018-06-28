@@ -82,8 +82,8 @@ local unit_attack_tool =
   name = names.unit_attack_tool,
   localised_name = names.unit_attack_tool,
   selection_mode = {"enemy", "any-entity"},
-  entity_type_filters = {"unit"},
-  alt_selection_mode = {"enemy", "friend"},
+  alt_entity_type_filters = {"unit"},
+  alt_selection_mode = {"enemy", "any-entity"},
   selection_cursor_box_type = "not-allowed",
   alt_selection_cursor_box_type = "not-allowed",
   icon = path.."unit_attack_tool.png",
@@ -91,7 +91,7 @@ local unit_attack_tool =
   stack_size = 1,
   flags = {},
   selection_color = {r = 1},
-  alt_selection_color = {a = 0},
+  alt_selection_color = {r = 1},
 }
 
 data:extend{
