@@ -47,4 +47,13 @@ data.hotkey_names =
   change_class = "Change class"
 }
 
+data.unit_names =
+{
+  unit_selection_tool = "Select units",
+  unit_move_tool = "Move to position",
+  unit_move_sound = "Unit move sound",
+  unit_attack_move_tool = "Attack move to position",
+  unit_attack_tool = "Attack targets",
+}
+
 return data

@@ -1,4 +1,5 @@
 local debug = {}
+local names = require("shared")
 
 local on_player_created = function(event)
   local player = game.players[event.player_index]
@@ -9,6 +10,20 @@ local on_player_created = function(event)
     player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
+  local pos = {0, -10}
+  for name, ent in pairs (game.entity_prototypes) do
+    if ent.type == "unit" then
+      for k = 1, 10 do
+        local position = player.surface.find_non_colliding_position(ent.name, pos, 15, 1) 
+        if position then
+          player.surface.create_entity{name = ent.name, position = position, force = "player"}
+        else
+          break
+        end
+      end
+    end
+  end
+  player.get_quickbar().insert(names.unit_names.unit_selection_tool)
   player.insert("entry-item")
   player.insert("exit-item")
 end

@@ -21,7 +21,8 @@ local libs = {
   debug = require "script/debug",
   teleporters = require "script/teleporters",
   classes = require "script/classes/classes",
-  stickybomb_launcher = require "script/stickybomb_launcher"
+  stickybomb_launcher = require "script/stickybomb_launcher",
+  unit_control = require "script/unit_control"
 }
 
 libs.debug.libs = libs

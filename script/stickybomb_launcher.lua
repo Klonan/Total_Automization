@@ -51,6 +51,7 @@ local on_trigger_created_entity = function(event)
 end
 
 local kill_player_mines = function(event)
+  game.print("killing mines")
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
   local character = player.character
@@ -94,6 +95,7 @@ local events =
   [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
   [defines.events.on_pre_player_died] = kill_player_mines,
   [defines.events.on_pre_player_left_game] = kill_player_mines,
+  [defines.events.on_pre_player_changed_class] = kill_player_mines,
   [defines.events.on_entity_died] = on_entity_died
 }
 

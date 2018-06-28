@@ -12,6 +12,7 @@ require "data/health_pickup"
 require "data/stickers/afterburn"
 require "data/stickers/healing"
 require "data/hotkeys"
+require "data/unit_control/unit_control"
 
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33
@@ -27,3 +28,4 @@ style.working_weapon_button.height = 96 + 4
 style.working_weapon_button.width = 96 + 4
 style.not_working_weapon_button.height = 96 + 4
 style.not_working_weapon_button.width = 96 + 4
+

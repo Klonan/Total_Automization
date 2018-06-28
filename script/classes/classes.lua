@@ -1,3 +1,5 @@
+defines.events.on_pre_player_changed_class = script.generate_event_name()
+
 local util = require("script/script_util")
 class_names = require("shared").class_names
 weapon_names = require("shared").weapon_names
@@ -25,6 +27,7 @@ local class_list =
 }
 
 local set_class = function(player, name, primary, secondary)
+  script.raise_event(defines.events.on_pre_player_changed_class, {player_index = player.index})
   if player.character then player.character.destroy() end
   player.create_character(name)
   local character = player.character
