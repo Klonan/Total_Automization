@@ -101,10 +101,20 @@ local make_unit_gui = function(frame, group)
   data.button_action_index[stop.index] = {name = "stop_button"}
 end
 
-local deregister_unit = function(entity)
+local deregister_unit = function(entity, new_group)
   if not (entity and entity.valid) then return end
   if not (entity.type == "unit") then return end
-  entity.set_command{type = defines.command.stop}
+
+  if new_group and new_group.valid then
+    entity.set_command
+    {
+    type = defines.command.group,
+    distraction = defines.distraction.none,
+    group = new_group
+    }
+  else
+    entity.set_command{type = defines.command.stop}
+  end
 
   local player_index = data.unit_owners[entity.unit_number]
   if not player_index then return end
@@ -146,8 +156,7 @@ local unit_selection = function(event)
   for k, ent in pairs (entities) do
     data.unit_owners[ent.unit_number] = index
     if ent.unit_group and ent.unit_group ~= group then
-      deregister_unit(ent)
-      game.print("Deregistering index: "..k)
+      deregister_unit(ent, group)
     end
     group.add_member(ent)
     ent.set_command{

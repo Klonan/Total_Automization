@@ -5,6 +5,7 @@ SD = function(v)
   return v / settings.startup["game-speed"].value
 end
 util = require "data/tf_util/tf_util"
+require "data/entities/entities"
 require "data/classes/classes"
 require "data/weapons/weapons"
 require "data/teleporters/teleporters"
@@ -13,7 +14,7 @@ require "data/stickers/afterburn"
 require "data/stickers/healing"
 require "data/hotkeys"
 require "data/unit_control/unit_control"
-require "data/units/units"
+--require "data/units/units"
 
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33
