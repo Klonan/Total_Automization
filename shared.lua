@@ -54,6 +54,8 @@ data.unit_names =
   unit_move_sound = "Unit move sound",
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
+
+  tazer_bot = "Tazer Bot"
 }
 
 return data
