@@ -58,4 +58,9 @@ data.unit_names =
   tazer_bot = "Tazer Bot"
 }
 
+data.entities =
+{
+  recon_outpost = "Recon Outpost"
+}
+
 return data
