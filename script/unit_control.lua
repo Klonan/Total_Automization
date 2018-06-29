@@ -137,22 +137,26 @@ local unit_selection = function(event)
   local center = util.center(area)
   local group = data.selected_groups[player.index]
   if not (append and group and group.valid) then
+    game.print("Making new unit group")
     group = surface.create_unit_group{position = center, force = player.force}
   end
   data.selected_groups[player.index] = group
   local index = player.index
+  game.print(#entities)
   for k, ent in pairs (entities) do
     data.unit_owners[ent.unit_number] = index
     if ent.unit_group and ent.unit_group ~= group then
       deregister_unit(ent)
+      game.print("Deregistering index: "..k)
     end
     group.add_member(ent)
-    --ent.set_command{
-    --  type = defines.command.group,
-    --  distraction = defines.distraction.none,
-    --  group = group
-    --}
+    ent.set_command{
+      type = defines.command.group,
+      distraction = defines.distraction.none,
+      group = group
+    }
   end
+  game.print(#group.members)
   local gui = player.gui.left
   local old_frame = data.open_frames[player.index]
   if (old_frame and old_frame.valid) then
