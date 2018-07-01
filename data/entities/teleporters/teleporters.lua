@@ -1,4 +1,4 @@
-local path = util.path("data/teleporters/")
+local path = util.path("data/entities/teleporters/")
 local entry = util.copy(data.raw["land-mine"]["land-mine"])
 
 entry.name = "entry"

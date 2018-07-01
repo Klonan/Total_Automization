@@ -54,13 +54,15 @@ data.unit_names =
   unit_move_sound = "Unit move sound",
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
-
+  
   tazer_bot = "Tazer Bot"
 }
 
 data.entities =
 {
-  recon_outpost = "Recon Outpost"
+  recon_outpost = "Recon Outpost",
+  command_center = "Command Center",
+  command_center_turret = "Command Center Turret"
 }
 
 return data

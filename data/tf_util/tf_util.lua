@@ -26,6 +26,7 @@ recursive_hack_animation_speed = function(array, scale)
     end
   end
 end
+util.recursive_hack_animation_speed = recursive_hack_animation_speed
 
 local recursive_hack_tint
 recursive_hack_tint = function(array, tint)
@@ -40,6 +41,22 @@ recursive_hack_tint = function(array, tint)
 end
 util.recursive_hack_tint = recursive_hack_tint
 
+local recursive_hack_make_hr
+recursive_hack_make_hr = function(prototype)
+  for k, v in pairs (prototype) do
+    if type(v) == "table" then
+      if v.width and v.height and v.filename and v.hr_version then
+        prototype[k] = v.hr_version
+        prototype[k].scale = prototype[k].scale * 2    
+        v.hr_version = nil
+      else
+        recursive_hack_tint(v, tint)
+      end
+    end
+  end
+end
+util.recursive_hack_make_hr = recursive_hack_make_hr
+
 util.scale_boxes = function(prototype, scale)
   for k, v in pairs {"collision_box", "selection_box"} do
     local box = prototype[v]
@@ -53,7 +70,6 @@ util.scale_boxes = function(prototype, scale)
     end
   end
 end
-util.recursive_hack_animation_speed = recursive_hack_animation_speed
 
 util.remove_flag = function(prototype, flag)
   if not prototype.flags then return end
@@ -89,6 +105,16 @@ util.empty_sound = function()
   {
     filename = util.path("data/tf_util/empty-sound.ogg"),
     volume = 0
+  }
+end
+
+util.empty_sprite = function()
+  return
+  {
+    filename = util.path("data/tf_util/empty-sprite.png"),
+    height = 1,
+    width = 1,
+    frame_count = 1
   }
 end
 

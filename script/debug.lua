@@ -13,7 +13,7 @@ local on_player_created = function(event)
   local pos = {0, -10}
   for name, ent in pairs (game.entity_prototypes) do
     if ent.type == "unit" then
-      for k = 1, 10 do
+      for k = 1, 3 do
         local position = player.surface.find_non_colliding_position(ent.name, pos, 150, 1) 
         if position then
           player.surface.create_entity{name = ent.name, position = position, force = "player"}

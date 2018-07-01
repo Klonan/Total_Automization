@@ -27,9 +27,13 @@ radar.max_distance_of_sector_revealed = 8
 radar.energy_per_sector = tostring(100 * 60 * 15).."W"
 radar.energy_usage = tostring(100).."W"
 radar.energy_per_nearby_scan = "0J"
+radar.corpse = "small-remnants"
 radar.order = "noob"
-radar.tile_width = 32
-radar.tile_height = 32
+
+--This doesn't work...
+--radar.tile_width = 32
+--radar.tile_height = 32
+
 util.scale_boxes(radar, 0.5)
 util.recursive_hack_scale(radar, 0.5)
 --error(serpent.block(radar))
@@ -40,6 +44,8 @@ item.icon_size = 150
 item.name = name
 item.localised_name = name
 item.place_result = name
+
+
 
 
 data:extend{radar, item}

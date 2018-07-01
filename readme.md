@@ -1,4 +1,4 @@
-*** Team factory
+## Team factory
 
 --------------------------------------
 
@@ -12,7 +12,7 @@ We achieve this using 3 features:
     - Biological component units. EG water and coal to make a basic biological unit. Melee and acidic weaponry.
     - Battery and circuitry units. EG iron and copper to make a basic capacitor. Laser and plasma weaponry.
 
-*** Classes
+## Classes
 
 WIP
 
@@ -26,7 +26,9 @@ Rough types:
   - Fabrication engineer. Good at setting up outposts and building train lines etc. Has mobile construction port, some special construction and repair related abilities.
   - Logistics engineer. Good at setting up the main factory areas? Maybe a generalist?
 
- *** Units
+The idea is that there are different parts of the game people enjoy, some players like building spaghetts, some players like building trains and outposts, others like murdering things. We give the choide and flexibility in the classes, so the players can make themselves better at the playstyle they prefer.
+
+ ### Units
 
  The units will have tiers, so the first tier is easily automatable, like red science, second tier is more invovled, etc.
 
@@ -71,9 +73,3 @@ So the Fuel cell guys have a special looking lab, special looking assembler for 
 
 Other general things, gears, circuits,plates etc. use normal machines.
 
-
-
-** TODO
-
- - Unit control, move, attack move, stop, etc.
- - Unit radar!

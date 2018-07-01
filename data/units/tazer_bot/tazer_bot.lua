@@ -305,15 +305,15 @@ sticker.damage_per_tick = {type = "electric", amount = 0.1}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
---sticker.animation = 
-dud = {
-  filename = path.."healing.png",
-  height = 825,
-  width = 825,
-  frame_count = 1,
-  scale = 0.04
+sticker.animation = 
+{
+  filename = path.."tazer_bot_sticker.png",
+  width = 37,
+  height = 35,
+  frame_count = 16
 }
-sticker.stickers_per_square_meter = 1
+sticker.stickers_per_square_meter = 15
+
 
 
 data:extend{
