@@ -50,7 +50,7 @@ recursive_hack_make_hr = function(prototype)
         prototype[k].scale = prototype[k].scale * 2    
         v.hr_version = nil
       else
-        recursive_hack_tint(v, tint)
+        recursive_hack_make_hr(v)
       end
     end
   end

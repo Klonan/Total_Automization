@@ -42,9 +42,10 @@ data.class_names =
   spy = "Spy"
 }
 
-data.hotkey_names =
+data.hotkeys =
 {
-  change_class = "Change class"
+  change_class = "Change class",
+  unit_move = "Move unit"
 }
 
 data.unit_names =

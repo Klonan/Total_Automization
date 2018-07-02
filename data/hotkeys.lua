@@ -1,10 +1,19 @@
-local hotkey_names = require("shared").hotkey_names
+local hotkeys = require("shared").hotkeys
 local change_class =
 {
   type = "custom-input",
-  name = hotkey_names.change_class,
-  localised_names = hotkey_names.change_class,
+  name = hotkeys.change_class,
+  localised_names = hotkeys.change_class,
   key_sequence = "N",
   consuming = "none"
 }
-data:extend{change_class}
+
+local move_unit =
+{
+  type = "custom-input",
+  name = hotkeys.unit_move,
+  localised_names = hotkeys.unit_move,
+  key_sequence = "SHIFT + A",
+  consuming = "game-only"
+}
+data:extend{change_class, move_unit}

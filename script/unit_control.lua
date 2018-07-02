@@ -34,6 +34,7 @@ end
 local gui_actions =
 {
   move_button = function(event)
+    if not data.selected_groups[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     clean(player)
@@ -91,8 +92,9 @@ local make_unit_gui = function(frame, group)
   end
   --local butts = frame.add{type = "flow", direction = "horizontal", style = "table_spacing_flow"}
   local butts = frame.add{type = "table", column_count = 2}
-  local move = butts.add{type = "sprite-button", sprite = "item/"..names.unit_move_tool, tooltip = names.unit_move_tool, style = "image_tab_slot"}
+  local move = butts.add{type = "sprite-button", sprite = "item/"..names.unit_move_tool, tooltip = names.unit_move_tool, style = "image_tab_slot", caption = {"unit_move_button"}}
   data.button_action_index[move.index] = {name = "move_button"}
+  move.style.font = "default"
   local attack_move = butts.add{type = "sprite-button", sprite = "item/"..names.unit_attack_move_tool, tooltip = names.unit_attack_move_tool, style = "image_tab_slot"}
   data.button_action_index[attack_move.index] = {name = "attack_move_button"}
   local attack = butts.add{type = "sprite-button", sprite = "item/"..names.unit_attack_tool, tooltip = names.unit_attack_tool, style = "image_tab_slot"}
@@ -296,7 +298,10 @@ local on_player_cursor_stack_changed = function(event)
   if not item then return end
   if event.tick == item.ignore_tick then return end
   local player = game.players[event.player_index]
-  player.remove_item{name = item.item, count = player.get_item_count(item.item)}
+  local count = player.get_item_count(item.item)
+  if count > 0 then
+    player.remove_item{name = item.item, count = count}
+  end
   data.stack_event_check[player.index] = nil
 end
 
@@ -309,6 +314,7 @@ local events =
   [defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_player_cursor_stack_changed] = on_player_cursor_stack_changed,
   --[defines.event.on_player_created] = on_player_created
+  [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button
 }
 
 unit_control.on_event = handler(events)

@@ -7,9 +7,10 @@ local bot =
   localised_name = name,
   icon = "__base__/graphics/icons/defender.png",
   icon_size = 32,
-  flags = {},
+  flags = {"player-creation"},
+  map_color = {b = 0.5, g = 1},
   max_health = 125,
-  radar_range = 1,
+  radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
   resistances =
@@ -22,16 +23,14 @@ local bot =
   healing_per_tick = 0,
   collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.1, -0.1}, {0.1, 0.1}},
-  distraction_cooldown = 300,
+  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  distraction_cooldown = 120,
   
   attack_parameters =
   {
-    type = "projectile",
+    type = "beam",
     ammo_category = "bullet",
     cooldown = SU(150),
-    projectile_center = {0, 1},
-    projectile_creation_distance = 0.6,
     range = 12,
     min_attack_distance = 8,
     sound = make_light_gunshot_sounds(),
@@ -128,10 +127,12 @@ local bot =
       }
     }
   },
-  vision_distance = 25,
+  vision_distance = 50,
+  has_belt_immunity = true,
   movement_speed = SD(0.2),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
+  destroy_when_commands_fail = false,
   corpse = name.." Corpse",
   dying_explosion = "explosion",
   working_sound = {
@@ -236,7 +237,8 @@ local bot =
     }
   }
 }
-util.recursive_hack_scale(bot, 2)
+util.recursive_hack_make_hr(bot)
+--util.recursive_hack_scale(bot, 2)
 util.scale_boxes(bot, 2)
 
 local corpse =

@@ -3,7 +3,7 @@ defines.events.on_pre_player_changed_class = script.generate_event_name()
 local util = require("script/script_util")
 class_names = require("shared").class_names
 weapon_names = require("shared").weapon_names
-hotkey_names = require("shared").hotkey_names
+hotkeys = require("shared").hotkeys
 
 classes =
 {
@@ -215,7 +215,7 @@ local events =
   --[defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_gui_click] = on_gui_click,
   [defines.events.on_gui_closed] = on_gui_closed,
-  [defines.events[hotkey_names.change_class]] = change_class_hotkey_pressed
+  [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
 
 --error(serpent.block(events))
