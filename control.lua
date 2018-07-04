@@ -22,8 +22,12 @@ local libs = {
   teleporters = require "script/teleporters",
   classes = require "script/classes/classes",
   stickybomb_launcher = require "script/stickybomb_launcher",
-  unit_control = require "script/unit_control"
+  unit_control = require "script/unit_control",
+  command_center = require("script/command_center")
 }
+
+
+remote.add_interface("tf", {get = function(func) func(libs) end})
 
 libs.debug.libs = libs
 

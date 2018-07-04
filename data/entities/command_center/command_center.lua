@@ -2,22 +2,64 @@
 local name = require("shared").entities.command_center
 local path = util.path("data/entities/command_center/")
 
+local radar = util.copy(data.raw.radar.radar)
+radar.name = name
+radar.localised_name = name
+radar.collision_box = {{-2.9, -2.9},{2.9, 2.9}}
+radar.selection_box = {{-3, -3},{3, 3}}
+radar.pictures = {
+  layers =
+  {
+    {
+      filename = path.."command_center_base.png",
+      width = 293,
+      height = 229,
+      shift = {1.2, -0.25},
+      direction_count = 1
+    }
+  }
+}
+radar.max_health = 2000
+radar.order = "noob"
+radar.energy_source = {type = "void"}
+radar.selection_priority = 1
+radar.minable = nil
+radar.max_distance_of_nearby_sector_revealed = 6
+radar.max_distance_of_sector_revealed = 0
+radar.energy_per_sector = tostring(100 * 60 * 15).."W"
+radar.energy_usage = tostring(100).."W"
+radar.energy_per_nearby_scan = "0J"
+radar.working_sound =
+{
+  sound =
+  {
+    {
+      filename = path.."command_center.ogg",
+      volume = 2
+    }
+  }
+}
+
 local roboport = util.copy(data.raw.roboport.roboport)
 roboport.flags = {"no-automated-item-removal", "no-automated-item-insertion"}
-roboport.name = name
-roboport.localised_name = name
-roboport.collision_box = {{-2.9, -2.9},{2.9, 2.9}}
-roboport.selection_box = {{-3, -3},{3, 3}}
+roboport.name = name.." Roboport"
+roboport.localised_name = name.." Roboport"
+--roboport.collision_box = {{-2.9, -2.9},{2.9, 2.9}}
+roboport.selection_box = {{-1.2, -2.5},{1.2, -0.5}}
+roboport.drawing_box = {{-3, -3},{3, 3}}
 roboport.selectable_in_game = true
+roboport.selection_priority = 10
 roboport.energy_source =
 {
   type = "void"
 }
+roboport.minable = nil
+roboport.max_health = 1
 roboport.recharge_minimum = "40MJ"
 roboport.energy_usage = "50kW"
 -- per one charge slot
 roboport.charging_energy = "2000kW"
-roboport.logistics_radius = 5
+roboport.logistics_radius = 0
 roboport.construction_radius = 100
 roboport.charge_approach_distance = 7
 roboport.robot_slots_count = 7
@@ -231,17 +273,29 @@ sticker.animation =
 }
 sticker.stickers_per_square_meter = 15
 
---local chest = util.copy(data.raw["logistic-container"]["logistic-chest-storage"])
---chest.name = name.." Chest"
---chest.localised_name = name.." Chest"
---chest.collision_box = {{-2.8, -2.8},{2.8, 2.8}}
---chest.selection_box = {{-3, -3},{3, 3}}
---chest.collision_mask = {"doodad-layer"}
---chest.order = "noob"
+local chest = util.copy(data.raw["logistic-container"]["logistic-chest-storage"])
+chest.name = name.." Chest"
+chest.localised_name = name.." Chest"
+chest.collision_box = {{-2.8, -2.8},{2.8, 2.8}}
+chest.drawing_box = {{-3, -3},{3, 3}}
+chest.selection_box = {{-1.2, 0.5},{1.2, 2.5}}
+chest.collision_mask = {"doodad-layer"}
+chest.order = "noob"
+chest.inventory_size = 99
 --util.recursive_hack_scale(chest, 6)
+chest.picture =
+{
+  filename = path.."command_center_base.png",
+  width = 293,
+  height = 229,
+  shift = {1.2, -0.25}
+}
+chest.minable = nil
+chest.max_health = 1
 
-data:extend{roboport, robot, robot_item, turret, beam, sticker,
---chest
+
+data:extend{radar, roboport, robot, robot_item, turret, beam, sticker,
+chest
 }
 
 
