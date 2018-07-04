@@ -20,6 +20,7 @@ radar.pictures = {
   }
 }
 radar.max_health = 2000
+radar.corpse = "big-remnants"
 radar.order = "noob"
 radar.energy_source = {type = "void"}
 radar.selection_priority = 1
@@ -29,6 +30,7 @@ radar.max_distance_of_sector_revealed = 0
 radar.energy_per_sector = tostring(100 * 60 * 15).."W"
 radar.energy_usage = tostring(100).."W"
 radar.energy_per_nearby_scan = "0J"
+radar.flags = {"not-repairable", "not-deconstructable"}
 radar.working_sound =
 {
   sound =
@@ -41,7 +43,7 @@ radar.working_sound =
 }
 
 local roboport = util.copy(data.raw.roboport.roboport)
-roboport.flags = {"no-automated-item-removal", "no-automated-item-insertion"}
+roboport.flags = {"no-automated-item-removal", "no-automated-item-insertion", "not-repairable", "not-deconstructable"}
 roboport.name = name.." Roboport"
 roboport.localised_name = name.." Roboport"
 --roboport.collision_box = {{-2.9, -2.9},{2.9, 2.9}}
@@ -130,6 +132,7 @@ robot.energy_per_tick = nil
 robot.name = name.." Robot"
 robot.localised_name = name.." Robot"
 robot.order = "noob"
+robot.minable = nil
 util.recursive_hack_make_hr(robot)
 util.recursive_hack_scale(robot, 0.75)
 util.recursive_hack_tint(robot, {r = 0.5, g = 0.5, b = 0.5})
@@ -149,6 +152,7 @@ turret.max_health = 10000
 turret.collision_box = {{-1.8, -1.8},{1.8, 1.8}}
 turret.selection_box = {{-2, -2},{2, 2}}
 turret.minable = nil
+turret.flags = {"not-deconstructable"}
 local picture =
 {
   filename = path.."command_center_turret.png",
@@ -292,6 +296,7 @@ chest.picture =
 }
 chest.minable = nil
 chest.max_health = 1
+chest.flags = {"hide-alt-info", "not-deconstructable"}
 
 
 data:extend{radar, roboport, robot, robot_item, turret, beam, sticker,
