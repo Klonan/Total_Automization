@@ -2,23 +2,33 @@
 local name = require("shared").entities.command_center
 local path = util.path("data/entities/command_center/")
 
+local command_center_picture = {
+  layers =
+  {
+    {
+      filename = path.."command_center_base_2.png",
+      width = 221,
+      height = 225,
+      shift = {0.068, -0.465},
+      direction_count = 1
+    },
+    {
+      filename = path.."command_center_base_2_shadow.png",
+      width = 277,
+      height = 149,
+      shift = {1.7, 1},
+      direction_count = 1,
+      draw_as_shadow = true
+    }
+  }
+}
+
 local radar = util.copy(data.raw.radar.radar)
 radar.name = name
 radar.localised_name = name
 radar.collision_box = {{-2.9, -2.9},{2.9, 2.9}}
 radar.selection_box = {{-3, -3},{3, 3}}
-radar.pictures = {
-  layers =
-  {
-    {
-      filename = path.."command_center_base.png",
-      width = 293,
-      height = 229,
-      shift = {1.2, -0.25},
-      direction_count = 1
-    }
-  }
-}
+radar.pictures = command_center_picture
 radar.max_health = 2000
 radar.corpse = "big-remnants"
 radar.order = "noob"
@@ -73,18 +83,7 @@ roboport.charging_station_count = 8
 roboport.charging_distance = 2
 roboport.robot_limit = 20
 roboport.charging_station_shift = {0, -1}
-roboport.base =
-{
-  layers =
-  {
-    {
-      filename = path.."command_center_base.png",
-      width = 293,
-      height = 229,
-      shift = {1.2, -0.25}
-    }
-  }
-}
+roboport.base = command_center_picture
 roboport.base_patch =
 {
   filename = path.."command_center_patch.png",
@@ -287,13 +286,7 @@ chest.collision_mask = {"doodad-layer"}
 chest.order = "noob"
 chest.inventory_size = 99
 --util.recursive_hack_scale(chest, 6)
-chest.picture =
-{
-  filename = path.."command_center_base.png",
-  width = 293,
-  height = 229,
-  shift = {1.2, -0.25}
-}
+chest.picture = command_center_picture
 chest.minable = nil
 chest.max_health = 1
 chest.flags = {"hide-alt-info", "not-deconstructable"}
