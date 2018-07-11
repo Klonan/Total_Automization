@@ -92,6 +92,7 @@ ammo.ammo_type =
 
 projectile = util.copy(data.raw.projectile["cannon-projectile"])
 projectile.name = names.minigun.." Projectile"
+projectile.force_condition = "not-same"
 projectile.piercing_damage = 0
 projectile.action =
 {
@@ -104,21 +105,7 @@ projectile.action =
       {
         type = "create-explosion",
         entity_name = "explosion-hit"
-      }
-    }
-  }
-}
-projectile.final_action = 
-{
-  type = "area",
-  radius = 0.1,
-  collision_mode = "distance-from-center",
-  force = "not-same",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
+      },
       {
         type = "damage",
         damage = {amount = 9 , type = util.damage_type("heavy-projectile")}
@@ -126,6 +113,7 @@ projectile.final_action =
     }
   }
 }
+projectile.final_action = nil
 
 data:extend{gun, ammo, projectile}
 

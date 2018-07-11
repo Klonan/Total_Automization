@@ -9,6 +9,7 @@ entry.shooting_cursor_size = 0
 entry.dying_explosion = nil
 entry.action = nil
 entry.force_die_on_attack = true
+entry.trigger_force = "all"
 entry.order = "entry"
 entry.picture_safe =
 {

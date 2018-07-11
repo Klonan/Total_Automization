@@ -52,6 +52,7 @@ local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = names.rocket_launcher.." Projectile"
 projectile.acceleration = SD(0)
 projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
+projectile.force_condition = "not-same"
 projectile.action =
 {
   type = "direct",
@@ -65,25 +66,8 @@ projectile.action =
         entity_name = "big-explosion"
       },
       {
-        type = "nested-result",
-        action =
-        {
-          type = "area",
-          radius = 0.1,
-          collision_mode = "distance-from-center",
-          force = "not-same",
-          action_delivery =
-          {
-            type = "instant",
-            target_effects =
-            {
-              {
-                type = "damage",
-                damage = {amount = 45, type = util.damage_type("solider-rocket-hit")}
-              }
-            }
-          }
-        }
+        type = "damage",
+        damage = {amount = 45, type = util.damage_type("solider-rocket-hit")}
       },
       {
         type = "nested-result",

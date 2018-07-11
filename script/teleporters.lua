@@ -72,7 +72,7 @@ end
 
 local entry_built = function(entry, index)
   entry.active = false
-  entry.force = "enemy"
+  --entry.force = "enemy"
   teleporters.data.players[index] = teleporters.data.players[index] or {}
   local data = teleporters.data.players[index]
   if data.entry and data.entry.valid then
@@ -85,7 +85,7 @@ end
 
 local exit_built = function(exit, index)
   exit.active = false
-  exit.force = "enemy"
+  --exit.force = "enemy"
   teleporters.data.players[index] = teleporters.data.players[index] or {}
   local data = teleporters.data.players[index]
   if data.exit and data.exit.valid then

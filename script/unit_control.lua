@@ -386,11 +386,12 @@ unit_control.on_event = handler(events)
 unit_control.on_init = function()
   global.unit_control = data
   game.map_settings.path_finder.max_steps_worked_per_tick = 1000000
-  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 100000
+  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000000000
   game.map_settings.path_finder.short_request_max_steps = 5000
   game.map_settings.path_finder.min_steps_to_check_path_find_termination = 50000
   game.map_settings.path_finder.max_clients_to_accept_any_new_request = 50000
   game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  game.map_settings.max_failed_behavior_count = 50
   
 end
 

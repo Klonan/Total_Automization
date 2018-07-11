@@ -51,27 +51,23 @@ ammo.ammo_type =
 projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = names.syringe_gun.." Projectile"
 projectile.height = 0.5
-projectile.action = nil
-projectile.final_action =
+projectile.force_condition = "not-same"
+projectile.action = 
 {
+  type = "direct",
+  action_delivery =
   {
-    type = "area",
-    radius = 0.1,
-    collision_mode = "distance-from-center",
-    force = "not-same",
-    action_delivery =
+    type = "instant",
+    target_effects =
     {
-      type = "instant",
-      target_effects =
       {
-        {
-          type = "damage",
-          damage = { amount = 10, type = util.damage_type("medic-needle-gun")}
-        }
+        type = "damage",
+        damage = { amount = 10, type = util.damage_type("medic-needle-gun")}
       }
     }
   }
 }
+projectile.final_action = nil
 
 projectile.animation =
 {

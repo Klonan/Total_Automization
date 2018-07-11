@@ -55,31 +55,27 @@ local make_fire = function(name, n)
   pyro_fire_projectile = util.copy(base)
   pyro_fire_projectile.name = name
   pyro_fire_projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
-  pyro_fire_projectile.action = nil
-  pyro_fire_projectile.final_action = 
+  pyro_fire_projectile.force_condition = "not-same"
+  pyro_fire_projectile.action = 
   {
+    type = "direct",
+    action_delivery =
     {
-      type = "area",
-      radius = 0.1,
-      collision_mode = "distance-from-center",
-      force = "not-same",
-      action_delivery =
+      type = "instant",
+      target_effects =
       {
-        type = "instant",
-        target_effects =
         {
-          {
-            type = "damage",
-            damage = {amount = 2 , type = util.damage_type("pyro-fire")}
-          },
-          {
-            type = "create-sticker",
-            sticker = "Afterburn Sticker"
-          }
+          type = "damage",
+          damage = {amount = 2 , type = util.damage_type("pyro-fire")}
+        },
+        {
+          type = "create-sticker",
+          sticker = "Afterburn Sticker"
         }
       }
     }
   }
+  pyro_fire_projectile.final_action = nil
   pyro_fire_projectile.animation = sprite()
   data:extend({pyro_fire_projectile})
   return

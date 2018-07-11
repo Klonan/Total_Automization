@@ -77,6 +77,7 @@ ammo.ammo_type =
 
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = names.shotgun.." Projectile"
+projectile.force_condition = "not-same"
 projectile.action =
 {
   type = "direct",
