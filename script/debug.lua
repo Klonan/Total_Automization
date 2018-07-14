@@ -10,14 +10,16 @@ local on_player_created = function(event)
     player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
-  local pos = {0, -100}
-  for k = 1, 256 do
-    local position = player.surface.find_non_colliding_position(names.unit_names.tazer_bot, pos, 150, 1) 
-    if position then
-      --player.surface.create_entity{name = ent.name, position = position, force = "player"}
-      player.surface.create_entity{name = names.unit_names.tazer_bot, position = position, force = "player"}
-    else
-      break
+  local pos = {x = 0, y = -100}
+  for X = 1, 10 do
+    for Y = 1, 10 do
+      local position = player.surface.find_non_colliding_position(names.unit_names.tazer_bot, {pos.x + X, pos.y + Y}, 150, 1) 
+      if position then
+        --player.surface.create_entity{name = ent.name, position = position, force = "player"}
+        player.surface.create_entity{name = names.unit_names.tazer_bot, position = position, force = "player"}
+      else
+        break
+      end
     end
   end
   --for name, ent in pairs (game.entity_prototypes) do

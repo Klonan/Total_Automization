@@ -28,7 +28,7 @@ local bot =
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = 120,
-  
+  move_while_shooting = true, --Not merged
   attack_parameters =
   {
     type = "beam",
@@ -130,7 +130,7 @@ local bot =
       }
     }
   },
-  vision_distance = 50,
+  vision_distance = 16,
   has_belt_immunity = true,
   movement_speed = SD(0.2),
   distance_per_frame = 0.15,
