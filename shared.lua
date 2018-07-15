@@ -48,7 +48,7 @@ data.hotkeys =
   unit_move = "Move unit"
 }
 
-data.unit_names =
+data.units =
 {
   unit_selection_tool = "Select units",
   unit_move_tool = "Move to position",
@@ -56,7 +56,9 @@ data.unit_names =
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
   
-  tazer_bot = "Tazer Bot"
+  tazer_bot = "Tazer Bot",
+  scatter_spitter = "Scatter Spitter",
+  smg_bot = "SMG Bot"
 }
 
 data.entities =

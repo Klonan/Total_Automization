@@ -23,12 +23,12 @@ health_pack.action =
     }
   }
 }
-for k, rock in pairs (data.raw["simple-entity"]) do
-  if rock.autoplace then
-    health_pack.autoplace = util.table.deepcopy(rock.autoplace)
-  end
-end
-health_pack.autoplace.force = "enemy"
+--for k, rock in pairs (data.raw["simple-entity"]) do
+--  if rock.autoplace then
+--    health_pack.autoplace = util.table.deepcopy(rock.autoplace)
+--  end
+--end
+--health_pack.autoplace.force = "enemy"
 health_pack.picture_set_enemy = health_pack.picture_set
 health_pack.order = "zzz"
 data:extend{health_pack}

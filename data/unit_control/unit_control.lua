@@ -1,5 +1,5 @@
 --WIP
-local names = require("shared").unit_names
+local names = require("shared").units
 local path = util.path("data/unit_control/")
 
 local unit_selection_tool = 
@@ -82,8 +82,8 @@ local unit_attack_tool =
   name = names.unit_attack_tool,
   localised_name = names.unit_attack_tool,
   selection_mode = {"enemy", "any-entity"},
-  alt_entity_type_filters = {"unit"},
-  alt_selection_mode = {"enemy", "any-entity"},
+  --alt_entity_type_filters = {"unit"},
+  alt_selection_mode = {"not-same-force", "any-entity"},
   selection_cursor_box_type = "not-allowed",
   alt_selection_cursor_box_type = "not-allowed",
   icon = path.."unit_attack_tool.png",

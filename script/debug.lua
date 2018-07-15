@@ -11,31 +11,28 @@ local on_player_created = function(event)
     count = count + 5
   end
   local pos = {x = 0, y = -100}
-  for X = 1, 10 do
-    for Y = 1, 10 do
-      local position = player.surface.find_non_colliding_position(names.unit_names.tazer_bot, {pos.x + X, pos.y + Y}, 150, 1) 
+  for X = 1, 12 do
+    for Y = 1, 12 do
+      local position = player.surface.find_non_colliding_position(names.units.smg_bot, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        --player.surface.create_entity{name = ent.name, position = position, force = "player"}
-        player.surface.create_entity{name = names.unit_names.tazer_bot, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.smg_bot, position = position, force = "player"}
       else
         break
       end
     end
   end
-  --for name, ent in pairs (game.entity_prototypes) do
-  --  if ent.type == "unit" then
-  --    for k = 1, 3 do
-  --      local position = player.surface.find_non_colliding_position(ent.name, pos, 150, 1) 
-  --      if position then
-  --        --player.surface.create_entity{name = ent.name, position = position, force = "player"}
-  --        player.surface.create_entity{name = names.unit_names.tazer_bot, position = position, force = "player"}
-  --      else
-  --        break
-  --      end
-  --    end
-  --  end
-  --end
-  player.get_quickbar().insert(names.unit_names.unit_selection_tool)
+  local pos = {x = 100, y = -100}
+  for X = 1, 12 do
+    for Y = 1, 12 do
+      local position = player.surface.find_non_colliding_position(names.units.scatter_spitter, {pos.x + X, pos.y + Y}, 150, 1) 
+      if position then
+        player.surface.create_entity{name = names.units.scatter_spitter, position = position, force = "enemy"}
+      else
+        break
+      end
+    end
+  end
+  player.get_quickbar().insert(names.units.unit_selection_tool)
   --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
   --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
   player.insert("entry-item")

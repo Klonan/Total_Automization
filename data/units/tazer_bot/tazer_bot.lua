@@ -1,5 +1,5 @@
 local path = util.path("data/units/tazer_bot/")
-local name = require("shared").unit_names.tazer_bot
+local name = require("shared").units.tazer_bot
 local bot =
 {
   type = "unit",

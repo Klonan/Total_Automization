@@ -1,4 +1,4 @@
-local names = require("shared").unit_names
+local names = require("shared").units
 
 local unit_control = {}
 
@@ -303,7 +303,7 @@ local attack_closest = function(unit, entities)
   local entities = entities
   local quick_dist = quick_dist
   for k, ent in pairs (entities) do
-    if ent.valid then
+    if ent.valid and ent.health then
       local sep = quick_dist(ent.position, position)
       if sep < min then
         min = sep
