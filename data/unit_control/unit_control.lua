@@ -22,18 +22,6 @@ local unit_selection_tool =
   alt_selection_color = {r = 1},
 }
 
---/c biter1 = game.surfaces[1].create_entity{name = "small-biter", position = {-20, -10}, force = "enemy"}
---biter2 = game.surfaces[1].create_entity{name = "small-biter", position = {20, -10}, force = "player"}
---group = game.surfaces[1].create_unit_group{position = biter2.position, force = biter2.force}
---biter2.set_command{
---  type = defines.command.group,
---  group = group,
---}
---group.set_command
---{
---  type = defines.command.stop
---}
---
 local unit_move_tool =
 {
   type = "selection-tool",
@@ -82,8 +70,7 @@ local unit_attack_tool =
   name = names.unit_attack_tool,
   localised_name = names.unit_attack_tool,
   selection_mode = {"enemy", "any-entity"},
-  --alt_entity_type_filters = {"unit"},
-  alt_selection_mode = {"not-same-force", "any-entity"},
+  alt_selection_mode = {"enemy", "any-entity"},
   selection_cursor_box_type = "not-allowed",
   alt_selection_cursor_box_type = "not-allowed",
   icon = path.."unit_attack_tool.png",

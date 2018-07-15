@@ -52,4 +52,6 @@ debug.on_init = function()
   end
 end
 
+remote.add_interface("debug", {dump = function() log(serpent.block(global)) end})
+
 return debug

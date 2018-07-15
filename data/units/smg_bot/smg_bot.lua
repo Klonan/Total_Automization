@@ -95,5 +95,20 @@ local bot =
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
+projectile.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "damage",
+        damage = {amount = 3 , type = util.damage_type("smg_bot")}
+      }
+    }
+  }
+}
 
 data:extend{bot, projectile}

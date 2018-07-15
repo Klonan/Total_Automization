@@ -70,14 +70,14 @@ local gui_actions =
   end,
   stop_button = function(event)
     local group = data.selected_units[event.player_index]
-    if not (group and group.valid) then
-      data.selected_units[event.player_index] = nil
+    if not group then
       return
     end
-    group.set_command
-    {
-      type = defines.command.stop
-    }
+    for unit_number, unit in pairs (group) do
+      unit.set_command{type = defines.command.wander, radius = 0.1}
+      data.units[unit_number].command_queue = {}
+      data.units[unit_number].idle = true
+    end
   end,
 }
 
@@ -180,7 +180,8 @@ local unit_selection = function(event)
       entity = ent,
       player = index,
       group = group,
-      command = {}
+      command_queue = {},
+      idle = true
     }
   end
   local gui = player.gui.left
@@ -213,24 +214,21 @@ local make_move_command = function(param)
       index, entity = next(group, index)
       if entity then
         local command = {
+          command_type = next_command_type.move,
           type = type, distraction = distraction,
           destination = find(entity.name, {position.x + x, position.y + y}, 16, 4) or entity.position,
         }
+        local unit_data = data.units[entity.unit_number]
         if append then
-          local command_data = data.units[entity.unit_number].command
-          local execute_now = (command_data.type == next_command_type.idle) or (command_data.type == nil)
-          --game.print(tostring(execute_now))
-          command_data.type = next_command_type.move
-          command_data.data = command_data.data or {}
-          if execute_now then
+          if unit_data.idle then
             entity.set_command(command)
-          else
-            insert(command_data.data, command)
           end
+          insert(unit_data.command_queue, command)
         else
-          data.units[entity.unit_number].command = {type = next_command_type.move, data = {}}
+          unit_data.command_queue = {}
           entity.set_command(command)
         end
+        unit_data.idle = false
       else
         return
       end
@@ -298,7 +296,7 @@ end
 
 local attack_closest = function(unit, entities)
   local closest
-  local min = 5000000
+  local min = 5000000000000000000000000
   local position = unit.position
   local entities = entities
   local quick_dist = quick_dist
@@ -313,30 +311,41 @@ local attack_closest = function(unit, entities)
       entities[k] = nil
     end
   end
+
   if closest then
     unit.set_command
     {
       type = defines.command.attack,
-      distraction = defines.distraction.by_enemy,
+      distraction = defines.distraction.none,
       target = closest
     }
+    return true
   else
-    unit.set_command{type = defines.command.wander, radius = 0.1}
-    data.units[unit.unit_number].command = {type = next_command_type.idle}
+    return false
   end
 end
 
-local make_attack_command = function(group, entities)
+local make_attack_command = function(group, entities, append)
   local entities = entities
   if #entities == 0 then return end
   local data = data.units
   for unit_number, unit in pairs (group) do
-    attack_closest(unit, entities)
-    data[unit_number].command = 
+    local next_command = 
     {
-      type = next_command_type.attack,
+      command_type = next_command_type.attack,
       targets = entities
-    }    
+    }
+    local unit_data = data[unit_number]
+    if append then
+      if unit_data.idle then
+        attack_closest(unit, entities)
+      end
+      table.insert(unit_data.command_queue, next_command)
+    else
+      attack_closest(unit, entities)
+      unit_data.command_queue = {next_command}
+    end
+    unit_data.idle = false
   end
 end
 
@@ -346,7 +355,8 @@ local attack_units = function(event)
     data.selected_units[event.player_index] = nil
     return
   end
-  make_attack_command(group, event.entities)
+  local append = event.name == defines.events.on_player_alt_selected_area
+  make_attack_command(group, event.entities, append)
   game.players[event.player_index].play_sound({path = names.unit_move_sound})
 end
 
@@ -413,45 +423,59 @@ local on_player_cursor_stack_changed = function(event)
   data.stack_event_check[player.index] = nil
 end
 
-local default_command = {type = defines.command.wander, radius = 0.1}
+local idle_command = {type = defines.command.wander, radius = 0.1}
+
+
+local process_command_queue
+process_command_queue = function(unit_data)
+  local entity = unit_data.entity
+  if not (entity and entity.valid) then
+    game.print("Entity is nil??")
+    return 
+  end
+  local command_queue = unit_data.command_queue
+  local next_command = command_queue[1]
+
+  if not (next_command) then
+    entity.set_command(idle_command)
+    unit_data.idle = true
+    --game.print("No next command??")
+    return
+  end
+
+  local type = next_command.command_type
+
+  if type == next_command_type.move then
+    entity.set_command(next_command)
+    table.remove(command_queue, 1)
+  end
+
+  if type == next_command_type.patrol then
+    entity.set_command(next_command)
+    table.remove(command_queue, 1)
+    table.insert(command_queue, next_command)
+  end
+
+  if type == next_command_type.attack then
+    if not attack_closest(entity, next_command.targets) then
+      table.remove(command_queue, 1)
+      process_command_queue(unit_data)
+      --game.print("No more targets?")
+      return
+    end
+  end
+
+  if type == next_command_type.idle then
+    entity.set_command(idle_command)
+    unit_data.idle = true
+  end
+
+end
 
 local on_ai_command_completed = function(event)
-  --game.print("Command complete")
   local unit = data.units[event.unit_number]
   if unit then
-    local next_type = next_command_type.idle
-    --game.print("A matey of our finished a command")
-    local entity = unit.entity
-    if (entity and entity.valid) then
-      local command_data = unit.command
-      local type = command_data.type
-      if type == next_command_type.move then
-        if command_data.data[1] then
-          entity.set_command(command_data.data[1])
-          table.remove(command_data.data, 1)
-        else
-          entity.set_command(default_command)
-          command_data.type = next_command_type.idle
-        end
-      end
-      if type == next_command_type.patrol then
-        if command_data.data[1] then
-          entity.set_command(command_data.data[1])
-          table.remove(command_data.data, 1)
-          table.insert(command_data.data, command)
-        else
-          entity.set_command(default_command)
-          command_data.type = next_command_type.idle
-        end
-      end
-      if type == next_command_type.attack then
-        attack_closest(entity, command_data.targets)
-        game.print("Reissuing attack command")
-      end
-      if (type == next_command_type.idle) or type == nil then
-        entity.set_command(default_command)
-      end
-    end
+    process_command_queue(unit)
   end
 end
 
