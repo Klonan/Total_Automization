@@ -56,7 +56,7 @@ local set_scout_command = function(unit)
     for X = -scout_range, scout_range do
       checked[X] = checked[X] or {}
       for Y = -scout_range, scout_range do
-        if not checked[X][Y] then
+        if (not (X == 0 and Y == 0)) and not checked[X][Y] then
           local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
           if not unit.force.is_chunk_charted(surface, chunk_position) then
             any = true
@@ -66,11 +66,11 @@ local set_scout_command = function(unit)
         end
       end
     end
-    scout_range = scout_range + 2
+    scout_range = scout_range + 1
   end
   if any then
     local destination = eligible_chunks[math.random(#eligible_chunks)]
-    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_damage, destination = {(destination.x * 32) + 16, (destination.y * 32) + 16}}
+    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = {(destination.x * 32) + 16, (destination.y * 32) + 16}}
   end
 end
 
@@ -483,7 +483,7 @@ local idle_command = {type = defines.command.wander, radius = 0.1}
 
 
 local process_command_queue
-process_command_queue = function(unit_data)
+process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
   if not (entity and entity.valid) then
     game.print("Entity is nil??")
@@ -504,30 +504,39 @@ process_command_queue = function(unit_data)
   if type == next_command_type.move then
     entity.set_command(next_command)
     table.remove(command_queue, 1)
+    return
   end
 
   if type == next_command_type.patrol then
     entity.set_command(next_command)
     table.remove(command_queue, 1)
     table.insert(command_queue, next_command)
+    return
   end
 
   if type == next_command_type.attack then
     if not attack_closest(entity, next_command.targets) then
       table.remove(command_queue, 1)
       process_command_queue(unit_data)
-      --game.print("No more targets?")
-      return
     end
+    return
   end
 
   if type == next_command_type.idle then
     entity.set_command(idle_command)
     unit_data.idle = true
+    return
   end
 
   if type == next_command_type.scout then
-    set_scout_command(entity)
+    if result == defines.behavior_result.fail then
+      entity.set_command(idle_command)
+      unit_data.idle = true
+      unit_data.command_queue = {}
+    else
+      set_scout_command(entity)
+    end
+    return
   end
 
 end
@@ -535,7 +544,7 @@ end
 local on_ai_command_completed = function(event)
   local unit = data.units[event.unit_number]
   if unit then
-    process_command_queue(unit)
+    process_command_queue(unit, event.result)
   end
 end
 

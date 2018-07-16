@@ -21,6 +21,16 @@ local on_player_created = function(event)
       end
     end
   end
+  for X = 1, 20 do
+    for Y = 1, 20 do
+      local position = player.surface.find_non_colliding_position(names.units.tazer_bot, {pos.x + X, pos.y + Y}, 150, 1) 
+      if position then
+        player.surface.create_entity{name = names.units.tazer_bot, position = position, force = "player"}
+      else
+        break
+      end
+    end
+  end
   local pos = {x = 100, y = -100}
   for X = 1, 12 do
     for Y = 1, 12 do
