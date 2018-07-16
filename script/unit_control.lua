@@ -42,6 +42,38 @@ local clean = function(player)
   player.remove_item{name = item.item, count = count}
 end
 
+local set_scout_command = function(unit)
+  local position = unit.position
+  local surface = unit.surface
+  local chunk_x = math.floor(position.x / 32)
+  local chunk_y = math.floor(position.y / 32)
+  --unit.surface.request_to_generate_chunks(position, scout_range)
+  local eligible_chunks = {}
+  local checked = {}
+  local scout_range = 4
+  local any = false
+  while not any do
+    for X = -scout_range, scout_range do
+      checked[X] = checked[X] or {}
+      for Y = -scout_range, scout_range do
+        if not checked[X][Y] then
+          local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
+          if not unit.force.is_chunk_charted(surface, chunk_position) then
+            any = true
+            table.insert(eligible_chunks, chunk_position)
+          end
+          checked[X][Y] = true
+        end
+      end
+    end
+    scout_range = scout_range + 2
+  end
+  if any then
+    local destination = eligible_chunks[math.random(#eligible_chunks)]
+    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_damage, destination = {(destination.x * 32) + 16, (destination.y * 32) + 16}}
+  end
+end
+
 local gui_actions =
 {
   move_button = function(event)
@@ -80,6 +112,17 @@ local gui_actions =
       data.units[unit_number].idle = true
     end
   end,
+  scout_button = function(event)
+    local group = data.selected_units[event.player_index]
+    if not group then
+      return
+    end
+    for unit_number, unit in pairs (group) do
+      set_scout_command(unit)
+      data.units[unit_number].command_queue = {{command_type = next_command_type.scout}}
+      data.units[unit_number].idle = false
+    end
+  end,
 }
 
 local make_unit_gui = function(frame, group)
@@ -111,6 +154,8 @@ local make_unit_gui = function(frame, group)
   data.button_action_index[attack.index] = {name = "attack_button"}
   local stop = butts.add{type = "sprite-button", sprite = "utility/set_bar_slot", tooltip = "Issue stop command", style = "image_tab_slot"}
   data.button_action_index[stop.index] = {name = "stop_button"}
+  local stop = butts.add{type = "button", caption = "Scout", style = "image_tab_slot"}
+  data.button_action_index[stop.index] = {name = "scout_button"}
 end
 
 local deregister_unit = function(entity)
@@ -481,6 +526,10 @@ process_command_queue = function(unit_data)
     unit_data.idle = true
   end
 
+  if type == next_command_type.scout then
+    set_scout_command(entity)
+  end
+
 end
 
 local on_ai_command_completed = function(event)
@@ -528,6 +577,8 @@ unit_control.on_init = function()
   game.map_settings.path_finder.min_steps_to_check_path_find_termination = 50000
   game.map_settings.path_finder.max_clients_to_accept_any_new_request = 50000
   game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  game.map_settings.steering.moving.radius = 0
+  game.map_settings.steering.moving.default = 0
   game.map_settings.max_failed_behavior_count = 50
   
 end
