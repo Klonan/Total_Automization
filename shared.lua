@@ -55,6 +55,8 @@ data.units =
   unit_move_sound = "Unit move sound",
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
+  move_indicator = "Move Indicator",
+  attack_move_indicator = "Attack Move Indicator",
   
   tazer_bot = "Tazer Bot",
   scatter_spitter = "Scatter Spitter",

@@ -10,6 +10,7 @@ local data =
   open_frames = {},
   units = {},
   stack_event_check = {},
+  indicators = {}
 }
 
 --[[on_player_selected_area
@@ -204,6 +205,10 @@ local make_move_command = function(param)
   local group = param.group
   local surface = param.surface
   local append = param.append
+  local indicator = surface.create_entity{name = param.indicator or names.move_indicator, position = position, force = param.force}
+  local tick_to_die = game.tick + 300
+  data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
+  table.insert(data.indicators[tick_to_die], indicator)
   local type = defines.command.go_to_location
   local radius = math.ceil((offset * table_size(group) ^ 0.5)/2)
   local find = surface.find_non_colliding_position
@@ -242,14 +247,17 @@ local move_units = function(event)
     data.selected_units[event.player_index] = nil
     return
   end
+  local player = game.players[event.player_index]
   make_move_command{
     position = util.center(event.area),
     distraction = defines.distraction.none,
     group = group,
-    surface = game.players[event.player_index].surface,
+    surface = player.surface,
+    force = player.force,
     spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    type = next_command_type.move
+    type = next_command_type.move,
+    indicator = names.move_indicator
   }
   game.players[event.player_index].play_sound({path = names.unit_move_sound})
 end
@@ -260,14 +268,17 @@ local attack_move_units = function(event)
     data.selected_units[event.player_index] = nil
     return
   end
+  local player = game.players[event.player_index]
   make_move_command{
     position = util.center(event.area),
     distraction = defines.distraction.by_enemy,
     group = group,
-    surface = game.players[event.player_index].surface,
+    surface = player.surface,
+    force = player.force,
     spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    type = next_command_type.move
+    type = next_command_type.move,
+    indicator = names.attack_move_indicator
   }
   game.players[event.player_index].play_sound({path = names.unit_move_sound})
 end
@@ -479,6 +490,20 @@ local on_ai_command_completed = function(event)
   end
 end
 
+local check_indicators = function(tick)
+  local indicators = data.indicators[tick]
+  if not indicators then return end
+  for k, ent in pairs (indicators) do
+    if ent.valid then
+      ent.destroy()
+    end
+  end
+end
+
+local on_tick = function(event)
+  check_indicators(event.tick)
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -488,6 +513,7 @@ local events =
   [defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_player_cursor_stack_changed] = on_player_cursor_stack_changed,
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
+  [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
   [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button
 }
