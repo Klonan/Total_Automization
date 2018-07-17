@@ -10,7 +10,7 @@ local bot =
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/defender.png",
+  icon = "__base__/graphics/icons/player.png",
   icon_size = 32,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},

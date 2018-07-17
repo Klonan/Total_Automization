@@ -68,10 +68,13 @@ local set_scout_command = function(unit)
     end
     scout_range = scout_range + 1
   end
-  if any then
-    local destination = eligible_chunks[math.random(#eligible_chunks)]
-    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = {(destination.x * 32) + 16, (destination.y * 32) + 16}}
+  local chunk = eligible_chunks[math.random(#eligible_chunks)]
+  local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 16, 4)
+  if tile_destination then
+    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
+    return true
   end
+  return false
 end
 
 local gui_actions =
@@ -125,6 +128,15 @@ local gui_actions =
   end,
 }
 
+local button_map = 
+{
+  [names.unit_move_tool] = "move_button",
+  [names.unit_attack_move_tool] = "attack_move_button",
+  [names.unit_attack_tool] = "attack_button",
+  ["Stop"] = "stop_button",
+  ["Scout"] = "scout_button"
+}
+
 local make_unit_gui = function(frame, group)
   if not group then return end
   frame.clear()
@@ -143,19 +155,14 @@ local make_unit_gui = function(frame, group)
     local ent = pro[name]
     tab.add{type = "sprite-button", sprite = "entity/"..name, tooltip = ent.localised_name, number = count, style = "slot_button"}
   end
-  --local butts = frame.add{type = "flow", direction = "horizontal", style = "table_spacing_flow"}
-  local butts = frame.add{type = "table", column_count = 2}
-  local move = butts.add{type = "sprite-button", sprite = "item/"..names.unit_move_tool, tooltip = names.unit_move_tool, style = "image_tab_slot", caption = {"unit_move_button"}}
-  data.button_action_index[move.index] = {name = "move_button"}
-  move.style.font = "default"
-  local attack_move = butts.add{type = "sprite-button", sprite = "item/"..names.unit_attack_move_tool, tooltip = names.unit_attack_move_tool, style = "image_tab_slot"}
-  data.button_action_index[attack_move.index] = {name = "attack_move_button"}
-  local attack = butts.add{type = "sprite-button", sprite = "item/"..names.unit_attack_tool, tooltip = names.unit_attack_tool, style = "image_tab_slot"}
-  data.button_action_index[attack.index] = {name = "attack_button"}
-  local stop = butts.add{type = "sprite-button", sprite = "utility/set_bar_slot", tooltip = "Issue stop command", style = "image_tab_slot"}
-  data.button_action_index[stop.index] = {name = "stop_button"}
-  local stop = butts.add{type = "button", caption = "Scout", style = "image_tab_slot"}
-  data.button_action_index[stop.index] = {name = "scout_button"}
+  local butts = frame.add{type = "table", column_count = 1}
+  for name, action in pairs (button_map) do
+    local button = butts.add{type = "button", caption = name}
+    data.button_action_index[button.index] = {name = action}
+    button.style.font = "default"
+    button.style.horizontally_stretchable = true
+  end
+  butts.style.align = "center"
 end
 
 local deregister_unit = function(entity)
@@ -529,12 +536,10 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.scout then
-    if result == defines.behavior_result.fail then
+    if result == defines.behavior_result.fail or (not  set_scout_command(entity)) then
       entity.set_command(idle_command)
       unit_data.idle = true
       unit_data.command_queue = {}
-    else
-      set_scout_command(entity)
     end
     return
   end
