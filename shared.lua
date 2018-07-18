@@ -67,7 +67,8 @@ data.entities =
 {
   recon_outpost = "Recon Outpost",
   command_center = "Command Center",
-  command_center_turret = "Command Center Turret"
+  command_center_turret = "Command Center Turret",
+  auto_miner = "Auto Miner"
 }
 
 return data

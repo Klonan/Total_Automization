@@ -4,7 +4,7 @@ recursive_hack_scale = function(array, scale)
   for k, v in pairs (array) do
     if type(v) == "table" then
       if v.width and v.height and v.filename then
-        v.scale = scale
+        v.scale = (v.scale or 1) * scale
         if v.shift then
           --v.shift[1], v.shift[2] = v.shift[1] * scale, v.shift[2] * scale
         end
@@ -47,7 +47,7 @@ recursive_hack_make_hr = function(prototype)
     if type(v) == "table" then
       if v.width and v.height and v.filename and v.hr_version then
         prototype[k] = v.hr_version
-        prototype[k].scale = prototype[k].scale * 2    
+        --v.scale = v.scale * 0.5  
         v.hr_version = nil
       else
         recursive_hack_make_hr(v)
