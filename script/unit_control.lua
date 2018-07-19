@@ -362,9 +362,11 @@ local attack_closest = function(unit, entities)
   local min = 5000000000000000000000000
   local position = unit.position
   local entities = entities
+  local force = unit.force
+  local surface = unit.surface
   local quick_dist = quick_dist
   for k, ent in pairs (entities) do
-    if ent.valid and ent.health then
+    if ent.valid and ent.health and force.is_chunk_visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
       local sep = quick_dist(ent.position, position)
       if sep < min then
         min = sep
@@ -522,9 +524,11 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.attack then
+    --game.print"Issuing attack command"
     if not attack_closest(entity, next_command.targets) then
       table.remove(command_queue, 1)
       process_command_queue(unit_data)
+      --game.print"No targets found, removing attack command"
     end
     return
   end
