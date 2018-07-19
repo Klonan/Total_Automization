@@ -41,6 +41,7 @@ local bot =
     cooldown = SU(15),
     range = 24,
     min_attack_distance = 24,
+    projectile_creation_distance = 0.5,
     sound = make_light_gunshot_sounds(),
     ammo_type =
     {
@@ -51,12 +52,24 @@ local bot =
         type = "direct",
         action_delivery =
         {
+          {
           type = "projectile",
           projectile = name.." Projectile",
           starting_speed = SD(1),
           direction_deviation = 0.1,
           range_deviation = 0.1,
-          max_range = 30
+          max_range = 24
+          },
+          {
+            type = "instant",
+            source_effects =
+            {
+              {
+                type = "create-explosion",
+                entity_name = "explosion-gunshot"
+              }
+            }
+          }
         }
       }
     },
@@ -106,6 +119,21 @@ projectile.action =
       {
         type = "damage",
         damage = {amount = 3 , type = util.damage_type("smg_bot")}
+      }
+    }
+  }
+}
+projectile.final_action = 
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = "explosion-hit"
       }
     }
   }

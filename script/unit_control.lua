@@ -364,9 +364,10 @@ local attack_closest = function(unit, entities)
   local entities = entities
   local force = unit.force
   local surface = unit.surface
+  local visible = force.is_chunk_visible
   local quick_dist = quick_dist
   for k, ent in pairs (entities) do
-    if ent.valid and ent.health and force.is_chunk_visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
+    if ent.valid and ent.health and visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
       local sep = quick_dist(ent.position, position)
       if sep < min then
         min = sep
