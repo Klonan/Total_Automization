@@ -14,6 +14,7 @@ require "data/stickers/healing"
 require "data/hotkeys"
 require "data/unit_control/unit_control"
 require "data/units/units"
+require "data/remove_electricity"
 
 for name, font in pairs (data.raw.font) do
   font.size = font.size * 1.33

@@ -38,5 +38,5 @@ recipe.localised_name = name
 recipe.normal.result = name
 recipe.expensive.result = name
 
-data:extend{miner, item, recipe}
+--data:extend{miner, item, recipe}
 

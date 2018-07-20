@@ -160,5 +160,14 @@ util.speed = function(multiplier)
   return multiplier * SD(base_speed)
 end
 
+util.remove_from_list = function(list, name)
+  local remove = table.remove
+  for i = #list, 1, -1 do
+    if list[i] == name then
+      remove(list, i)
+    end
+  end
+end
+
 util.copy = util.table.deepcopy
 return util
