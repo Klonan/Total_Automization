@@ -68,8 +68,8 @@ data.entities =
   recon_outpost = "Recon Outpost",
   command_center = "Command Center",
   command_center_turret = "Command Center Turret",
-  auto_miner = "Auto Miner",
-  auto_inserter = "Auto Inserter",
+  big_miner = "Big Mining Drill",
+  small_miner = "Small Mining Drill",
 }
 
 return data

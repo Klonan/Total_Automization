@@ -48,7 +48,7 @@ local remove_from_recipe = function(recipe, name)
     end
   end
   
-  local products = recipe.products or recipe.products
+  local products = recipe.products
   if products then
     for i = #products, 1, -1 do
       if (products[i].name or products[i][1]) == name then
