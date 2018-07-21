@@ -170,4 +170,6 @@ util.remove_from_list = function(list, name)
 end
 
 util.copy = util.table.deepcopy
+
+util.prototype = require("data/tf_util/prototype_util")
 return util
