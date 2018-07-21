@@ -2,24 +2,26 @@
 
 local types =
 {
-  "mining-drill-productivity-bonus",
-  "ammo-damage",
-  "gun-speed",
-  "turret-attack",
-  "artillery-range",
-  "deconstruction-time-to-live",
-  "worker-robot-speed",
-  "worker-robot-storage",
-  "laboratory-speed",
-  "inserter-stack-size-bonus",
-  "stack-inserter-capacity-bonus",
-  "ghost-time-to-live",
-  "train-braking-force-bonus",
-  "laboratory-productivity",
-  "maximum-following-robots-count",
-  "quick-bar-count"
+  ["mining-drill-productivity-bonus"] = true,
+  ["ammo-damage"] = true,
+  ["gun-speed"] = true,
+  ["turret-attack"] = true,
+  ["artillery-range"] = true,
+  ["deconstruction-time-to-live"] = true,
+  ["worker-robot-speed"] = true,
+  ["worker-robot-storage"] = true,
+  ["laboratory-speed"] = true,
+  ["inserter-stack-size-bonus"] = true,
+  ["stack-inserter-capacity-bonus"] = true,
+  ["ghost-time-to-live"] = true,
+  ["train-braking-force-bonus"] = true,
+  ["laboratory-productivity"] = true,
+  ["maximum-following-robots-count"] = true,
+  ["quick-bar-count"] = true,
+  ["auto-character-logistic-trash-slots"] = true,
+  ["character-logistic-trash-slots"] = true,
+  ["character-logistic-slots"] = true
 }
-for k, type in pairs(types) do
-  util.prototype.remove_technology_effect_type(type)
-end
+
+util.prototype.remove_technology_effect_type(types)
 

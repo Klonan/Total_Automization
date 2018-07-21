@@ -262,12 +262,12 @@ local remove_item_prototype = function(item)
   item = nil
 end
 
-remove_technology_effect_type = function(name)
+remove_technology_effect_type = function(dict)
   for k, tech in pairs (data.raw.technology) do
     local effects = tech.effects
     if effects then
       for i = #effects, 1, -1 do
-        if effects[i].type == name then
+        if dict[effects[i].type] then
           table.remove(effects, i)
         end
       end
