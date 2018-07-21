@@ -43,6 +43,7 @@ local clean = function(player)
 end
 
 local set_scout_command = function(unit)
+  if unit.type ~= "unit" then return end
   local position = unit.position
   local surface = unit.surface
   local chunk_x = math.floor(position.x / 32)
@@ -110,7 +111,9 @@ local gui_actions =
       return
     end
     for unit_number, unit in pairs (group) do
-      unit.set_command{type = defines.command.wander, radius = 0.1}
+      if unit.type == "unit" then
+        unit.set_command{type = defines.command.wander, radius = 0.1}
+      end
       data.units[unit_number].command_queue = {}
       data.units[unit_number].idle = true
     end
@@ -120,10 +123,16 @@ local gui_actions =
     if not group then
       return
     end
+    local append = event.shift
     for unit_number, unit in pairs (group) do
-      set_scout_command(unit)
-      data.units[unit_number].command_queue = {{command_type = next_command_type.scout}}
-      data.units[unit_number].idle = false
+      local data = data.units[unit_number]
+      if append and not data.idle then
+        table.insert(data.command_queue, {command_type = next_command_type.scout})
+      else
+        set_scout_command(unit)
+        data.command_queue = {{command_type = next_command_type.scout}}
+        data.idle = false
+      end
     end
   end,
 }
@@ -231,8 +240,8 @@ local unit_selection = function(event)
     data.units[ent.unit_number] = 
     {
       entity = ent,
-      player = index,
-      group = group,
+      --player = index,
+      --group = group,
       command_queue = {},
       idle = true
     }
@@ -270,6 +279,7 @@ local make_move_command = function(param)
     for y = -radius, radius, offset do
       index, entity = next(group, index)
       if entity then
+        local unit = (entity.type == "unit")
         local command = {
           command_type = next_command_type.move,
           type = type, distraction = distraction,
@@ -277,13 +287,17 @@ local make_move_command = function(param)
         }
         local unit_data = data.units[entity.unit_number]
         if append then
-          if unit_data.idle then
+          if unit_data.idle and unit then
             entity.set_command(command)
           end
           insert(unit_data.command_queue, command)
         else
-          unit_data.command_queue = {}
-          entity.set_command(command)
+          if unit then
+            entity.set_command(command)
+            unit_data.command_queue = {}
+          else
+            unit_data.command_queue = {command}
+          end
         end
         unit_data.idle = false
       else
@@ -396,6 +410,7 @@ local make_attack_command = function(group, entities, append)
   if #entities == 0 then return end
   local data = data.units
   for unit_number, unit in pairs (group) do
+    local commandable = (unit.type == "unit")
     local next_command = 
     {
       command_type = next_command_type.attack,
@@ -403,12 +418,14 @@ local make_attack_command = function(group, entities, append)
     }
     local unit_data = data[unit_number]
     if append then
-      if unit_data.idle then
+      if unit_data.idle and commandable then
         attack_closest(unit, entities)
       end
       table.insert(unit_data.command_queue, next_command)
     else
-      attack_closest(unit, entities)
+      if commandable then
+        attack_closest(unit, entities)
+      end
       unit_data.command_queue = {next_command}
     end
     unit_data.idle = false
@@ -429,6 +446,7 @@ end
 local selected_area_actions = 
 {
   [names.unit_selection_tool] = unit_selection,
+  [names.deployer_selection_tool] = unit_selection,
   [names.unit_move_tool] = move_units,
   [names.unit_attack_move_tool] = attack_move_units,
   [names.unit_attack_tool] = attack_units
@@ -437,6 +455,7 @@ local selected_area_actions =
 local alt_selected_area_actions = 
 {
   [names.unit_selection_tool] = unit_selection,
+  [names.deployer_selection_tool] = unit_selection,
   [names.unit_attack_tool] = attack_units,
   [names.unit_attack_move_tool] = attack_move_units,
   [names.unit_move_tool] = move_units
@@ -572,6 +591,23 @@ local on_tick = function(event)
   check_indicators(event.tick)
 end
 
+local on_unit_deployed = function(event)
+  local unit = event.unit
+  local source = event.source
+  if not (source and source.valid and unit and unit.valid) then return end
+
+  local source_data = data.units[source.unit_number]
+  if not source_data then return end
+  local queue = source_data.command_queue
+  data.units[unit.unit_number] = 
+  {
+    entity = unit,
+    command_queue = util.copy(queue),
+    idle = true
+  }
+  process_command_queue(data.units[unit.unit_number])
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -583,7 +619,8 @@ local events =
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
-  [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button
+  [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button,
+  [defines.events.on_unit_deployed] = on_unit_deployed
 }
 
 unit_control.on_event = handler(events)

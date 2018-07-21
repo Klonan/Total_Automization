@@ -51,6 +51,7 @@ data.hotkeys =
 data.units =
 {
   unit_selection_tool = "Select units",
+  deployer_selection_tool = "Select deployers",
   unit_move_tool = "Move to position",
   unit_move_sound = "Unit move sound",
   unit_attack_move_tool = "Attack move to position",
@@ -70,6 +71,11 @@ data.entities =
   command_center_turret = "Command Center Turret",
   big_miner = "Big Mining Drill",
   small_miner = "Small Mining Drill",
+}
+
+data.deployers =
+{
+  iron_unit = "Iron Unit Deployer"
 }
 
 return data

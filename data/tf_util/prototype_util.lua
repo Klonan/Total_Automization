@@ -174,16 +174,16 @@ local remove_item_from_technologies = function(name)
 end
 
 local remove_recipe_from_technologies = function(name)
-  log("Removing recipe from technologies: "..name)
+  --log("Removing recipe from technologies: "..name)
   local technologies = data.raw.technology
   for k, technology in pairs (technologies) do
     local effects = technology.effects
     if effects then
-      log(technology.name.." = "..#effects)
+      --log(technology.name.." = "..#effects)
       for i = #effects, 1, -1 do
         --log((effects[i].recipe or "nil").. " == "..name)
         if (effects[i].recipe == name) then
-          log("Removed from: "..k)
+          --log("Removed from: "..k)
           table.remove(effects, i)
         end
       end
@@ -195,7 +195,7 @@ local remove_recipe_from_technologies = function(name)
 end
 
 local remove_item_from_recipes = function(name)
-  log("Removing item from recipes: "..name)
+  --log("Removing item from recipes: "..name)
   local recipes = data.raw.recipe
   for k, recipe in pairs (recipes) do
     local result = remove_from_recipe(recipe, name)

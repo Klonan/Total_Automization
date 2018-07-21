@@ -33,6 +33,7 @@ local on_player_created = function(event)
     end
   end
   player.get_quickbar().insert(names.units.unit_selection_tool)
+  player.get_quickbar().insert(names.units.deployer_selection_tool)
   --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
   --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
   player.insert("entry-item")

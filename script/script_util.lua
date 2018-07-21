@@ -30,5 +30,7 @@ util.clear_item = function(entity, item_name)
   entity.remove_item{name = item_name, count = entity.get_item_count(item_name)}
 end
 
+util.copy = util.table.deepcopy
+
 
 return util

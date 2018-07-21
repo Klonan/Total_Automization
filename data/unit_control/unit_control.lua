@@ -22,6 +22,31 @@ local unit_selection_tool =
   alt_selection_color = {r = 1},
 }
 
+local deploy_filter = {}
+for k, name in pairs (require("shared").deployers) do
+  table.insert(deploy_filter, name)
+end
+
+local deployer_selection_tool = 
+{
+  type = "selection-tool",
+  name = names.deployer_selection_tool,
+  localised_name = names.deployer_selection_tool,
+  selection_mode = {"friend", "any-entity"},
+  alt_selection_mode = {"friend", "any-entity"},
+  entity_filters = deploy_filter,
+  alt_entity_filters = deploy_filter,
+  selection_cursor_box_type = "copy",
+  alt_selection_cursor_box_type = "pair",
+  icon = path.."deployer_select.png",
+  icon_size = 128,
+  stack_size = 1,
+  flags = {"goes-to-quickbar"},
+  show_in_library = true,
+  selection_color = {g = 1},
+  alt_selection_color = {r = 1},
+}
+
 local unit_move_tool =
 {
   type = "selection-tool",
@@ -69,8 +94,8 @@ local unit_attack_tool =
   type = "selection-tool",
   name = names.unit_attack_tool,
   localised_name = names.unit_attack_tool,
-  selection_mode = {"enemy", "any-entity"},
-  alt_selection_mode = {"enemy", "any-entity"},
+  selection_mode = {"enemy", "entity-with-force"},
+  alt_selection_mode = {"enemy", "entity-with-force"},
   selection_cursor_box_type = "not-allowed",
   alt_selection_cursor_box_type = "not-allowed",
   icon = path.."unit_attack_tool.png",
@@ -111,6 +136,7 @@ attack_move_indicator.animations[1].filename = path.."attack_move_indicator.png"
 
 data:extend{
   unit_selection_tool,
+  deployer_selection_tool,
   move_confirm_sound,
   unit_move_tool,
   unit_attack_move_tool,

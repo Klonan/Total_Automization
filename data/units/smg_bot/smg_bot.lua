@@ -139,4 +139,28 @@ projectile.final_action =
   }
 }
 
-data:extend{bot, projectile}
+local item = {
+  type = "item",
+  name = name,
+  icon = "__base__/graphics/icons/player.png",
+  icon_size = 32,
+  flags = {},
+  subgroup = "circuit-network",
+  order = name,
+  stack_size= 1
+}
+
+local recipe = {
+    type = "recipe",
+    name = name,
+    category = require("shared").deployers.iron_unit,
+    enabled = true,
+    ingredients =
+    {
+      {"iron-plate", 4}
+    },
+    energy_required = 5,
+    result = name
+}
+
+data:extend{bot, projectile, item, recipe}

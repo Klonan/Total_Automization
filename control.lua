@@ -22,8 +22,9 @@ local libs = {
   teleporters = require "script/teleporters",
   classes = require "script/classes/classes",
   stickybomb_launcher = require "script/stickybomb_launcher",
+  unit_deployment = require("script/unit_deployment"),
   unit_control = require "script/unit_control",
-  command_center = require("script/command_center")
+  command_center = require("script/command_center"),
 }
 
 
