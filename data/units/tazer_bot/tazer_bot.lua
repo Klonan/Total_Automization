@@ -319,11 +319,38 @@ sticker.animation =
 }
 sticker.stickers_per_square_meter = 15
 
+local item = {
+  type = "item",
+  name = name,
+  icon = bot.icon,
+  icon_size = bot.icon_size,
+  flags = {},
+  subgroup = "circuit-units",
+  order = name,
+  stack_size= 1
+}
+
+local recipe = {
+  type = "recipe",
+  name = name,
+  category = require("shared").deployers.circuit_unit,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4}
+  },
+  energy_required = 5,
+  result = name
+}
+
+
 
 
 data:extend{
   bot,
   beam,
   sticker,
-  corpse
+  corpse,
+  item,
+  recipe
 }

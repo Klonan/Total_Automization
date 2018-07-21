@@ -99,6 +99,31 @@ projectile.action =
     }
   }
 }
-data:extend{unit, projectile}
+
+local item = {
+  type = "item",
+  name = name,
+  icon = unit.icon,
+  icon_size = unit.icon_size,
+  flags = {},
+  subgroup = "bio-units",
+  order = name,
+  stack_size= 1
+}
+
+local recipe = {
+  type = "recipe",
+  name = name,
+  category = require("shared").deployers.bio_unit,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4},
+    {type = "fluid", name = "water", amount = 1}
+  },
+  energy_required = 5,
+  result = name
+}
+data:extend{unit, projectile, item, recipe}
 
 

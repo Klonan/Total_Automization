@@ -145,7 +145,7 @@ local item = {
   icon = "__base__/graphics/icons/player.png",
   icon_size = 32,
   flags = {},
-  subgroup = "circuit-network",
+  subgroup = "iron-units",
   order = name,
   stack_size= 1
 }

@@ -75,7 +75,9 @@ data.entities =
 
 data.deployers =
 {
-  iron_unit = "Iron Unit Deployer"
+  iron_unit = "Iron Unit Deployer",
+  bio_unit = "Bio Unit Deployer",
+  circuit_unit = "Circuit Unit Deployer"
 }
 
 return data

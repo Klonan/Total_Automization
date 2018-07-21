@@ -49,17 +49,29 @@ local set_scout_command = function(unit)
   local chunk_x = math.floor(position.x / 32)
   local chunk_y = math.floor(position.y / 32)
   --unit.surface.request_to_generate_chunks(position, scout_range)
+  local scout_range = 4
+  local max = 16
+  local any = false
+  local map_chunk_width = surface.map_gen_settings.width / 64
+  local map_chunk_height = surface.map_gen_settings.height / 64
+  local in_map = function(chunk_position)
+    if map_chunk_width > 0 and (chunk_position.x > map_chunk_width or chunk_position.x < -map_chunk_width) then
+      return false
+    end
+    if map_chunk_height > 0 and (chunk_position.y > map_chunk_height or chunk_position.y < -map_chunk_height) then
+      return false
+    end
+    return true
+  end
   local eligible_chunks = {}
   local checked = {}
-  local scout_range = 4
-  local any = false
-  while not any do
+  while (not any) and (scout_range < max) do
     for X = -scout_range, scout_range do
       checked[X] = checked[X] or {}
       for Y = -scout_range, scout_range do
         if (not (X == 0 and Y == 0)) and not checked[X][Y] then
           local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
-          if not unit.force.is_chunk_charted(surface, chunk_position) then
+          if in_map(chunk_position) and (not unit.force.is_chunk_charted(surface, chunk_position))then
             any = true
             table.insert(eligible_chunks, chunk_position)
           end
@@ -69,14 +81,48 @@ local set_scout_command = function(unit)
     end
     scout_range = scout_range + 1
   end
+  if #eligible_chunks == 0 then
+    scout_range = 4 
+    checked = {}
+    while (not any) and (scout_range < max) do
+      for X = -scout_range, scout_range do
+        checked[X] = checked[X] or {}
+        for Y = -scout_range, scout_range do
+          if (not (X == 0 and Y == 0)) and not checked[X][Y] then
+            local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
+            if in_map(chunk_position) and (not unit.force.is_chunk_visible(surface, chunk_position))then
+              any = true
+              table.insert(eligible_chunks, chunk_position)
+            end
+            checked[X][Y] = true
+          end
+        end
+      end
+      scout_range = scout_range + 1
+    end
+  end
+  if #eligible_chunks == 0 then return false end
   local chunk = eligible_chunks[math.random(#eligible_chunks)]
   local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 16, 4)
-  if tile_destination then
-    unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
-    return true
-  end
-  return false
+  if not tile_destination then return false end
+  
+  unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
+  return true
 end
+
+local get_selected_units = function(player_index)
+  local data = data.selected_units
+  local selected = data[player_index] or {}
+  for unit_number, entity in pairs (selected) do
+    if not entity.valid then
+      selected[unit_number] = nil
+    end
+  end
+  data[player_index] = selected
+  return selected
+end
+
+local make_unit_gui
 
 local gui_actions =
 {
@@ -106,7 +152,7 @@ local gui_actions =
     data.stack_event_check[player.index] = {item = names.unit_attack_tool, ignore_tick = game.tick}
   end,
   stop_button = function(event)
-    local group = data.selected_units[event.player_index]
+    local group = get_selected_units(event.player_index)
     if not group then
       return
     end
@@ -119,7 +165,7 @@ local gui_actions =
     end
   end,
   scout_button = function(event)
-    local group = data.selected_units[event.player_index]
+    local group = get_selected_units(event.player_index)
     if not group then
       return
     end
@@ -135,6 +181,27 @@ local gui_actions =
       end
     end
   end,
+  selected_units_button = function(event, action)
+    local unit_name = action.unit
+    local group = get_selected_units(event.player_index)
+    if not group then return end
+    if event.shift then
+      for unit_number, entity in pairs (group) do
+        if entity.name == unit_name then
+          group[unit_number] = nil
+        end
+      end
+    else
+      for unit_number, entity in pairs (group) do
+        if entity.name ~= unit_name then
+          group[unit_number] = nil
+        end
+      end
+    end
+    local frame = data.open_frames[event.player_index]
+    if not frame then return end
+    make_unit_gui(frame, group)
+  end
 }
 
 local button_map = 
@@ -146,15 +213,15 @@ local button_map =
   ["Scout"] = "scout_button"
 }
 
-local make_unit_gui = function(frame, group)
+make_unit_gui = function(frame, group)
   if not group then return end
   frame.clear()
-  local map = {}
   if table_size(group) == 0 then
     util.deregister_gui(frame, data.button_action_index)
     frame.destroy()
     return
   end
+  local map = {}
   for unit_number, ent in pairs (group) do
     map[ent.name] = (map[ent.name] or 0) + 1
   end
@@ -162,7 +229,8 @@ local make_unit_gui = function(frame, group)
   local pro = game.entity_prototypes
   for name, count in pairs (map) do
     local ent = pro[name]
-    tab.add{type = "sprite-button", sprite = "entity/"..name, tooltip = ent.localised_name, number = count, style = "slot_button"}
+    local unit_button = tab.add{type = "sprite-button", sprite = "entity/"..name, tooltip = ent.localised_name, number = count, style = "slot_button"}
+    data.button_action_index[unit_button.index] = {name = "selected_units_button", unit = name}
   end
   local butts = frame.add{type = "table", column_count = 1}
   for name, action in pairs (button_map) do
@@ -204,18 +272,6 @@ local deregister_unit = function(entity)
   make_unit_gui(frame, group)
 end
 
-local get_selected_units = function(player_index)
-  local data = data.selected_units
-  local selected = data[player_index] or {}
-  for unit_number, entity in pairs (selected) do
-    if not entity.valid then
-      selected[unit_number] = nil
-    end
-  end
-  data[player_index] = selected
-  return selected
-end
-
 local unit_selection = function(event)
   local entities = event.entities
   if not entities then return end
@@ -229,22 +285,24 @@ local unit_selection = function(event)
   local index = player.index
   local group = get_selected_units(index)
   if not append then
-    game.print("New selected units")
+    --game.print("New selected units")
     group = {}
   end
   data.selected_units[index] = group
-  game.print(#entities)
+  --game.print(#entities)
+  local units = data.units
   for k, ent in pairs (entities) do
     deregister_unit(ent)
-    group[ent.unit_number] = ent
-    data.units[ent.unit_number] = 
+    local unit_index = ent.unit_number
+    group[unit_index] = ent
+    units[unit_index] = units[unit_index] or
     {
       entity = ent,
-      --player = index,
-      --group = group,
       command_queue = {},
       idle = true
     }
+    units[unit_index].group = group
+    units[unit_index].player = index
   end
   local gui = player.gui.left
   local old_frame = data.open_frames[player.index]
@@ -489,7 +547,7 @@ local on_gui_click = function(event)
   if not (gui and gui.valid) then return end
   local action = data.button_action_index[gui.index]
   if not action then return end
-  return gui_actions[action.name](event, action.param)
+  return gui_actions[action.name](event, action)
 end
 
 local on_entity_died = function(event)
