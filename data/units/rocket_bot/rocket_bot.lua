@@ -1,4 +1,4 @@
-local path = util.path("data/units/rocket_bot")
+local path = util.path("data/units/rocket_bot/")
 local name = require("shared").units.rocket_bot
 
 local base = util.copy(data.raw.player.player)
@@ -16,8 +16,8 @@ local bot =
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/player.png",
-  icon_size = 32,
+  icon = path.."rocket_bot_icon.png",
+  icon_size = 107,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   max_health = 125,
@@ -38,17 +38,20 @@ local bot =
   min_persue_time = 60 * 15,
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(30),
   move_while_shooting = true, --Not merged
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(15),
-    range = 24,
-    min_attack_distance = 24,
+    cooldown = SU(120),
+    cooldown_deviation = 0.5,
+    range = 36,
+    min_attack_distance = 28,
     projectile_creation_distance = 0.5,
-    sound = make_light_gunshot_sounds(),
+    sound = {
+      {filename = path.."rocket_bot_shoot.ogg", volume = 0.5}
+    },
     ammo_type =
     {
       category = "bullet",
@@ -64,7 +67,7 @@ local bot =
           starting_speed = SD(1),
           direction_deviation = 0.1,
           range_deviation = 0.1,
-          max_range = 24
+          max_range = 32
           },
           {
             type = "instant",
@@ -83,7 +86,7 @@ local bot =
   },
   vision_distance = 16,
   has_belt_immunity = true,
-  movement_speed = SD(0.2),
+  movement_speed = SD(0.15),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -116,8 +119,11 @@ util.recursive_hack_make_hr(bot)
 util.recursive_hack_scale(bot, scale)
 util.scale_boxes(bot, scale)
 
-local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+
+local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
+projectile.acceleration = SD(0)
+projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
 projectile.force_condition = "not-same"
 projectile.action =
 {
@@ -128,23 +134,33 @@ projectile.action =
     target_effects =
     {
       {
-        type = "damage",
-        damage = {amount = 3 , type = util.damage_type("smg_bot")}
-      }
-    }
-  }
-}
-projectile.final_action = 
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
         type = "create-entity",
-        entity_name = "explosion-hit"
+        entity_name = "explosion"
+      },
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 1,
+          force = "not-same",
+          collision_mode = "distance-from-center",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "damage",
+                damage = {amount = 45, type = util.damage_type("soldier-rocket-explosion")}
+              },
+              {
+                type = "create-entity",
+                entity_name = "explosion"
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -153,25 +169,25 @@ projectile.final_action =
 local item = {
   type = "item",
   name = name,
-  icon = "__base__/graphics/icons/player.png",
-  icon_size = 32,
+  icon = bot.icon,
+  icon_size = bot.icon_size,
   flags = {},
   subgroup = "iron-units",
   order = name,
-  stack_size= 1
+  stack_size = 1
 }
 
 local recipe = {
-    type = "recipe",
-    name = name,
-    category = require("shared").deployers.iron_unit,
-    enabled = true,
-    ingredients =
-    {
-      {"iron-plate", 4}
-    },
-    energy_required = 5,
-    result = name
+  type = "recipe",
+  name = name,
+  category = require("shared").deployers.iron_unit,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4}
+  },
+  energy_required = 5,
+  result = name
 }
 
 data:extend{bot, projectile, item, recipe}
