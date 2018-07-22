@@ -241,7 +241,7 @@ local bot =
   }
 }
 util.recursive_hack_make_hr(bot)
---util.recursive_hack_scale(bot, 2)
+util.recursive_hack_scale(bot, 2)
 util.scale_boxes(bot, 2)
 
 local corpse =

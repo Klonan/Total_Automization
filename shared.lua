@@ -45,7 +45,8 @@ data.class_names =
 data.hotkeys =
 {
   change_class = "Change class",
-  unit_move = "Move unit"
+  unit_move = "Move unit",
+  suicide = "Suicide"
 }
 
 data.units =
@@ -53,15 +54,18 @@ data.units =
   unit_selection_tool = "Select units",
   deployer_selection_tool = "Select deployers",
   unit_move_tool = "Move to position",
+  unit_patrol_tool = "Add patrol waypoint",
   unit_move_sound = "Unit move sound",
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
+  unit_force_attack_tool = "Force attack targets",
   move_indicator = "Move Indicator",
   attack_move_indicator = "Attack Move Indicator",
   
   tazer_bot = "Tazer Bot",
   scatter_spitter = "Scatter Spitter",
-  smg_bot = "SMG Bot"
+  smg_bot = "SMG Bot",
+  rocket_bot = "Rocket bot"
 }
 
 data.entities =

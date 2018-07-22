@@ -64,6 +64,23 @@ local unit_move_tool =
   alt_selection_color = {a = 0},
 }
 
+local unit_patrol_tool =
+{
+  type = "selection-tool",
+  name = names.unit_patrol_tool,
+  localised_name = names.unit_patrol_tool,
+  selection_mode = {"friend", "enemy"},
+  alt_selection_mode = {"enemy", "friend"},
+  selection_cursor_box_type = "entity",
+  alt_selection_cursor_box_type = "not-allowed",
+  icon = path.."unit_move_tool.png",
+  icon_size = 258,
+  stack_size = 1,
+  flags = {},
+  selection_color = {a = 0},
+  alt_selection_color = {a = 0},
+}
+
 local move_confirm_sound =
 {
   name = names.unit_move_sound,
@@ -96,6 +113,23 @@ local unit_attack_tool =
   localised_name = names.unit_attack_tool,
   selection_mode = {"enemy", "entity-with-force"},
   alt_selection_mode = {"enemy", "entity-with-force"},
+  selection_cursor_box_type = "not-allowed",
+  alt_selection_cursor_box_type = "not-allowed",
+  icon = path.."unit_attack_tool.png",
+  icon_size = 258,
+  stack_size = 1,
+  flags = {},
+  selection_color = {r = 1},
+  alt_selection_color = {r = 1},
+}
+
+local unit_force_attack_tool =
+{
+  type = "selection-tool",
+  name = names.unit_force_attack_tool,
+  localised_name = names.unit_force_attack_tool,
+  selection_mode = {"not-same-force", "entity-with-health"},
+  alt_selection_mode = {"not-same-force", "entity-with-health"},
   selection_cursor_box_type = "not-allowed",
   alt_selection_cursor_box_type = "not-allowed",
   icon = path.."unit_attack_tool.png",
@@ -139,7 +173,9 @@ data:extend{
   deployer_selection_tool,
   move_confirm_sound,
   unit_move_tool,
+  unit_patrol_tool,
   unit_attack_move_tool,
+  unit_force_attack_tool,
   unit_attack_tool,
   move_indicator,
   attack_move_indicator

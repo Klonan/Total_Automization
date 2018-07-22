@@ -16,4 +16,13 @@ local move_unit =
   key_sequence = "SHIFT + A",
   consuming = "game-only"
 }
-data:extend{change_class, move_unit}
+
+local become_an_hero =
+{
+  type = "custom-input",
+  name = hotkeys.suicide,
+  localised_names = hotkeys.suicide,
+  key_sequence = "DELETE",
+  consuming = "game-only"
+}
+data:extend{change_class, move_unit, become_an_hero}
