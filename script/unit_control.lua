@@ -221,7 +221,7 @@ local gui_actions =
     end
     local frame = data.open_frames[event.player_index]
     if not frame then return end
-    make_unit_gui(frame, group)
+    make_unit_gui(frame)
   end
 }
 
@@ -236,7 +236,9 @@ local button_map =
   ["Scout"] = "scout_button"
 }
 
-make_unit_gui = function(frame, group)
+make_unit_gui = function(frame)
+  local index = frame.player_index
+  local group = get_selected_units(index)
   if not group then return end
   frame.clear()
   if table_size(group) == 0 then
@@ -278,6 +280,7 @@ local deregister_unit = function(entity)
   if group then
     --game.print("Deregistered unit from group")
     group[unit_number] = nil
+    --if table_size(group) == 0 then 
   end
   local player_index = unit.player
   if not player_index then
@@ -292,7 +295,7 @@ local deregister_unit = function(entity)
     return
   end
 
-  make_unit_gui(frame, group)
+  make_unit_gui(frame)
 end
 
 local unit_selection = function(event)
@@ -306,13 +309,12 @@ local unit_selection = function(event)
   local area = event.area
   local center = util.center(area)
   local index = player.index
-  local group = get_selected_units(index)
-  if not append then
-    --game.print("New selected units")
+  local group
+  if append then
+    group = get_selected_units(index)
+  else
     group = {}
   end
-  data.selected_units[index] = group
-  --game.print(#entities)
   local units = data.units
   for k, ent in pairs (entities) do
     deregister_unit(ent)
@@ -327,6 +329,7 @@ local unit_selection = function(event)
     units[unit_index].group = group
     units[unit_index].player = index
   end
+  data.selected_units[index] = group
   local gui = player.gui.left
   local old_frame = data.open_frames[player.index]
   if (old_frame and old_frame.valid) then
@@ -336,7 +339,7 @@ local unit_selection = function(event)
   local frame = gui.add{type = "frame", caption = "units", direction = "vertical"}
   data.open_frames[player.index] = frame
   --player.opened = frame
-  make_unit_gui(frame, group)
+  make_unit_gui(frame)
   player.clean_cursor()
 end
 
