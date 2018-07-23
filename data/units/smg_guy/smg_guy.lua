@@ -1,5 +1,5 @@
-local path = util.path("data/units/smg_bot")
-local name = require("shared").units.smg_bot
+local path = util.path("data/units/smg_guy")
+local name = require("shared").units.smg_guy
 
 local base = util.copy(data.raw.player.player)
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
@@ -118,7 +118,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 3 , type = util.damage_type("smg_bot")}
+        damage = {amount = 3 , type = util.damage_type("smg_guy")}
       }
     }
   }

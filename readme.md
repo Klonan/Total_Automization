@@ -1,4 +1,4 @@
-## Team factory
+## Total Automization
 
 --------------------------------------
 
@@ -30,36 +30,34 @@ The idea is that there are different parts of the game people enjoy, some player
 
  ### Units
 
- The units will have tiers, so the first tier is easily automatable, like red science, second tier is more invovled, etc.
+ The units will have tiers, so the first tier is easily automatable, like red science, second tier is more involved, etc.
 
-Fuel cell units
+Iron units
 
-These are like the terrans. Each unit is based on Iron and gears and bullets and guns. The whole faction revolves around Fuel cells.
+These are like the terrans. Each unit is based on Iron and gears and bullets and guns. The whole faction revolves around More iron.
 
-1. Fuel cell of iron and coal
-2. Advanced fuel cell of Steel and solid fuel
-3. High tech fuel cell of Advanced metal and nuclear something etc.
-
+* SMG guy - Tier 1 - Shoots dodgeable bullets
+* Flame car - Tier 2 - AoE fire damage
+* Rocket guy - Tier 2 - Single unit high damage
+* Tank - Tier 3 - High damage AoE
 
 Bio units
 
 These are like the Zerg. They are generally somewhat easier to setup and automate, but not as effective in some ways. Use melee and acidic weaponry.
 
-1. Simple bio component made of Coal and water
-2. Advanced bio component of Crude oil and sulfur or something
-3. High tech bio component of Uranium and something
+* Biter - Tier 1 - Nibbles you
+* Scatter Spitter - Tier 2 - AoE acid damage
+* ?? - Tier 2 - Single unit high damage
+* Behemoth - Tier 3 - High damage AoE
 
-Circuitry / battery units
+Circuit units
 
 Like the protoss. USes batteries and circuits etc. They use a lot of copper and circuitry. They use laser and plasma weaponry.
 
-1. Simple capacitor of copper and iron and water or something
-2. Advanced capacitor of battery and circuits
-3. high tech using some advanced circtuits etc.
-
-Each tier of the units will branch to 2/3 types of units, which each have some slightly different recipe:
-
-For instance, Fuel cell and a SMG gives a marine type guy, Fuel cell and a armor and grenade give a marauder type unit
+* Blaster bot - Tier 1 - Shoots dodgeable blaster shots
+* Tazer bot - Tier 2 - AoE electric damage
+* Laser bot - Tier 2 - Single unit high damage
+* Plasma bot - Tier 3 - High damage AoE
 
 The tiers will require researching, and quite expensive.
 So advanced fuel cells need you to use the fuel cells to research them,
@@ -69,7 +67,8 @@ The advanced cells also will require the normal fuel cells in their recipe!
 This is important, so that small weak units are not continually spawned, and lag up the game.
 
 The buildings used to craft and research the units should all be kinda unique, 
-So the Fuel cell guys have a special looking lab, special looking assembler for the tiers, etc.
+So the Iron guys have a special looking assembler for their units.
+Maybe later we will add more buildings with more units, for now keep it simple, 1 building/category to craft all the iron guys.
+Research will all use the lab I guess...
 
 Other general things, gears, circuits,plates etc. use normal machines.
-

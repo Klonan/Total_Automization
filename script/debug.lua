@@ -13,10 +13,10 @@ local on_player_created = function(event)
   local pos = {x = 0, y = 0}
   for X = 1, 10 do
     for Y = 1, 10 do
-      local position = player.surface.find_non_colliding_position(names.units.rocket_bot, {pos.x + X, pos.y + Y}, 150, 1) 
+      local position = player.surface.find_non_colliding_position(names.units.rocket_guy, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        player.surface.create_entity{name = names.units.rocket_bot, position = position, force = "player"}
-        player.surface.create_entity{name = names.units.smg_bot, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.rocket_guy, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.smg_guy, position = position, force = "player"}
       else
         break
       end

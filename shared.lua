@@ -64,8 +64,8 @@ data.units =
   
   tazer_bot = "Tazer Bot",
   scatter_spitter = "Scatter Spitter",
-  smg_bot = "SMG Bot",
-  rocket_bot = "Rocket bot",
+  smg_guy = "SMG Guy",
+  rocket_guy = "Rocket Guy",
   flame_car = "Flame Car"
 }
 

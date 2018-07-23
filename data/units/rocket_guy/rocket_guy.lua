@@ -1,5 +1,5 @@
-local path = util.path("data/units/rocket_bot/")
-local name = require("shared").units.rocket_bot
+local path = util.path("data/units/rocket_guy/")
+local name = require("shared").units.rocket_guy
 
 local base = util.copy(data.raw.player.player)
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
@@ -16,7 +16,7 @@ local bot =
   type = "unit",
   name = name,
   localised_name = name,
-  icon = path.."rocket_bot_icon.png",
+  icon = path.."rocket_guy_icon.png",
   icon_size = 107,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
@@ -50,7 +50,7 @@ local bot =
     min_attack_distance = 28,
     projectile_creation_distance = 0.5,
     sound = {
-      {filename = path.."rocket_bot_shoot.ogg", volume = 0.5}
+      {filename = path.."rocket_guy_shoot.ogg", volume = 0.5}
     },
     ammo_type =
     {
@@ -136,7 +136,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 50 , type = util.damage_type("rocket_bot")}
+        damage = {amount = 50 , type = util.damage_type("rocket_guy")}
       },
       {
         type = "create-entity",
