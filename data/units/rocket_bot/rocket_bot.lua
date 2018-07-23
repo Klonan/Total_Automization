@@ -55,7 +55,7 @@ local bot =
     ammo_type =
     {
       category = "bullet",
-      target_type = "direction",
+      target_type = "entity",
       action =
       {
         type = "direct",
@@ -123,8 +123,9 @@ util.scale_boxes(bot, scale)
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
 projectile.acceleration = SD(0)
-projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
-projectile.force_condition = "not-same"
+--projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
+--projectile.force_condition = "not-same"
+projectile.direction_only = false
 projectile.action =
 {
   type = "direct",
@@ -134,34 +135,13 @@ projectile.action =
     target_effects =
     {
       {
+        type = "damage",
+        damage = {amount = 50 , type = util.damage_type("rocket_bot")}
+      },
+      {
         type = "create-entity",
         entity_name = "explosion"
       },
-      {
-        type = "nested-result",
-        action =
-        {
-          type = "area",
-          radius = 1,
-          force = "not-same",
-          collision_mode = "distance-from-center",
-          action_delivery =
-          {
-            type = "instant",
-            target_effects =
-            {
-              {
-                type = "damage",
-                damage = {amount = 45, type = util.damage_type("soldier-rocket-explosion")}
-              },
-              {
-                type = "create-entity",
-                entity_name = "explosion"
-              }
-            }
-          }
-        }
-      }
     }
   }
 }
