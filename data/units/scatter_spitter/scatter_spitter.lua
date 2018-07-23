@@ -29,7 +29,8 @@ local make_spitter_blast = function(speed, direction, range, count)
     }
   }
 end
-
+animation.layers[2].apply_runtime_tint = true
+unit.run_animation.layers[2].apply_runtime_tint = true
 unit.attack_parameters = 
 {
   animation = animation,
