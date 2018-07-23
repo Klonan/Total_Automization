@@ -65,7 +65,8 @@ data.units =
   tazer_bot = "Tazer Bot",
   scatter_spitter = "Scatter Spitter",
   smg_bot = "SMG Bot",
-  rocket_bot = "Rocket bot"
+  rocket_bot = "Rocket bot",
+  flame_car = "Flame Car"
 }
 
 data.entities =
