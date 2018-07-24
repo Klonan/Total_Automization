@@ -1,17 +1,19 @@
 local path = util.path("data/units/smg_guy")
-local name = require("shared").units.smg_guy
+local name = require("shared").units.blaster_bot
 
-local base = util.copy(data.raw.player.player)
+local base = util.copy(data.raw["combat-robot"]["defender"])
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
 --  layer.frame_count = 1
 --end
+table.insert(base.idle.layers, base.shadow_idle)
+table.insert(base.in_motion.layers, base.shadow_in_motion)
 local bot =
 {
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/player.png",
-  icon_size = 32,
+  icon = base.icon,
+  icon_size = base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   max_health = 125,
@@ -32,18 +34,32 @@ local bot =
   min_persue_time = 60 * 15,
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(30),
   move_while_shooting = true, --Not merged
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(15),
+    cooldown = SU(45),
     cooldown_deviation = 0.5,
     range = 24,
     min_attack_distance = 18,
     projectile_creation_distance = 0.5,
-    sound = make_light_gunshot_sounds(),
+    sound = 
+    {
+      {
+        filename = "__base__/sound/fight/laser-1.ogg",
+        volume = 0.5
+      },
+      {
+        filename = "__base__/sound/fight/laser-2.ogg",
+        volume = 0.5
+      },
+      {
+        filename = "__base__/sound/fight/laser-3.ogg",
+        volume = 0.5
+      }
+    },
     ammo_type =
     {
       category = "bullet",
@@ -60,25 +76,15 @@ local bot =
           direction_deviation = 0.1,
           range_deviation = 0.1,
           max_range = 24
-          },
-          {
-            type = "instant",
-            source_effects =
-            {
-              {
-                type = "create-explosion",
-                entity_name = "explosion-gunshot"
-              }
-            }
           }
         }
       }
     },
-    animation = base.animations[1].idle_with_gun
+    animation = base.idle
   },
   vision_distance = 16,
   has_belt_immunity = true,
-  movement_speed = SD(0.2),
+  movement_speed = SD(0.22),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -103,12 +109,17 @@ local bot =
       volume = 0.5
     }
   },
-  run_animation = base.animations[1].running
+  run_animation = base.in_motion
 }
+util.recursive_hack_make_hr(bot)
+util.recursive_hack_scale(bot, 1.5)
+util.scale_boxes(bot, 1.5)
 
-local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+local projectile = util.copy(data.raw.projectile["laser"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
+projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
+projectile.direction_only = true
 projectile.action =
 {
   type = "direct",
@@ -119,7 +130,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 3 , type = util.damage_type("smg_guy")}
+        damage = {amount = 8 , type = util.damage_type("blaster_bot")}
       }
     }
   }
@@ -134,7 +145,7 @@ projectile.final_action =
     {
       {
         type = "create-entity",
-        entity_name = "explosion-hit"
+        entity_name = "laser-bubble"
       }
     }
   }
@@ -143,18 +154,18 @@ projectile.final_action =
 local item = {
   type = "item",
   name = name,
-  icon = "__base__/graphics/icons/player.png",
-  icon_size = 32,
+  icon = bot.icon,
+  icon_size = bot.icon_size,
   flags = {},
-  subgroup = "iron-units",
+  subgroup = "circuit-units",
   order = name,
-  stack_size= 1
+  stack_size = 1
 }
 
 local recipe = {
     type = "recipe",
     name = name,
-    category = require("shared").deployers.iron_unit,
+    category = require("shared").deployers.circuit_unit,
     enabled = true,
     ingredients =
     {

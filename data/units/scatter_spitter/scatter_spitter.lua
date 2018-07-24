@@ -1,7 +1,7 @@
 local path = util.path("data/units/scatter_spitter")
 local name = require("shared").units.scatter_spitter
 
-local unit = util.copy(data.raw.unit["medium-spitter"])
+local unit = util.copy(data.raw.unit["big-spitter"])
 unit.name = name
 unit.localised_name = name
 unit.collision_mask = {"not-colliding-with-itself", "player-layer", "object-layer"}
@@ -10,6 +10,7 @@ unit.radar_range = 2
 unit.movement_speed = SD(0.2)
 unit.max_pursue_distance = 64
 unit.min_persue_time = 8 * 60
+unit.map_color = {b = 0.5, g = 1}
 
 local animation = util.copy(unit.attack_parameters.animation)
 local sound = util.copy(unit.attack_parameters.sound)
@@ -25,7 +26,7 @@ local make_spitter_blast = function(speed, direction, range, count)
       starting_speed = SD(speed),
       direction_deviation = direction,
       range_deviation = range,
-      max_range = 30
+      max_range = 20
     }
   }
 end
@@ -38,7 +39,8 @@ unit.attack_parameters =
   type = "projectile",
   ammo_category = "rocket",
   cooldown = SU(60),
-  range = 18,
+  cooldown_deviation = 0.2,
+  range = 20,
   min_attack_distance = 16,
   projectile_creation_distance = 1.9,
   warmup = 30,
@@ -63,6 +65,7 @@ projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.direction_only = true
 projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
+projectile.acceleration = -0.0025
 projectile.action =
 {
   type = "direct",
@@ -96,10 +99,22 @@ projectile.action =
       {
         type = "damage",
         damage = {amount = 3, type = "acid"}
+      },
+      {
+        type = "create-sticker",
+        sticker = name.." Sticker"
       }
     }
   }
 }
+
+local sticker = util.copy(data.raw.sticker["slowdown-sticker"])
+sticker.name = name.." Sticker"
+
+sticker.duration_in_ticks = SU(1 * 60)
+sticker.target_movement_modifier = 1
+sticker.damage_per_tick = {type = "acid", amount = 1}
+sticker.stickers_per_square_meter = 15
 
 local item = {
   type = "item",
@@ -125,6 +140,7 @@ local recipe = {
   energy_required = 5,
   result = name
 }
-data:extend{unit, projectile, item, recipe}
+
+data:extend{unit, projectile, sticker, item, recipe}
 
 

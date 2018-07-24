@@ -47,8 +47,8 @@ These are like the Zerg. They are generally somewhat easier to setup and automat
 
 * Biter - Tier 1 - Nibbles you
 * Scatter Spitter - Tier 2 - AoE acid damage
-* ?? - Tier 2 - Single unit high damage
-* Behemoth - Tier 3 - High damage AoE
+* Piercing biter - Tier 2 - Single unit high damage
+* Big wormy boi - Tier 3 - High damage AoE
 
 Circuit units
 

@@ -4,7 +4,7 @@ local sprite_base = util.copy(data.raw.car.car)
 local path = util.path("data/units/flame_car/")
 
 local fire = require("data/tf_util/tf_fire_util")
-local sprites = fire.create_fire_pictures({animation_speed = SD(0.5), scale = 0.8})
+local sprites = fire.create_fire_pictures({animation_speed = SD(0.5), scale = 0.5})
 local index = 0
 local sprite = function()
   index = index + 1
@@ -16,6 +16,7 @@ local make_fire = function(name, n)
   pyro_fire_projectile.name = name
   pyro_fire_projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
   pyro_fire_projectile.force_condition = "not-same"
+  pyro_fire_projectile.height = 0
   pyro_fire_projectile.action = 
   {
     type = "direct",
@@ -26,7 +27,7 @@ local make_fire = function(name, n)
       {
         {
           type = "damage",
-          damage = {amount = 1 , type = util.damage_type("fire")}
+          damage = {amount = 0.1 , type = util.damage_type("fire")}
         },
         {
           type = "create-sticker",
@@ -139,10 +140,7 @@ local unit =
         },
         make_fire("pyro-fire-projectile-1", 1),
         make_fire("pyro-fire-projectile-2", 1.5),
-        make_fire("pyro-fire-projectile-3", 2),
-        --make_fire("pyro-fire-projectile-4", 2.5),
-        --make_fire("pyro-fire-projectile-5", 3),
-        --make_fire("pyro-fire-projectile-6", 3.5)
+        make_fire("pyro-fire-projectile-3", 2)
       }
     },
     animation = sprite_base.animation

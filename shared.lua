@@ -63,6 +63,7 @@ data.units =
   attack_move_indicator = "Attack Move Indicator",
   
   tazer_bot = "Tazer Bot",
+  blaster_bot = "Blaster Bot",
   scatter_spitter = "Scatter Spitter",
   smg_guy = "SMG Guy",
   rocket_guy = "Rocket Guy",

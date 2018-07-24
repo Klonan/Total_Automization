@@ -7,26 +7,26 @@ local on_player_created = function(event)
   --debug.libs.classes.set_class(player, "Pyro")
   local count = 5
   for name, class in pairs(debug.libs.classes.class_list) do
-    player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
+    --player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
   local pos = {x = 0, y = 0}
-  for X = 1, 10 do
-    for Y = 1, 10 do
-      local position = player.surface.find_non_colliding_position(names.units.rocket_guy, {pos.x + X, pos.y + Y}, 150, 1) 
+  for X = 1, 8 do
+    for Y = 1, 8 do
+      local position = player.surface.find_non_colliding_position(names.units.smg_guy, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        player.surface.create_entity{name = names.units.scatter_spitter, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.tazer_bot, position = position, force = "enemy"}
       else
         break
       end
     end
   end
   local pos = {x = 0, y = -20}
-  for X = 1, 4 do
-    for Y = 1, 4 do
-      local position = player.surface.find_non_colliding_position(names.units.scatter_spitter, {pos.x + X, pos.y + Y}, 150, 1) 
+  for X = 1, 8 do
+    for Y = 1, 8 do
+      local position = player.surface.find_non_colliding_position(names.units.blaster_bot, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        player.surface.create_entity{name = names.units.tazer_bot, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.blaster_bot, position = position, force = "player"}
       else
         break
       end

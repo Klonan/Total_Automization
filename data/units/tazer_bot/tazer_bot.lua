@@ -1,11 +1,14 @@
 local path = util.path("data/units/tazer_bot/")
 local name = require("shared").units.tazer_bot
+local base = util.copy(data.raw["combat-robot"]["distractor"])
+table.insert(base.idle.layers, base.shadow_idle)
+table.insert(base.in_motion.layers, base.shadow_in_motion)
 local bot =
 {
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/defender.png",
+  icon = "__base__/graphics/icons/distractor.png",
   icon_size = 32,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
@@ -27,22 +30,22 @@ local bot =
   min_persue_time = 8 * 60,
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(30),
   move_while_shooting = true, --Not merged
   attack_parameters =
   {
     type = "beam",
     ammo_category = "bullet",
     cooldown = SU(150),
-    range = 12,
-    min_attack_distance = 8,
-    sound = make_light_gunshot_sounds(),
+    cooldown_deviation = 0.15,
+    range = 16,
+    min_attack_distance = 10,
     ammo_type =
     {
       category = "bullet",
       action =
       {
-        force = "enemy",
+        force = "not-same",
         type = "direct",
         action_delivery =
         {
@@ -55,80 +58,7 @@ local bot =
         }
       }
     },
-    animation =
-    {   
-      layers =
-      {
-        {
-          filename = "__base__/graphics/entity/distractor-robot/distractor-robot.png",
-          priority = "high",
-          line_length = 16,
-          width = 38,
-          height = 33,
-          frame_count = 1,
-          direction_count = 16,
-          shift = {0, -0.078125},
-          hr_version =
-          {
-            filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot.png",
-            priority = "high",
-            line_length = 16,
-            width = 72,
-            height = 62,
-            frame_count = 1,
-            direction_count = 16,
-            shift = util.by_pixel(0, -2.5),
-            scale = 0.5
-          }
-        },
-        {
-          filename = "__base__/graphics/entity/distractor-robot/distractor-robot-mask.png",
-          priority = "high",
-          line_length = 16,
-          width = 24,
-          height = 21,
-          frame_count = 1,
-          direction_count = 16,
-          shift = {0, -0.203125},
-          apply_runtime_tint = true,
-          hr_version =
-          {
-            filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot-mask.png",
-            priority = "high",
-            line_length = 16,
-            width = 42,
-            height = 37,
-            frame_count = 1,
-            direction_count = 16,
-            shift = util.by_pixel(0, -6.25),
-            apply_runtime_tint = true,
-            scale = 0.5
-          }
-        },
-        {
-          filename = "__base__/graphics/entity/distractor-robot/distractor-robot-shadow.png",
-          priority = "high",
-          line_length = 16,
-          width = 40,
-          height = 25,
-          frame_count = 1,
-          direction_count = 16,
-          shift = {0.9375, 0.609375},
-          hr_version =
-          {
-            filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot-shadow.png",
-            priority = "high",
-            line_length = 16,
-            width = 97,
-            height = 59,
-            frame_count = 1,
-            direction_count = 16,
-            shift = util.by_pixel(32.5, 19.25),
-            scale = 0.5
-          }
-        }
-      }
-    }
+    animation = base.idle
   },
   vision_distance = 16,
   has_belt_immunity = true,
@@ -161,84 +91,7 @@ local bot =
       volume = 0.5
     }
   },
-  run_animation = 
-  {
-    layers =
-    {
-      {
-        filename = "__base__/graphics/entity/distractor-robot/distractor-robot.png",
-        priority = "high",
-        line_length = 16,
-        width = 38,
-        height = 33,
-        frame_count = 1,
-        direction_count = 16,
-        shift = {0, -0.078125},
-        y = 33,
-        hr_version =
-        {
-          filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot.png",
-          priority = "high",
-          line_length = 16,
-          width = 72,
-          height = 62,
-          frame_count = 1,
-          direction_count = 16,
-          shift = util.by_pixel(0, -2.5),
-          y = 62,
-          scale = 0.5
-        }
-      },
-      {
-        filename = "__base__/graphics/entity/distractor-robot/distractor-robot-mask.png",
-        priority = "high",
-        line_length = 16,
-        width = 24,
-        height = 21,
-        frame_count = 1,
-        direction_count = 16,
-        shift = {0, -0.203125},
-        apply_runtime_tint = true,
-        y = 21,
-        hr_version =
-        {
-          filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot-mask.png",
-          priority = "high",
-          line_length = 16,
-          width = 42,
-          height = 37,
-          frame_count = 1,
-          direction_count = 16,
-          shift = util.by_pixel(0, -6.25),
-          apply_runtime_tint = true,
-          y = 37,
-          scale = 0.5
-        }
-      },
-      {
-        filename = "__base__/graphics/entity/distractor-robot/distractor-robot-shadow.png",
-        priority = "high",
-        line_length = 16,
-        width = 40,
-        height = 25,
-        frame_count = 1,
-        direction_count = 16,
-        shift = {0.9375, 0.609375},
-        hr_version =
-        {
-          filename = "__base__/graphics/entity/distractor-robot/hr-distractor-robot-shadow.png",
-          priority = "high",
-          line_length = 16,
-          width = 97,
-          height = 59,
-          frame_count = 1,
-          direction_count = 16,
-          shift = util.by_pixel(32.5, 19.25),
-          scale = 0.5
-        }
-      }
-    }
-  }
+  run_animation = base.in_motion
 }
 util.recursive_hack_make_hr(bot)
 util.recursive_hack_scale(bot, 2)
@@ -294,8 +147,25 @@ beam.action =
         damage = { amount = 10, type = "electric"}
       },
       {
-        type = "create-sticker",
-        sticker = name.." Sticker"
+        type = "nested-result",
+        affects_target = true,
+        action =
+        {
+          type = "area",
+          radius = 1,
+          force = "not-same",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "create-sticker",
+                sticker = name.." Sticker"
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -304,9 +174,9 @@ beam.action =
 local sticker = util.copy(data.raw.sticker["fire-sticker"])
 sticker.name = name.." Sticker"
 
-sticker.duration_in_ticks = SU(1 * 60)
+sticker.duration_in_ticks = SU(2 * 60)
 sticker.target_movement_modifier = 0.75
-sticker.damage_per_tick = {type = "electric", amount = 0.1}
+sticker.damage_per_tick = {type = "electric", amount = 0.25}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
@@ -342,9 +212,6 @@ local recipe = {
   energy_required = 5,
   result = name
 }
-
-
-
 
 data:extend{
   bot,
