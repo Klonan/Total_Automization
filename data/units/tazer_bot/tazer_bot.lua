@@ -155,6 +155,7 @@ beam.action =
           type = "area",
           radius = 1,
           force = "not-same",
+          
           action_delivery =
           {
             type = "instant",

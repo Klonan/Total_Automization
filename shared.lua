@@ -65,6 +65,7 @@ data.units =
   tazer_bot = "Tazer Bot",
   blaster_bot = "Blaster Bot",
   laser_bot = "Laser Bot",
+  plasma_bot = "Plasma Bot",
   scatter_spitter = "Scatter Spitter",
   smg_guy = "SMG Guy",
   rocket_guy = "Rocket Guy",
