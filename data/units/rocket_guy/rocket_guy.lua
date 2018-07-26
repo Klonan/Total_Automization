@@ -33,13 +33,14 @@ local bot =
   },
   healing_per_tick = 0,
   collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  collision_mask = {"not-colliding-with-itself", "player-layer", "object-layer"},
+  collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = SU(30),
-  move_while_shooting = true, --Not merged
+  move_while_shooting = true,
+  can_open_gates = true,
   attack_parameters =
   {
     type = "projectile",

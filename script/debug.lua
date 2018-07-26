@@ -15,7 +15,11 @@ local on_player_created = function(event)
     for Y = 1, 3 do
       local position = player.surface.find_non_colliding_position(names.units.smg_guy, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        player.surface.create_entity{name = names.units.scatter_spitter, position = position, force = "player"}
+        for k, unit in pairs (names.units) do
+          if game.entity_prototypes[unit] then
+            player.surface.create_entity{name = unit, position = player.surface.find_non_colliding_position(unit, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
+          end
+        end
       else
         break
       end

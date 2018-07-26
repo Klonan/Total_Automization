@@ -80,12 +80,13 @@ local unit =
   healing_per_tick = 0,
   collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-1, -1}, {1, 1}},
-  collision_mask = {"not-colliding-with-itself", "player-layer", "object-layer"},
+  collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = 120,
-  move_while_shooting = true, --Not merged
+  move_while_shooting = true,
+  can_open_gates = true,
   attack_parameters =
   {
     type = "projectile",

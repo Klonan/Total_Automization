@@ -34,7 +34,8 @@ local bot =
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = 120,
-  move_while_shooting = true, --Not merged
+  move_while_shooting = true,
+  can_open_gates = true,
   attack_parameters =
   {
     type = "projectile",
