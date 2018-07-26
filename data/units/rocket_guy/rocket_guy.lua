@@ -44,7 +44,7 @@ local bot =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(120),
+    cooldown = SU(90),
     cooldown_deviation = 0.5,
     range = 36,
     min_attack_distance = 28,

@@ -11,22 +11,11 @@ local on_player_created = function(event)
     count = count + 5
   end
   local pos = {x = 0, y = 0}
-  for X = 1, 8 do
-    for Y = 1, 8 do
+  for X = 1, 3 do
+    for Y = 1, 3 do
       local position = player.surface.find_non_colliding_position(names.units.smg_guy, {pos.x + X, pos.y + Y}, 150, 1) 
       if position then
-        player.surface.create_entity{name = names.units.tazer_bot, position = position, force = "enemy"}
-      else
-        break
-      end
-    end
-  end
-  local pos = {x = 0, y = -20}
-  for X = 1, 8 do
-    for Y = 1, 8 do
-      local position = player.surface.find_non_colliding_position(names.units.blaster_bot, {pos.x + X, pos.y + Y}, 150, 1) 
-      if position then
-        player.surface.create_entity{name = names.units.blaster_bot, position = position, force = "player"}
+        player.surface.create_entity{name = names.units.scatter_spitter, position = position, force = "player"}
       else
         break
       end

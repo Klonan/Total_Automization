@@ -62,7 +62,7 @@ local bot =
   },
   vision_distance = 16,
   has_belt_immunity = true,
-  movement_speed = SD(0.2),
+  movement_speed = SD(0.22),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
