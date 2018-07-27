@@ -3,60 +3,6 @@ local name = require("shared").units.flame_car
 local sprite_base = util.copy(data.raw.car.car)
 local path = util.path("data/units/flame_car/")
 
-local fire = require("data/tf_util/tf_fire_util")
-local sprites = fire.create_fire_pictures({animation_speed = SD(0.5), scale = 0.5})
-local index = 0
-local sprite = function()
-  index = index + 1
-  return sprites[index]
-end
-local base = data.raw.projectile["shotgun-pellet"]
-local make_fire = function(name, n)
-  pyro_fire_projectile = util.copy(base)
-  pyro_fire_projectile.name = name
-  pyro_fire_projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
-  pyro_fire_projectile.force_condition = "not-same"
-  pyro_fire_projectile.height = 0
-  pyro_fire_projectile.action = 
-  {
-    type = "direct",
-    action_delivery =
-    {
-      type = "instant",
-      target_effects =
-      {
-        {
-          type = "damage",
-          damage = {amount = 0.1 , type = util.damage_type("fire")}
-        },
-        {
-          type = "create-sticker",
-          sticker = "Afterburn Sticker"
-        }
-      }
-    }
-  }
-  pyro_fire_projectile.final_action = nil
-  pyro_fire_projectile.animation = sprite()
-  data:extend({pyro_fire_projectile})
-  return
-  {
-    type = "direct",
-    action_delivery =
-    {
-      type = "projectile",
-      projectile = name,
-      starting_speed = SD(0.4) + (0.1 / n),
-      direction_deviation = 0.1 * n,
-      range_deviation = 0.2 * n,
-      starting_frame_deviation = 5,
-      max_range = 25 - (n * 2)
-    }
-  }
-
-end
-
-
 local unit =
 {
   type = "unit",
@@ -91,9 +37,9 @@ local unit =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(2.64),
-    range = 15,
-    min_attack_distance = 15,
+    cooldown = SU(1),
+    range = 24,
+    min_attack_distance = 20,
     projectile_creation_distance = 0.5,
     cyclic_sound =
     {
@@ -129,19 +75,30 @@ local unit =
           type = "direct",
           action_delivery =
           {
-            type = "instant",
-            source_effects =
-            {
-              {
-                type = "create-explosion",
-                entity_name = "explosion-gunshot"
-              }
-            }
+            type = "projectile",
+            projectile = name.." Projectile",
+            starting_speed = SD(0.5),
+            starting_speed_deviation = SD(0.05),
+            direction_deviation = 0.2,
+            range_deviation = 0.2,
+            starting_frame_deviation = 5,
+            max_range = 25
           }
         },
-        make_fire("pyro-fire-projectile-1", 1),
-        make_fire("pyro-fire-projectile-2", 1.5),
-        make_fire("pyro-fire-projectile-3", 2)
+        {
+          type = "direct",
+          action_delivery =
+          {
+            type = "projectile",
+            projectile = name.." Projectile",
+            starting_speed = SD(0.55),
+            starting_speed_deviation = SD(0.05),
+            direction_deviation = 0.1,
+            range_deviation = 0.1,
+            starting_frame_deviation = 5,
+            max_range = 25
+          }
+        }
       }
     },
     animation = sprite_base.animation
@@ -177,4 +134,60 @@ local unit =
   run_animation = sprite_base.animation
 }
 
-data:extend{unit}
+local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+projectile.name = name.." Projectile"
+projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
+projectile.force_condition = "not-same"
+projectile.height = 0
+projectile.action = 
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "damage",
+        damage = {amount = 0.1 , type = util.damage_type("fire")}
+      },
+      {
+        type = "create-sticker",
+        sticker = "Afterburn Sticker"
+      }
+    }
+  }
+}
+projectile.acceleration = -0.005
+projectile.final_action = nil
+projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
+
+
+local item = {
+  type = "item",
+  name = name,
+  localised_name = name,
+  icon = unit.icon,
+  icon_size = unit.icon_size,
+  flags = {},
+  subgroup = "iron-units",
+  order = name,
+  stack_size = 1
+}
+
+local recipe = {
+  type = "recipe",
+  name = name,
+  localised_name = name,
+  category = require("shared").deployers.iron_unit,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4}
+  },
+  energy_required = 5,
+  result = name
+}
+
+
+data:extend{unit, projectile, item, recipe}

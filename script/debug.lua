@@ -13,7 +13,7 @@ local on_player_created = function(event)
   local pos = {x = 0, y = 0}
   for X = 1, 8 do
     for Y = 1, 8 do
-      player.surface.create_entity{name = names.units.plasma_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
+      player.surface.create_entity{name = names.units.flame_car, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
     end
   end
   local pos = {x = 50, y = 0}
