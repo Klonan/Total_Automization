@@ -78,9 +78,9 @@ local bot =
           type = "projectile",
           projectile = name.." Projectile",
           starting_speed = SD(0),
-          direction_deviation = 0.1,
-          range_deviation = 0.1,
-          max_range = 35
+          direction_deviation = 0.05,
+          range_deviation = 0.05,
+          max_range = 36
           }
         }
       }
@@ -125,6 +125,7 @@ projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.collision_box = {{-0.25, -0.25}, {0.25, 0.25}}
 projectile.direction_only = true
+projectile.height = 0.5
 projectile.action =
 {
   type = "direct",
@@ -143,7 +144,7 @@ projectile.action =
 projectile.final_action = 
 {
   type = "area",
-  radius = 2,
+  radius = 2.5,
   force = "not-same",
   collision_mode = "distance-from-center",
   action_delivery =
@@ -186,7 +187,7 @@ projectile.final_action =
 }
 projectile.animation.filename = path.."plasma_bot_projectile.png"
 projectile.animation.animation_speed = 3
-projectile.acceleration = SD(0.01)
+projectile.acceleration = SD(0.02)
 util.recursive_hack_scale(projectile, 2)
 
 local splash = 
@@ -205,7 +206,8 @@ local splash =
       frame_count = 15,
       line_length = 5,
       shift = {-0.437, 0.5},
-      animation_speed = 0.35
+      animation_speed = 0.35,
+      scale = 1.5
     }
   }
 }

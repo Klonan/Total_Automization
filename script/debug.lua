@@ -11,18 +11,15 @@ local on_player_created = function(event)
     count = count + 5
   end
   local pos = {x = 0, y = 0}
-  for X = 1, 3 do
-    for Y = 1, 3 do
-      local position = player.surface.find_non_colliding_position(names.units.smg_guy, {pos.x + X, pos.y + Y}, 150, 1) 
-      if position then
-        for k, unit in pairs (names.units) do
-          if game.entity_prototypes[unit] then
-            player.surface.create_entity{name = unit, position = player.surface.find_non_colliding_position(unit, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
-          end
-        end
-      else
-        break
-      end
+  for X = 1, 8 do
+    for Y = 1, 8 do
+      player.surface.create_entity{name = names.units.plasma_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
+    end
+  end
+  local pos = {x = 50, y = 0}
+  for X = 1, 10 do
+    for Y = 1, 10 do
+      player.surface.create_entity{name = names.units.blaster_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "enemy"}
     end
   end
   player.get_quickbar().insert(names.units.unit_selection_tool)
