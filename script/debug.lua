@@ -13,7 +13,7 @@ local on_player_created = function(event)
   local pos = {x = 0, y = 0}
   for X = 1, 8 do
     for Y = 1, 8 do
-      player.surface.create_entity{name = names.units.flame_car, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
+      player.surface.create_entity{name = names.units.acid_worm, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
     end
   end
   local pos = {x = 50, y = 0}
@@ -22,8 +22,8 @@ local on_player_created = function(event)
       player.surface.create_entity{name = names.units.blaster_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "enemy"}
     end
   end
-  player.get_quickbar().insert(names.units.unit_selection_tool)
-  player.get_quickbar().insert(names.units.deployer_selection_tool)
+  player.get_quickbar().insert(names.unit_tools.unit_selection_tool)
+  player.get_quickbar().insert(names.unit_tools.deployer_selection_tool)
   --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
   --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
   player.insert("entry-item")

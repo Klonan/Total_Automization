@@ -6,11 +6,6 @@ local base = util.copy(data.raw.player.player)
 --  layer.frame_count = 1
 --end
 
-util.recursive_hack_tint(base.animations[2].idle_with_gun.layers[2], {r = 0.6, g = 0.6, b = 0.6})
-util.recursive_hack_tint(base.animations[2].idle_with_gun.layers[4], {r = 0.6, g = 0.6, b = 0.6})
-util.recursive_hack_tint(base.animations[2].running.layers[2], {r = 0.6, g = 0.6, b = 0.6})
-util.recursive_hack_tint(base.animations[2].running.layers[4], {r = 0.6, g = 0.6, b =0.6})
-
 local bot =
 {
   type = "unit",

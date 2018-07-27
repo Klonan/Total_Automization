@@ -49,7 +49,7 @@ data.hotkeys =
   suicide = "Suicide"
 }
 
-data.units =
+data.unit_tools =
 {
   unit_selection_tool = "Select units",
   deployer_selection_tool = "Select deployers",
@@ -61,7 +61,10 @@ data.units =
   unit_force_attack_tool = "Force attack targets",
   move_indicator = "Move Indicator",
   attack_move_indicator = "Attack Move Indicator",
-  
+}
+
+data.units =
+{
   tazer_bot = "Tazer Bot",
   blaster_bot = "Blaster Bot",
   laser_bot = "Laser Bot",
@@ -69,7 +72,8 @@ data.units =
   scatter_spitter = "Scatter Spitter",
   smg_guy = "SMG Guy",
   rocket_guy = "Rocket Guy",
-  flame_car = "Flame Car"
+  flame_car = "Flame Car",
+  acid_worm = "Acid Worm"
 }
 
 data.entities =

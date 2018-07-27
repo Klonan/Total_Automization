@@ -1,4 +1,4 @@
-local names = require("shared").units
+local names = require("shared").unit_tools
 
 local unit_control = {}
 
