@@ -1,28 +1,50 @@
-local name = require("shared").units.flame_car
+local name = require("shared").units.shell_tank
 
-local sprite_base = util.copy(data.raw.car.car)
-local path = util.path("data/units/flame_car/")
+local sprite_base = util.copy(data.raw.car.tank)
+local path = util.path("data/units/shell_tank/")
+util.recursive_hack_make_hr(sprite_base)
+for k, layer in pairs (sprite_base.animation.layers) do
+  layer.frame_count = 1
+  layer.max_advance = nil
+  layer.line_length = nil
+  if layer.stripes then
+    for k, strip in pairs (layer.stripes) do
+      strip.width_in_frames = 1
+    end
+    if layer.apply_runtime_tint then
+      local new_stripes = {}
+      for k, stripe in pairs (layer.stripes) do
+        if k % 2 ~= 0 then
+          table.insert(new_stripes, stripe)
+        end
+      end
+      layer.stripes = new_stripes
+      --error(serpent.block(layer))
+    end
+  end
+end
+for k, layer in pairs (sprite_base.turret_animation.layers) do
+  table.insert(sprite_base.animation.layers, layer)
+end
+
+
+--util.recursive_hack_scale(sprite_base, 1.5)
+
 
 local unit =
 {
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/car.png",
-  icon_size = 32,
+  icon = sprite_base.icon,
+  icon_size = sprite_base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   max_health = 100,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-1, -1}, {1, 1}},
@@ -37,34 +59,10 @@ local unit =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(1),
+    cooldown = SU(100),
     range = 24,
     min_attack_distance = 20,
     projectile_creation_distance = 0.5,
-    cyclic_sound =
-    {
-      begin_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_start.ogg",
-          volume = 0.5
-        }
-      },
-      middle_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_mid.ogg",
-          volume = 0.5
-        }
-      },
-      end_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_end.ogg",
-          volume = 0.5
-        }
-      }
-    },
     ammo_type =
     {
       category = "bullet",
@@ -160,7 +158,7 @@ projectile.action =
 }
 projectile.acceleration = -0.005
 projectile.final_action = nil
-projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
+--projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
 
 local item = {

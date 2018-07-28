@@ -32,7 +32,7 @@ local recursive_hack_tint
 recursive_hack_tint = function(array, tint)
   for k, v in pairs (array) do
     if type(v) == "table" then
-      if v.width and v.height and v.filename then
+      if v.width and v.height and (v.filename or v.stripes)  then
         v.tint = tint
       end
       recursive_hack_tint(v, tint)
@@ -45,13 +45,12 @@ local recursive_hack_make_hr
 recursive_hack_make_hr = function(prototype)
   for k, v in pairs (prototype) do
     if type(v) == "table" then
-      if v.width and v.height and v.filename and v.hr_version then
+      if v.width and v.height and v.hr_version and (v.filename or v.stripes) then
         prototype[k] = v.hr_version
         --v.scale = v.scale * 0.5  
         v.hr_version = nil
-      else
-        recursive_hack_make_hr(v)
       end
+      recursive_hack_make_hr(v)
     end
   end
 end

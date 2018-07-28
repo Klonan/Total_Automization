@@ -1,6 +1,22 @@
 local debug = {}
 local names = require("shared")
 
+local get_position = function(n)
+  local root = n^0.5
+  local nearest_root = math.floor(root+0.5)
+  local upper_root = math.ceil(root)
+  local root_difference = math.abs(nearest_root^2 - n)
+  if nearest_root == upper_root then
+    x = upper_root - root_difference
+    y = nearest_root
+  else
+    x = upper_root
+    y = root_difference
+  end
+  --game.print(x.." - "..y)
+  return {x, y}
+end
+
 local on_player_created = function(event)
   local player = game.players[event.player_index]
   if player.character then player.character.destroy() end
@@ -10,17 +26,27 @@ local on_player_created = function(event)
     --player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
     count = count + 5
   end
+  local team1 = {
+    shell_tank = 5
+  }
   local pos = {x = 0, y = 0}
-  for X = 1, 4 do
-    for Y = 1, 4 do
-      player.surface.create_entity{name = names.units.plasma_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "player"}
-    end
+  for name, count in pairs (team1) do
+    for x = 1, count do
+      local vec = get_position(math.random(300))
+      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+    end 
   end
+  team2 = {
+    piercing_biter = 1,
+    rocket_guy = 1,
+    laser_bot = 1
+  }
   local pos = {x = 50, y = 0}
-  for X = 1, 10 do
-    for Y = 1, 10 do
-      player.surface.create_entity{name = names.units.blaster_bot, position = player.surface.find_non_colliding_position(names.units.plasma_bot, {pos.x + X, pos.y + Y}, 150, 1) , force = "enemy"}
-    end
+  for name, count in pairs (team2) do
+    for x = 1, count do
+      local vec = get_position(math.random(300))
+      --  player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
+    end 
   end
   player.get_quickbar().insert(names.unit_tools.unit_selection_tool)
   player.get_quickbar().insert(names.unit_tools.deployer_selection_tool)

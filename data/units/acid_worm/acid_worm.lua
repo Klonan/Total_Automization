@@ -29,7 +29,7 @@ local bot =
   icon_size = base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 125,
+  max_health = 200,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -56,8 +56,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = SU(90),
     cooldown_deviation = 0.5,
-    range = 36,
-    min_attack_distance = 28,
+    range = 40,
+    min_attack_distance = 32,
     projectile_creation_distance = 0.5,
     sound = base.starting_attack_sound,
     ammo_type =
@@ -124,7 +124,7 @@ stream.action =
   },
   {
     type = "area",
-    radius = 2.5,
+    radius = 1.5,
     force = "not-same",
     action_delivery =
     {
@@ -134,11 +134,7 @@ stream.action =
         {
           type = "damage",
           damage = { amount = 3, type = "acid" }
-        },
-        {
-          type = "create-entity",
-          entity_name = name.." Splash"
-        },
+        }
       }
     }
   }
@@ -154,13 +150,13 @@ stream.particle_horizontal_speed_deviation = 0.03
 stream.particle_start_alpha = 1
 stream.particle_end_alpha = 1
 stream.particle_start_scale = 1
-stream.particle_loop_frame_count = 3
+stream.particle_loop_frame_count = 10
 stream.particle_fade_out_threshold = 1
 stream.particle_loop_exit_threshold = 1
 --stream.particle.tint = {r = 0.5, g = 0, b = 1}
 stream.spine_animation = nil
 stream.smoke_sources = nil
-stream.target_position_deviation = 2.5
+stream.target_position_deviation = 3
 
 local splash = 
 {

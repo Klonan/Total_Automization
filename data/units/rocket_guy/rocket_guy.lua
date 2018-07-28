@@ -15,7 +15,7 @@ local bot =
   icon_size = 107,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 125,
+  max_health = 140,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -27,7 +27,7 @@ local bot =
     }
   },
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,

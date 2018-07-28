@@ -73,7 +73,10 @@ data.units =
   smg_guy = "SMG Guy",
   rocket_guy = "Rocket Guy",
   flame_car = "Flame Car",
-  acid_worm = "Acid Worm"
+  acid_worm = "Acid Worm",
+  beetle = "Beetle",
+  piercing_biter = "Piercing Biter",
+  shell_tank = "Shell Tank"
 }
 
 data.entities =

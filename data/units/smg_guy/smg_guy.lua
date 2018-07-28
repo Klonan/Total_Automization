@@ -14,26 +14,20 @@ local bot =
   icon_size = 32,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 125,
+  max_health = 80,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
   can_open_gates = true,
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
+  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
   attack_parameters =
@@ -59,6 +53,7 @@ local bot =
           type = "projectile",
           projectile = name.." Projectile",
           starting_speed = SD(1),
+          starting_speed_deviation = SD(0.05),
           direction_deviation = 0.1,
           range_deviation = 0.1,
           max_range = 24
@@ -121,7 +116,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 3 , type = util.damage_type("smg_guy")}
+        damage = {amount = 2.5 , type = util.damage_type("smg_guy")}
       }
     }
   }

@@ -12,7 +12,7 @@ unit.movement_speed = SD(0.2)
 unit.max_pursue_distance = 64
 unit.min_persue_time = 8 * 60
 unit.map_color = {b = 0.5, g = 1}
-
+unit.max_health = 100
 local animation = util.copy(unit.attack_parameters.animation)
 local sound = util.copy(unit.attack_parameters.sound)
 local make_spitter_blast = function(speed, direction, range, count)

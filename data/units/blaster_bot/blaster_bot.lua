@@ -16,17 +16,11 @@ local bot =
   icon_size = base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 125,
+  max_health = 60,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
@@ -45,7 +39,8 @@ local bot =
     cooldown_deviation = 0.5,
     range = 24,
     min_attack_distance = 18,
-    projectile_creation_distance = 0.5,
+    projectile_creation_distance = 1,
+    projectile_center = {0, 1.2},
     sound = 
     {
       {
@@ -73,9 +68,9 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(1),
-          direction_deviation = 0.1,
-          range_deviation = 0.1,
+          starting_speed = SD(1.5),
+          direction_deviation = 0.05,
+          range_deviation = 0.05,
           max_range = 24
           }
         }

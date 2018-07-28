@@ -12,17 +12,11 @@ local bot =
   icon_size = 32,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 125,
+  max_health = 120,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
