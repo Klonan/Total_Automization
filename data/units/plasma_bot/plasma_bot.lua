@@ -24,13 +24,7 @@ local bot =
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
@@ -187,7 +181,7 @@ projectile.final_action =
 }
 projectile.animation.filename = path.."plasma_bot_projectile.png"
 projectile.animation.blend_mode = "additive-soft"
-projectile.animation.animation_speed = 3
+projectile.animation.animation_speed = SD(3)
 projectile.acceleration = SD(0.02)
 util.recursive_hack_scale(projectile, 2)
 
@@ -207,7 +201,7 @@ local splash =
       frame_count = 10,
       line_length = 5,
       shift = {-0.437, 0.5},
-      animation_speed = 0.35,
+      animation_speed = SD(0.35),
       blend_mode = "additive-soft",
       run_mode = "backward",
       scale = 1.5

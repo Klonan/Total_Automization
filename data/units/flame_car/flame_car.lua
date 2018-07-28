@@ -38,8 +38,8 @@ local unit =
     type = "projectile",
     ammo_category = "bullet",
     cooldown = SU(1),
-    range = 24,
-    min_attack_distance = 20,
+    range = 16,
+    min_attack_distance = 12,
     projectile_creation_distance = 0.5,
     cyclic_sound =
     {
@@ -158,7 +158,7 @@ projectile.action =
     }
   }
 }
-projectile.acceleration = -0.005
+projectile.acceleration = SD(-0.004)
 projectile.final_action = nil
 projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
