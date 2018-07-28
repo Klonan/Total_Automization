@@ -47,7 +47,7 @@ local bot =
   min_persue_time = 60 * 15,
   selection_box = {{-1, -1}, {1, 1}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = SU(30),
+  distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
   attack_parameters =
@@ -78,7 +78,7 @@ local bot =
     },
     animation = base.ending_attack_animation
   },
-  vision_distance = 16,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = SD(0.15),
   distance_per_frame = 0.15,
@@ -102,14 +102,30 @@ local scale = 1.5
 util.recursive_hack_make_hr(bot)
 --util.recursive_hack_scale(bot, scale)
 --util.scale_boxes(bot, scale)
+local particle_gfx = util.copy(data.raw.projectile["acid-projectile-purple"])
 
 local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
 stream.name = name.." Stream"
 stream.action =
 {
   {
+    type = "direct",
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "create-entity",
+          entity_name = name.." Splash"
+        }
+      }
+    }
+  },
+  {
     type = "area",
     radius = 2.5,
+    force = "not-same",
     action_delivery =
     {
       type = "instant",
@@ -118,30 +134,55 @@ stream.action =
         {
           type = "damage",
           damage = { amount = 3, type = "acid" }
-        }
+        },
+        {
+          type = "create-entity",
+          entity_name = name.." Splash"
+        },
       }
     }
   }
 }
-stream.particle.frame_count = 8
+stream.particle = particle_gfx.animation
+stream.particle.scale = 1.5
 stream.particle_buffer_size = 100
 stream.particle_spawn_interval = 2
 stream.particle_spawn_timeout = SU(30)
 stream.particle_vertical_acceleration = 0.981 / 60
 stream.particle_horizontal_speed = 0.35
-stream.particle_horizontal_speed_deviation = 0.005
+stream.particle_horizontal_speed_deviation = 0.03
 stream.particle_start_alpha = 1
 stream.particle_end_alpha = 1
 stream.particle_start_scale = 1
 stream.particle_loop_frame_count = 3
 stream.particle_fade_out_threshold = 1
 stream.particle_loop_exit_threshold = 1
-stream.particle.tint = {r = 0.5, g = 0, b = 1}
-stream.spine_animation.tint = {r = 0.5, g = 0, b = 1}
+--stream.particle.tint = {r = 0.5, g = 0, b = 1}
 stream.spine_animation = nil
 stream.smoke_sources = nil
-stream.target_position_deviation = 3 -- not merged
+stream.target_position_deviation = 2.5
 
+local splash = 
+{
+  type = "explosion",
+  name = name.." Splash",
+  height = 1,
+  flags = {"not-on-map"},
+  animations =
+  {
+    {
+      filename = path.."acid_worm_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = 0.35,
+      scale = 1.5
+    }
+  }
+}
 
 local item = {
   type = "item",
@@ -167,4 +208,4 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, stream, item, recipe}
+data:extend{bot, stream, splash, item, recipe}

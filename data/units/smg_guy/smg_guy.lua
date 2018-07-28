@@ -78,7 +78,7 @@ local bot =
     },
     animation = base.animations[1].idle_with_gun
   },
-  vision_distance = 16,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = SD(0.2),
   distance_per_frame = 0.15,

@@ -30,7 +30,7 @@ local bot =
   min_persue_time = 8 * 60,
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
   sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = SU(30),
+  distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
   attack_parameters =
@@ -61,7 +61,7 @@ local bot =
     },
     animation = base.idle
   },
-  vision_distance = 16,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = SD(0.22),
   distance_per_frame = 0.15,

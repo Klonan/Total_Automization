@@ -103,7 +103,7 @@ local unit =
     },
     animation = sprite_base.animation
   },
-  vision_distance = 16,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = SD(0.25),
   distance_per_frame = 0.15,
