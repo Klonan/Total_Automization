@@ -33,8 +33,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = SU(150),
     cooldown_deviation = 0.15,
-    range = 16,
-    min_attack_distance = 10,
+    range = 20,
+    min_attack_distance = 16,
     ammo_type =
     {
       category = "bullet",
@@ -147,9 +147,8 @@ beam.action =
         action =
         {
           type = "area",
-          radius = 1,
+          radius = 2,
           force = "not-same",
-          
           action_delivery =
           {
             type = "instant",
@@ -172,7 +171,7 @@ sticker.name = name.." Sticker"
 
 sticker.duration_in_ticks = SU(2 * 60)
 sticker.target_movement_modifier = 0.75
-sticker.damage_per_tick = {type = "electric", amount = 0.25}
+sticker.damage_per_tick = {type = "electric", amount = SD(0.25)}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0

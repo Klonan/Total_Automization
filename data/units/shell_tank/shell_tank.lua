@@ -40,7 +40,7 @@ local unit =
   icon_size = sprite_base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 100,
+  max_health = 225,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -50,19 +50,28 @@ local unit =
   selection_box = {{-1, -1}, {1, 1}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 60 * 15,
+  min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(100),
-    range = 24,
-    min_attack_distance = 20,
-    projectile_creation_distance = 0.5,
+    warmup = SU(15),
+    cooldown = SU(145),
+    range = 40,
+    min_attack_distance = 32,
+    projectile_creation_distance = 1.5,
+    projectile_center = {0, -1.5},
+    sound =
+    {
+      {
+        filename = "__base__/sound/fight/tank-cannon.ogg",
+        volume = 1.0
+      }
+    },
     ammo_type =
     {
       category = "bullet",
@@ -75,26 +84,12 @@ local unit =
           {
             type = "projectile",
             projectile = name.." Projectile",
-            starting_speed = SD(0.5),
-            starting_speed_deviation = SD(0.05),
-            direction_deviation = 0.2,
-            range_deviation = 0.2,
-            starting_frame_deviation = 5,
-            max_range = 25
-          }
-        },
-        {
-          type = "direct",
-          action_delivery =
-          {
-            type = "projectile",
-            projectile = name.." Projectile",
-            starting_speed = SD(0.55),
-            starting_speed_deviation = SD(0.05),
+            starting_speed = SD(1.5),
+            starting_speed_deviation = SD(0.1),
             direction_deviation = 0.1,
             range_deviation = 0.1,
             starting_frame_deviation = 5,
-            max_range = 25
+            max_range = 40
           }
         }
       }
@@ -103,7 +98,7 @@ local unit =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.25),
+  movement_speed = SD(0.18),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -112,11 +107,7 @@ local unit =
   vehicle_impact_sound =  { filename = "__base__/sound/car-metal-impact.ogg", volume = 0.65 },
   working_sound =
   {
-    sound =
-    {
-      filename = "__base__/sound/car-engine.ogg",
-      volume = 0.6
-    }
+    sound = sprite_base.working_sound.sound
   },
   dying_sound =
   {
@@ -132,8 +123,25 @@ local unit =
   run_animation = sprite_base.animation
 }
 
-local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+local projectile = util.copy(data.raw.projectile["cannon-projectile"])
 projectile.name = name.." Projectile"
+projectile.animation.scale = 2.5
+projectile.blend_mode = "additive-soft"
+other_animation =
+{
+  layers =
+  {
+    {
+      filename = "__base__/graphics/entity/artillery-projectile/hr-shell.png",
+      width = 64,
+      height = 64,
+      shift = {1, 0},
+      scale = 1,
+      frame_count = 1
+    },
+    projectile.animation,
+  }
+}
 projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
 projectile.force_condition = "not-same"
 projectile.height = 0
@@ -146,18 +154,34 @@ projectile.action =
     target_effects =
     {
       {
-        type = "damage",
-        damage = {amount = 0.1 , type = util.damage_type("fire")}
-      },
-      {
-        type = "create-sticker",
-        sticker = "Afterburn Sticker"
+        type = "create-entity",
+        entity_name = "explosion"
       }
     }
   }
 }
-projectile.acceleration = -0.005
-projectile.final_action = nil
+projectile.acceleration = SA(0)
+projectile.final_action = {
+  type = "area",
+  radius = 2.5,
+  force = "not-same",
+  collision_mode = "distance-from-center",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = "explosion"
+      },
+      {
+        type = "damage",  
+        damage = {amount = 25 , type = util.damage_type("shell_tank")}
+      }
+    }
+  }
+}
 --projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
 

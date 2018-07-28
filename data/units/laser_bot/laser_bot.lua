@@ -55,7 +55,7 @@ local bot =
         {
           type = "beam",
           beam = name.." Beam",
-          max_length = 24,
+          max_length = 40,
           duration = SU(2),
           --source_offset = {0.15, -0.5},
         }

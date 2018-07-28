@@ -106,6 +106,7 @@ local bot =
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
+projectile.animation.blend_mode = "additive"
 projectile.action =
 {
   type = "direct",

@@ -26,12 +26,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  sticker_box = {{-0.5, -0.5}, {0.5, 0.5}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -182,7 +182,7 @@ projectile.final_action =
 projectile.animation.filename = path.."plasma_bot_projectile.png"
 projectile.animation.blend_mode = "additive-soft"
 projectile.animation.animation_speed = SD(3)
-projectile.acceleration = SD(0.02)
+projectile.acceleration = SA(0.02)
 util.recursive_hack_scale(projectile, 2)
 
 local splash = 

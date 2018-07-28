@@ -124,6 +124,7 @@ stream.action =
   },
   {
     type = "area",
+    collision_mode = "distance-from-center",
     radius = 1.5,
     force = "not-same",
     action_delivery =
@@ -144,7 +145,7 @@ stream.particle.scale = 1.5
 stream.particle_buffer_size = 100
 stream.particle_spawn_interval = SU(2)
 stream.particle_spawn_timeout = SU(30)
-stream.particle_vertical_acceleration = SD(0.981 / 60)
+stream.particle_vertical_acceleration = SA(0.981 / 60)
 stream.particle_horizontal_speed = SD(0.35)
 stream.particle_horizontal_speed_deviation = SD(0.03)
 stream.particle_start_alpha = 1
@@ -186,7 +187,7 @@ local item = {
   icon = bot.icon,
   icon_size = bot.icon_size,
   flags = {},
-  subgroup = "iron-units",
+  subgroup = "bio-units",
   order = name,
   stack_size = 1
 }

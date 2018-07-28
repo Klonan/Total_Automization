@@ -66,7 +66,7 @@ projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.direction_only = true
 projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
-projectile.acceleration = -0.0025
+projectile.acceleration = SA(-0.0025)
 projectile.action =
 {
   type = "direct",
@@ -114,7 +114,7 @@ sticker.name = name.." Sticker"
 
 sticker.duration_in_ticks = SU(1 * 60)
 sticker.target_movement_modifier = 1
-sticker.damage_per_tick = {type = "acid", amount = 1}
+sticker.damage_per_tick = {type = "acid", amount = SD(1)}
 sticker.stickers_per_square_meter = 15
 
 local item = {

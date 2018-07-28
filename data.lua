@@ -1,8 +1,12 @@
+local speed = settings.startup["game-speed"].value
 SU = function(v)
-  return v * settings.startup["game-speed"].value
+  return v * speed
 end
 SD = function(v)
-  return v / settings.startup["game-speed"].value
+  return v / speed
+end
+SA = function(v)
+  return v / (speed ^ 2)
 end
 util = require "data/tf_util/tf_util"
 require "data/entities/entities"
