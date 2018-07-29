@@ -150,25 +150,27 @@ projectile.final_action =
 local item = {
   type = "item",
   name = name,
+  localised_name = name,
   icon = bot.icon,
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "circuit-units",
-  order = name,
+  order = "a-"..name,
   stack_size = 1
 }
 
 local recipe = {
-    type = "recipe",
-    name = name,
-    category = require("shared").deployers.circuit_unit,
-    enabled = true,
-    ingredients =
-    {
-      {"iron-plate", 4}
-    },
-    energy_required = 5,
-    result = name
+  type = "recipe",
+  name = name,
+  localised_name = name,
+  category = require("shared").deployers.circuit_unit,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4}
+  },
+  energy_required = 5,
+  result = name
 }
 
 data:extend{bot, projectile, item, recipe}

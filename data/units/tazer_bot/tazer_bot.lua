@@ -188,17 +188,19 @@ sticker.stickers_per_square_meter = 15
 local item = {
   type = "item",
   name = name,
+  localised_name = name,
   icon = bot.icon,
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "circuit-units",
-  order = name,
+  order = "b-"..name,
   stack_size= 1
 }
 
 local recipe = {
   type = "recipe",
   name = name,
+  localised_name = name,
   category = require("shared").deployers.circuit_unit,
   enabled = true,
   ingredients =

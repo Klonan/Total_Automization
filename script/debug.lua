@@ -27,7 +27,7 @@ local on_player_created = function(event)
     count = count + 5
   end
   local team1 = {
-    plasma_bot = 200,
+    beetle = 86,
   }
   local pos = {x = -40, y = 0}
   for name, count in pairs (team1) do
@@ -37,7 +37,7 @@ local on_player_created = function(event)
     end 
   end
   team2 = {
-    beetle = 400,
+    blaster_bot = 50,
     --scatter_spitter = 30,
     --piercing_biter = 30,
     --rocket_guy = 30,

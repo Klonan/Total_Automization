@@ -207,7 +207,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "iron-units",
-  order = name,
+  order = "d-"..name,
   stack_size = 1
 }
 

@@ -141,17 +141,19 @@ projectile.final_action =
 local item = {
   type = "item",
   name = name,
+  localised_name = name,
   icon = "__base__/graphics/icons/player.png",
   icon_size = 32,
   flags = {},
   subgroup = "iron-units",
-  order = name,
+  order = "a-"..name,
   stack_size= 1
 }
 
 local recipe = {
     type = "recipe",
     name = name,
+    localised_name = name,
     category = require("shared").deployers.iron_unit,
     enabled = true,
     ingredients =

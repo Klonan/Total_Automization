@@ -33,6 +33,7 @@ unit.attack_parameters =
 {
   type = "projectile",
   range = 2,
+  min_attack_distance = 0.5,
   cooldown = SU(60),
   cooldown_deviation = 0.2,
   ammo_category = "melee",
@@ -67,7 +68,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "bio-units",
-  order = name,
+  order = "c-"..name,
   stack_size= 1
 }
 

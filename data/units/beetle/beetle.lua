@@ -7,11 +7,12 @@ unit.localised_name = name
 unit.collision_mask = {"not-colliding-with-itself", "player-layer"}
 unit.can_open_gates = true
 unit.destroy_when_commands_fail = false
+unit.only_attack_healthy = true
 --unit.move_while_shooting = true
 unit.radar_range = 2
 unit.movement_speed = SD(0.3)
 unit.max_pursue_distance = 64
-unit.min_persue_time = 8 * 60
+unit.min_persue_time = SU(8 * 60)
 unit.map_color = {b = 0.5, g = 1}
 unit.collision_box = {{-0.5, -0.5},{0.5, 0.5}}
 unit.selection_box = {{-0.5, -0.5},{0.5, 0.5}}
@@ -32,6 +33,7 @@ unit.attack_parameters =
 {
   type = "projectile",
   range = 1.5,
+  min_attack_distance = 0.5,
   cooldown = SU(35),
   cooldown_deviation = 0.2,
   ammo_category = "melee",
@@ -66,7 +68,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "bio-units",
-  order = name,
+  order = "a-"..name,
   stack_size= 1
 }
 

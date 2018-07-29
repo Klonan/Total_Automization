@@ -165,17 +165,19 @@ local splash =
 local item = {
   type = "item",
   name = name,
+  localised_name = name,
   icon = unit.icon,
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "bio-units",
-  order = name,
+  order = "b-"..name,
   stack_size= 1
 }
 
 local recipe = {
   type = "recipe",
   name = name,
+  localised_name = name,
   category = require("shared").deployers.bio_unit,
   enabled = true,
   ingredients =
