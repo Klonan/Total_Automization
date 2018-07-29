@@ -7,17 +7,25 @@ unit.localised_name = name
 unit.collision_mask = {"not-colliding-with-itself", "player-layer"}
 unit.can_open_gates = true
 unit.destroy_when_commands_fail = false
+unit.only_attack_healthy = true
 --unit.move_while_shooting = true
 unit.radar_range = 2
-unit.movement_speed = SD(0.2)
+unit.movement_speed = SD(0.25)
 unit.max_pursue_distance = 64
-unit.min_persue_time = 8 * 60
+unit.min_persue_time = SU(8 * 60)
 unit.map_color = {b = 0.5, g = 1}
---unit.collision_box = {{-1, -1},{1, 1}}
---unit.selection_box = {{-1, -1},{1, 1}}
-unit.max_health = 200
+unit.collision_box = {{-1, -1},{1, 1}}
+unit.selection_box = {{-1, -1},{1, 1}}
+unit.sticker_box = {{-1, -1},{1, 1}}
+unit.max_health = 220
+unit.dying_explosion = nil
+unit.corpse = nil
+unit.healing_per_tick = SD(3/60)
 
 local animation = util.copy(unit.attack_parameters.animation)
+for k, layer in pairs (animation.layers) do
+  layer.animation_speed = SD(layer.animation_speed or 1)
+end
 local sound = util.copy(unit.attack_parameters.sound)
 animation.layers[2].apply_runtime_tint = true
 unit.run_animation.layers[2].apply_runtime_tint = true
@@ -25,7 +33,7 @@ unit.attack_parameters =
 {
   type = "projectile",
   range = 2,
-  cooldown = SU(80),
+  cooldown = SU(60),
   cooldown_deviation = 0.2,
   ammo_category = "melee",
   ammo_type =
@@ -41,7 +49,7 @@ unit.attack_parameters =
         target_effects =
         {
           type = "damage",
-          damage = { amount = 20, type = util.damage_type("beetle")}
+          damage = { amount = 30, type = util.damage_type("piercing_biter")}
         }
       }
     }

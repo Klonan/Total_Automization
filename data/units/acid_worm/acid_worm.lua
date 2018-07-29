@@ -29,24 +29,18 @@ local bot =
   icon_size = base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 200,
+  max_health = 200, 
+  healing_per_tick = SD(4/60),
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
-  healing_per_tick = 0,
+  resistances = nil,
   collision_box = {{-1, -1}, {1, 1}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 60 * 15,
+  min_persue_time = SU(60 * 15),
   selection_box = {{-1, -1}, {1, 1}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  sticker_box = {{-0.8, -2}, {0.8, 0.2}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -86,14 +80,6 @@ local bot =
   destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = base.dying_explosion,
-  working_sound = {
-    sound =
-    {
-      { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
-    },
-    max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
-  },
   dying_sound = base.dying_sound,
   run_animation = base.ending_attack_animation
 }
@@ -175,7 +161,7 @@ local splash =
       frame_count = 15,
       line_length = 5,
       shift = {-0.437, 0.5},
-      animation_speed = 0.35,
+      animation_speed = SD(0.35),
       scale = 1.5
     }
   }

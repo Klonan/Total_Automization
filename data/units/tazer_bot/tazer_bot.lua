@@ -18,12 +18,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 8 * 60,
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  sticker_box = {{-0.5, -0.5}, {0.5, 0.5}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -49,7 +49,7 @@ local bot =
           add_to_shooter = false,
           max_length = 30,
           duration = SU(45),
-          source_offset = {0, -0.5},
+          source_offset = {0, 0.5},
         }
       }
     },
@@ -170,7 +170,7 @@ local sticker = util.copy(data.raw.sticker["fire-sticker"])
 sticker.name = name.." Sticker"
 
 sticker.duration_in_ticks = SU(2 * 60)
-sticker.target_movement_modifier = 0.75
+sticker.target_movement_modifier = 0.66
 sticker.damage_per_tick = {type = "electric", amount = SD(0.25)}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
@@ -180,7 +180,8 @@ sticker.animation =
   filename = path.."tazer_bot_sticker.png",
   width = 37,
   height = 35,
-  frame_count = 16
+  frame_count = 16,
+  animation_speed = SD(1)
 }
 sticker.stickers_per_square_meter = 15
 

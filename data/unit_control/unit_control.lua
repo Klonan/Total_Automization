@@ -158,7 +158,7 @@ move_indicator.animations = {
   axially_symmetrical = false,
   direction_count = 1,
   priority = "high",
-  animation_speed = 0.25,
+  animation_speed = SD(0.25),
   scale = 0.5,
   filename = path.."move_indicator.png",
 }}

@@ -1,4 +1,4 @@
-local path = util.path("data/units/scatter_spitter")
+local path = util.path("data/units/scatter_spitter/")
 local name = require("shared").units.scatter_spitter
 
 local unit = util.copy(data.raw.unit["big-spitter"])
@@ -13,7 +13,13 @@ unit.max_pursue_distance = 64
 unit.min_persue_time = 8 * 60
 unit.map_color = {b = 0.5, g = 1}
 unit.max_health = 100
+unit.dying_explosion = nil
+unit.corpse = nil
+unit.healing_per_tick = SD(1/60)
 local animation = util.copy(unit.attack_parameters.animation)
+for k, layer in pairs (animation.layers) do
+  layer.animation_speed = SD(layer.animation_speed or 1)
+end
 local sound = util.copy(unit.attack_parameters.sound)
 local make_spitter_blast = function(speed, direction, range, count)
   return
@@ -44,7 +50,7 @@ unit.attack_parameters =
   range = 20,
   min_attack_distance = 16,
   projectile_creation_distance = 1.9,
-  warmup = 30,
+  warmup = SU(30),
   ammo_type =
   {
     category = "biological",
@@ -104,6 +110,10 @@ projectile.action =
       {
         type = "create-sticker",
         sticker = name.." Sticker"
+      },
+      {
+        type = "create-entity",
+        entity_name = name.." Splash"
       }
     }
   }
@@ -116,6 +126,41 @@ sticker.duration_in_ticks = SU(1 * 60)
 sticker.target_movement_modifier = 1
 sticker.damage_per_tick = {type = "acid", amount = SD(1)}
 sticker.stickers_per_square_meter = 15
+sticker.animation = 
+{
+  filename = path.."scatter_spitter_splash.png",
+  priority = "extra-high",
+  width = 92,
+  height = 66,
+  frame_count = 5,
+  line_length = 5,
+  shift = {-0.437, 0.5},
+  animation_speed = SD(0.35),
+  run_mode = "forward-then-backward",
+  scale = 1
+}
+
+local splash = 
+{
+  type = "explosion",
+  name = name.." Splash",
+  height = 1,
+  flags = {"not-on-map"},
+  animations =
+  {
+    {
+      filename = path.."scatter_spitter_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.35),
+      scale = 1
+    }
+  }
+}
 
 local item = {
   type = "item",
@@ -142,6 +187,6 @@ local recipe = {
   result = name
 }
 
-data:extend{unit, projectile, sticker, item, recipe}
+data:extend{unit, projectile, sticker, splash, item, recipe}
 
 

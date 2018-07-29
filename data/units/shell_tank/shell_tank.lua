@@ -86,7 +86,21 @@ local unit =
             projectile = name.." Projectile",
             starting_speed = SD(1.5),
             starting_speed_deviation = SD(0.1),
-            direction_deviation = 0.1,
+            direction_deviation = 0.05,
+            range_deviation = 0.1,
+            starting_frame_deviation = 5,
+            max_range = 40
+          }
+        },
+        {
+          type = "direct",
+          action_delivery =
+          {
+            type = "projectile",
+            projectile = name.." Projectile",
+            starting_speed = SD(1.5),
+            starting_speed_deviation = SD(0.1),
+            direction_deviation = 0.05,
             range_deviation = 0.1,
             starting_frame_deviation = 5,
             max_range = 40
@@ -177,7 +191,7 @@ projectile.final_action = {
       },
       {
         type = "damage",  
-        damage = {amount = 25 , type = util.damage_type("shell_tank")}
+        damage = {amount = 15 , type = util.damage_type("shell_tank")}
       }
     }
   }

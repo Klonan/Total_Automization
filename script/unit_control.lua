@@ -351,7 +351,7 @@ local make_move_command = function(param)
   local surface = param.surface
   local append = param.append
   local indicator = surface.create_entity{name = param.indicator or names.move_indicator, position = position, force = param.force}
-  local tick_to_die = game.tick + 300
+  local tick_to_die = game.tick + SU(300)
   data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
   table.insert(data.indicators[tick_to_die], indicator)
   local type = defines.command.go_to_location

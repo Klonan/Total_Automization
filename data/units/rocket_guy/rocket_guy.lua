@@ -19,29 +19,24 @@ local bot =
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  sticker_box = {{-0.3, -1.5}, {0.3, 0.2}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
+  only_shoot_healthy = true,
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
     cooldown = SU(90),
-    cooldown_deviation = 0.5,
+    cooldown_deviation = 0.25,
     range = 36,
     min_attack_distance = 28,
     projectile_creation_distance = 0.5,
@@ -60,10 +55,11 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(1),
-          direction_deviation = 0.1,
-          range_deviation = 0.1,
-          max_range = 32
+          starting_speed = SD(1.5),
+          starting_speed_deviation = SD(0.05),
+          --direction_deviation = 0.1,
+          --range_deviation = 0.1,
+          max_range = 40
           },
           {
             type = "instant",
@@ -132,7 +128,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 50 , type = util.damage_type("rocket_guy")}
+        damage = {amount = 25 , type = util.damage_type("rocket_guy")}
       },
       {
         type = "create-entity",

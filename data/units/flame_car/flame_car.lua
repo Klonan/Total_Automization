@@ -8,29 +8,23 @@ local unit =
   type = "unit",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/car.png",
-  icon_size = 32,
+  icon = sprite_base.icon,
+  icon_size = sprite_base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 100,
+  max_health = 115,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
-  resistances =
-  {
-    {
-      type = "physical",
-      decrease = 4,
-    }
-  },
+  resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-1, -1}, {1, 1}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 60 * 15,
+  min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  distraction_cooldown = 120,
+  distraction_cooldown = SU(30),
   move_while_shooting = true,
   can_open_gates = true,
   attack_parameters =
@@ -38,9 +32,9 @@ local unit =
     type = "projectile",
     ammo_category = "bullet",
     cooldown = SU(1),
-    range = 22,
-    min_attack_distance = 18,
-    projectile_creation_distance = 0.5,
+    range = 16,
+    min_attack_distance = 10,
+    projectile_creation_distance = 1.5,
     cyclic_sound =
     {
       begin_sound =
@@ -73,30 +67,17 @@ local unit =
       {
         {
           type = "direct",
+          repeat_count = 2,
           action_delivery =
           {
             type = "projectile",
             projectile = name.." Projectile",
             starting_speed = SD(0.5),
-            starting_speed_deviation = SD(0.05),
-            direction_deviation = 0.2,
+            starting_speed_deviation = SD(0.025),
+            direction_deviation = 0.3,
             range_deviation = 0.2,
             starting_frame_deviation = 5,
-            max_range = 25
-          }
-        },
-        {
-          type = "direct",
-          action_delivery =
-          {
-            type = "projectile",
-            projectile = name.." Projectile",
-            starting_speed = SD(0.55),
-            starting_speed_deviation = SD(0.05),
-            direction_deviation = 0.1,
-            range_deviation = 0.1,
-            starting_frame_deviation = 5,
-            max_range = 25
+            max_range = 18
           }
         }
       }
@@ -105,7 +86,7 @@ local unit =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.25),
+  movement_speed = SD(0.35),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -136,7 +117,7 @@ local unit =
 
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
-projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
+projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
 projectile.force_condition = "not-same"
 projectile.height = 0
 projectile.action = 
@@ -149,7 +130,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 0.1 , type = util.damage_type("fire")}
+        damage = {amount = 0.25 , type = util.damage_type("flame_car")}
       },
       {
         type = "create-sticker",
@@ -158,7 +139,7 @@ projectile.action =
     }
   }
 }
-projectile.acceleration = SA(-0.004)
+projectile.acceleration = SA(-0.0075)
 projectile.final_action = nil
 projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
