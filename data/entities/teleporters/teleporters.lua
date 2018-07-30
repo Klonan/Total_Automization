@@ -11,7 +11,7 @@ teleporter.max_health = 200
 teleporter.dying_explosion = nil
 teleporter.action = nil
 teleporter.force_die_on_attack = true
-teleporter.trigger_force = "same"
+teleporter.trigger_force = "friend"
 teleporter.order = name
 teleporter.picture_safe =
 {
