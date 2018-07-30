@@ -1,127 +1,136 @@
---[[
-  Players can only have a single pair each
-  So when a teleporter is built, it destroys any that are assigned to that player ID,
-  and stores the data to the new one
+local teleporter_name = require"shared".entities.teleporter
 
-  Also the unit_number is put into a map,
-  so when the entity dies, we can cheaply lookup which player it belongs to
 
-  If a entry died with itself as a cause, it should teleport people
-]]
-
-local teleporters = {
-  data = {
-    players = {},
-    owners = {}
-  },
+local data =
+{
+  networks = {},
+  frames = {},
+  button_actions = {}
 }
-
-local try_to_link = function(data)
-  if not (data.entry and data.exit) then return end
-  if not (data.entry.valid and data.exit.valid) then return end
-  data.entry.active = true
-  data.exit.active = true
-end
 
 local create_flash = function(surface, position)
   return surface.create_entity{name = "teleporter-explosion", position = position}
 end
 
-local entry_died = function(entity, cause)
-  local owners = teleporters.data.owners
-  local data = owners[entity.unit_number]
-  owners[entity.unit_number] = nil
-  local exit = data.exit
-  if not exit and exit.valid then return end
-  if entity == cause then
-    local surface = entity.surface
-    local origin = entity.position
-    if (exit and exit.valid) then
-      local destination = exit.position
-      local destination_surface = exit.surface
-      local any = false
-      for k, character in pairs (surface.find_entities_filtered{type = "player", area = {{origin.x - 2, origin.y - 2},{origin.x + 2, origin.y + 2}}}) do
-        any = true
-        local position = destination_surface.find_non_colliding_position(character.name, destination, 4, 0.5) or destination
-        if character.player then
-          character.player.teleport(position, destination_surface.index)
-        end
-      end
-      if any then
-        create_flash(surface, origin)
-        create_flash(destination_surface, exit.position)
-      end
-      exit.timeout = entity.prototype.timeout
+local close_frame = function(frame)
+  if not (frame and frame.valid) then return end
+  data.frames[frame.index] = nil
+  util.deregister_gui(frame, data.button_actions)
+  frame.destroy()
+end
+
+local gui_click_actions =
+{
+  cancel_button = function(param)
+    close_frame(param.frame)
+  end,
+  confirm_rename_button = function(param)
+    local flying_text = param.flying_text
+    if flying_text and flying_text.valid then
+      param.flying_text.text = param.textfield.text
     end
-    local new = surface.create_entity{name = entity.name, force = entity.force, position = entity.position}
-    data.entry = new
-    owners[new.unit_number] = data
-  else
-    exit.active = false
+    close_frame(param.frame)
   end
-end
-
-local exit_died = function(entity)
-  local owners = teleporters.data.owners
-  local data = owners[entity.unit_number]
-  owners[entity.unit_number] = nil
-  if data.entry then
-    data.entry.active = false
-  end
-end
-
-local entry_built = function(entry, index)
-  entry.active = false
-  --entry.force = "enemy"
-  teleporters.data.players[index] = teleporters.data.players[index] or {}
-  local data = teleporters.data.players[index]
-  if data.entry and data.entry.valid then
-    data.entry.die()
-  end
-  data.entry = entry
-  teleporters.data.owners[entry.unit_number] = data
-  try_to_link(data)
-end
-
-local exit_built = function(exit, index)
-  exit.active = false
-  --exit.force = "enemy"
-  teleporters.data.players[index] = teleporters.data.players[index] or {}
-  local data = teleporters.data.players[index]
-  if data.exit and data.exit.valid then
-    data.exit.die()
-  end
-  data.exit = exit
-  teleporters.data.owners[exit.unit_number] = data
-  try_to_link(data)
-end
+}
 
 local on_built_entity = function(event)
   local entity = event.created_entity
   if not (entity and entity.valid) then return end
-  if entity.name == "entry" then
-    return entry_built(entity, event.player_index)
-  end
-  if entity.name == "exit" then
-    return exit_built(entity, event.player_index)
-  end
+  if entity.name ~= teleporter_name then return end
+  local player = game.players[event.player_index]
+  local surface = entity.surface
+  local force = entity.force
+  local caption = teleporter_name.." "..entity.unit_number
+  local text = surface.create_entity{name = "tutorial-flying-text", text = caption, position = {entity.position.x, entity.position.y - 2}, force = entity.force, color = player.chat_color}
+  text.active = false
+
+  data.networks[force.name] = data.networks[force.name] or {}
+  local network = data.networks[force.name]
+  network[entity.unit_number] = {teleporter = entity, flying_text = text}
+
+
+  local gui = player.gui.center
+  util.deregister_gui(gui, data.frames)
+  util.deregister_gui(gui, data.button_actions)
+  gui.clear()
+  local frame = gui.add{type = "frame", caption = "Name teleporter", direction = "horizontal"}
+  player.opened = frame
+  data.frames[frame.index] = frame
+
+  local textfield = frame.add{type = "textfield", text = caption}
+  textfield.style.horizontally_stretchable = true
+  local confirm = frame.add{type = "sprite-button", sprite = "utility/confirm_slot", style = "slot_button"}
+  data.button_actions[confirm.index] = {name = "confirm_rename_button", frame = frame, textfield = textfield, flying_text = text}
+
+  local cancel = frame.add{type = "sprite-button", sprite = "utility/set_bar_slot", style = "slot_button"}
+  data.button_actions[cancel.index] = {name = "cancel_button", frame = frame}
+
+end
+
+local on_teleporter_removed = function(entity)
+  if not (entity and entity.valid) then return end
+  if entity.name ~= teleporter_name then return end
+  local force = entity.force
+  local network = data.networks[force.name]
+  if not network then return end
+  local param = network[entity.unit_number]
+  if not param then return end
+  param.flying_text.destroy()
+  network[entity.unit_number] = nil
+end
+
+local teleporter_triggered = function(entity)
+  if not (entity and entity.valid and entity.name == teleporter_name) then return end
+  local force = entity.force
+  local network = data.networks[force.name]
+  if not network then return end
+  local param = network[entity.unit_number]
 end
 
 local on_entity_died = function(event)
+  local cause = event.cause
   local entity = event.entity
-  if not (entity and entity.valid) then return end
-  if entity.name == "entry" then
-    return entry_died(entity, event.cause)
+  if cause and cause.valid and entity and entity.valid and entity.name == teleporter_name and cause == entity then
+    return teleporter_triggered(entity)
   end
-  if entity.name == "exit" then
-    return exit_died(entity)
-  end
+  on_teleporter_removed(event.entity)
+end
+
+local on_player_mined_entity = function(event)
+  on_teleporter_removed(event.entity)
+end
+
+local on_robot_mined_entity = function(event)
+  on_teleporter_removed(event.entity)
+end
+
+local on_gui_click = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local action = data.button_actions[element.index]
+  if not action then return end
+  gui_click_actions[action.name](action)
+end
+
+local on_gui_closed = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local frame = data.frames[element.index]
+  if not (frame and frame.valid) then return end
+  data.frames[element.index] = nil
+  frame.destroy()
 end
 
 local events = {
   [defines.events.on_built_entity] = on_built_entity,
-  [defines.events.on_entity_died] = on_entity_died
+  [defines.events.on_gui_click] = on_gui_click,
+  [defines.events.on_entity_died] = on_entity_died,
+  [defines.events.on_player_mined_entity] = on_player_mined_entity,
+  [defines.events.on_robot_mined_entity] = on_robot_mined_entity,
+  [defines.events.on_gui_closed] = on_gui_closed,
 }
+
+local teleporters = {}
 
 teleporters.on_event = function(event)
   if not (event and event.name) then return end
@@ -130,11 +139,11 @@ teleporters.on_event = function(event)
 end
 
 teleporters.on_init = function()
-  global.teleporters = global.teleporters or teleporters.data
+  global.teleporters = global.teleporters or data
 end
 
 teleporters.on_load = function()
-  teleporters.data = global.teleporters
+  data = global.teleporters
 end
 
 return teleporters

@@ -1,17 +1,19 @@
 local path = util.path("data/entities/teleporters/")
-local entry = util.copy(data.raw["land-mine"]["land-mine"])
+local teleporter = util.copy(data.raw["land-mine"]["land-mine"])
+local name = require"shared".entities.teleporter
 
-entry.name = "entry"
-entry.trigger_radius = 1
-entry.timeout = SU(5 * 60)
-entry.max_health = 200
-entry.shooting_cursor_size = 0
-entry.dying_explosion = nil
-entry.action = nil
-entry.force_die_on_attack = true
-entry.trigger_force = "all"
-entry.order = "entry"
-entry.picture_safe =
+teleporter.name = name
+teleporter.localised_name = name
+teleporter.trigger_radius = 2
+teleporter.timeout = SU(5 * 60)
+teleporter.max_health = 200
+--teleporter.shooting_cursor_size = 0
+teleporter.dying_explosion = nil
+teleporter.action = nil
+teleporter.force_die_on_attack = true
+teleporter.trigger_force = "same"
+teleporter.order = name
+teleporter.picture_safe =
 {
   filename = path.."teleporter-closed.png",
   priority = "medium",
@@ -19,7 +21,7 @@ entry.picture_safe =
   height = 77,
   scale = 1
 }
-entry.picture_set = 
+teleporter.picture_set = 
 {
   filename = path.."teleporter-open.png",
   priority = "medium",
@@ -27,47 +29,26 @@ entry.picture_set =
   height = 77,
   scale = 1
 }
-entry.picture_set_enemy = entry.picture_set
-entry.minable = nil
-util.scale_boxes(entry, 2)
-util.remove_flag(entry, "placeable-off-grid")
+teleporter.picture_set_enemy = 
+{
+  filename = path.."teleporter-open.png",
+  priority = "medium",
+  width = 97,
+  height = 77,
+  scale = 1,
+  tint = {r = 1}
+}
+teleporter.minable = {result = name, mining_time = 3}
+util.scale_boxes(teleporter, 2)
+util.remove_flag(teleporter, "placeable-off-grid")
 
-exit = util.copy(entry)
-exit.name = "exit"
---pushback!
-exit.trigger_radius = 0
-exit.action = nil
---[[{
-  {
-    type = "area",
-    radius = 2.5,
-    force = "enemy",
-    action_delivery =
-    {
-     {
-       type = "instant",
-       target_effects =
-       {
-        {
-          type = "push-back",
-          distance = 1.5,
-        }
-       }
-     }
-    }
-  }
-}]]
-exit.force_die_on_attack = false
+local teleporter_item = util.copy(data.raw.item["land-mine"])
+teleporter_item.name = name
+teleporter_item.localised_name = name
+teleporter_item.place_result = name
+teleporter_item.icon = path.."teleporter-icon.png"
+teleporter_item.icon_size = 97
 
-local entry_item = util.copy(data.raw.item["land-mine"])
-entry_item.name = "entry-item"
-entry_item.place_result = "entry"
-entry_item.icon = path.."teleporter-icon.png"
-entry_item.icon_size = 97
-
-local exit_item = util.copy(entry_item)
-exit_item.name = "exit-item"
-entry_item.place_result = "exit"
 
 local fire = require("data/tf_util/tf_fire_util")
 
@@ -82,9 +63,7 @@ teleporter_explosion.sound =
 
 data:extend
 {
-  entry,
-  entry_item,
-  exit,
-  exit_item,
+  teleporter,
+  teleporter_item,
   teleporter_explosion
 }
