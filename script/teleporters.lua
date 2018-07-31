@@ -179,12 +179,12 @@ local teleporter_triggered = function(entity)
   local position = entity.position
   local param = data.map[entity.unit_number]
   local new_teleporter = surface.create_entity{name = teleporter_name, position = position, force = force}
-  new_teleporter.active = false
   param.teleporter = new_teleporter
   data.map[new_teleporter.unit_number] = param
   data.map[entity.unit_number] = nil
   local character = surface.find_entities_filtered{type = "player", area = {{position.x - 2, position.y - 2}, {position.x + 2, position.y + 2}}, force = force}[1]
   if not character then return end
+  new_teleporter.active = false
   character.character_running_speed_modifier = -1
   local player = character.player
   if not player then return end
