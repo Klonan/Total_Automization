@@ -4,7 +4,7 @@ local name = require"shared".entities.teleporter
 
 teleporter.name = name
 teleporter.localised_name = name
-teleporter.trigger_radius = 2
+teleporter.trigger_radius = 1
 teleporter.timeout = SU(5 * 60)
 teleporter.max_health = 200
 --teleporter.shooting_cursor_size = 0
@@ -39,8 +39,9 @@ teleporter.picture_set_enemy =
   tint = {r = 1}
 }
 teleporter.minable = {result = name, mining_time = 3}
-util.scale_boxes(teleporter, 2)
 util.remove_flag(teleporter, "placeable-off-grid")
+teleporter.collision_box = {{-1, -1},{1, 1}}
+teleporter.selection_box = {{-1, -1},{1, 1}}
 
 local teleporter_item = util.copy(data.raw.item["land-mine"])
 teleporter_item.name = name

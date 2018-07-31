@@ -6,7 +6,8 @@ local data =
   networks = {},
   frames = {},
   button_actions = {},
-  map = {}
+  map = {},
+  teleporter_frames = {}
 }
 
 local create_flash = function(surface, position)
@@ -38,9 +39,11 @@ local gui_click_actions =
       player.print("Name already taken")
       return
     end
-    network[new_key] = info
-    network[key] = nil
-    param.flying_text.text = new_key
+    if new_key ~= key then
+      network[new_key] = info
+      network[key] = nil
+      param.flying_text.text = new_key
+    end
     close_frame(param.frame)
   end,
   teleport_button = function(event, param)
@@ -49,12 +52,72 @@ local gui_click_actions =
     local destination = teleport_param.teleporter
     if not (destination and destination.valid) then return end
     destination.timeout = SU(300)
+    create_flash(destination.surface, destination.position)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.teleport(destination.position)
     close_frame(param.frame)
+    local source = param.source
+    if source and source.valid then
+      create_flash(source.surface, source.position)
+      source.active = true
+    end
+    if player.character then
+      player.character.character_running_speed_modifier = 0
+    end
   end
 }
+
+local make_teleporter_gui = function(param)
+  local frame = param.frame
+  if not (frame and frame.valid) then return end
+  local source = param.source
+  if not (source and source.valid) then return end
+  local force = param.force
+  if not (force and force.valid) then return end
+  local network = data.networks[force.name]
+  frame.clear()
+  local scroll = frame.add{type = "scroll-pane"}
+  local player = game.players[frame.player_index]
+  --scroll.style.maximal_height = player.display_resolution.height * 0.8
+  local table = scroll.add{type = "table", column_count = 4}
+  for name, teleporter in pairs (network) do
+    if teleporter.teleporter ~= source then
+      local button = table.add{type = "button", caption = name}
+      button.style.horizontally_stretchable = true
+      data.button_actions[button.index] = {name = "teleport_button", param = teleporter, frame = frame, source = param.source}
+    end
+  end
+end
+
+local close_teleporter_frame = function(param)
+  local frame = param.frame
+  if not frame and frame.valid then return end
+  local player = game.players[frame.player_index]
+  local character = player.character
+  if character then
+    character.character_running_speed_modifier = 0
+  end
+  local source = param.source
+  if (source and source.valid) then
+    source.active = true
+  end
+  util.deregister_gui(frame, data.button_actions)
+  frame.destroy()
+  return
+end
+
+local deregister_teleporter_frame = function(gui)
+  for k, child in pairs (gui.children) do
+    if child.valid then
+      local param = data.teleporter_frames[child.index]
+      if param then
+        data.teleporter_frames[child.index] = nil
+        close_teleporter_frame(param)
+      end
+    end
+  end
+end
 
 local on_built_entity = function(event)
   local entity = event.created_entity
@@ -71,8 +134,8 @@ local on_built_entity = function(event)
   local network = data.networks[force.name]
   network[caption] = {teleporter = entity, flying_text = text}
   data.map[entity.unit_number] = network[caption]
-
   local gui = player.gui.center
+  deregister_teleporter_frame(gui)
   util.deregister_gui(gui, data.frames)
   util.deregister_gui(gui, data.button_actions)
   gui.clear()
@@ -88,6 +151,9 @@ local on_built_entity = function(event)
   local cancel = frame.add{type = "sprite-button", sprite = "utility/set_bar_slot", style = "slot_button"}
   data.button_actions[cancel.index] = {name = "cancel_button", frame = frame}
 
+  for k, param in pairs (data.teleporter_frames) do
+    make_teleporter_gui(param)
+  end
 end
 
 local on_teleporter_removed = function(entity)
@@ -96,27 +162,15 @@ local on_teleporter_removed = function(entity)
   local force = entity.force
   local param = data.map[entity.unit_number]
   if not param then return end
+  local caption = param.flying_text.text
+  local network = data.networks[force.name]
+  network[caption] = nil
   param.flying_text.destroy()
   data.map[entity.unit_number] = nil
-end
-
-local create_teleport_gui = function(player, force)
-  local network = data.networks[force.name]
-  if not (table_size(network) > 1) then return end
-  local gui = player.gui.center
-  util.deregister_gui(gui, data.frames)
-  util.deregister_gui(gui, data.button_actions)
-  gui.clear()
-  local frame = gui.add{type = "frame", direction = "vertical", caption = "Teleporter Network"}
-  data.frames[frame.index] = frame
-  for name, param in pairs (network) do
-    local button = frame.add{type = "button", caption = name}
-    data.button_actions[button.index] = {name = "teleport_button", param = param, frame = frame}
+  for k, param in pairs (data.teleporter_frames) do
+    make_teleporter_gui(param)
   end
-
 end
-
-
 
 local teleporter_triggered = function(entity)
   if not (entity and entity.valid and entity.name == teleporter_name) then return end
@@ -129,10 +183,24 @@ local teleporter_triggered = function(entity)
   param.teleporter = new_teleporter
   data.map[new_teleporter.unit_number] = param
   data.map[entity.unit_number] = nil
-  local player = surface.find_entities_filtered{type = "player", area = {{position.x - 1, position.y - 1}, {position.x + 1, position.y + 1}}, force = force}[1]
+  local character = surface.find_entities_filtered{type = "player", area = {{position.x - 2, position.y - 2}, {position.x + 2, position.y + 2}}, force = force}[1]
+  if not character then return end
+  character.character_running_speed_modifier = -1
+  local player = character.player
   if not player then return end
-  create_teleport_gui(player, force)
+  local gui = player.gui.center
+  util.deregister_gui(gui, data.frames)
+  util.deregister_gui(gui, data.button_actions)
+  gui.clear()
+  local frame = gui.add{type = "frame", direction = "vertical", caption = "Teleporter Network"}
+  frame.style.maximal_height = player.display_resolution.height * 0.9
+  player.opened = frame
+  local gui_param = {frame = frame, source = new_teleporter, force = force}
+  data.teleporter_frames[frame.index] = gui_param
+  make_teleporter_gui(gui_param)
 end
+
+
 
 local on_entity_died = function(event)
   local cause = event.cause
@@ -162,10 +230,21 @@ end
 local on_gui_closed = function(event)
   local element = event.element
   if not (element and element.valid) then return end
+
   local frame = data.frames[element.index]
-  if not (frame and frame.valid) then return end
-  data.frames[element.index] = nil
-  frame.destroy()
+  if frame and frame.valid then 
+    util.deregister_gui(frame, data.button_actions)
+    data.frames[element.index] = nil
+    frame.destroy()
+    return
+  end
+
+  local param = data.teleporter_frames[element.index]
+  if param then
+    close_teleporter_frame(param)
+    return
+  end
+  
 end
 
 local events = {
