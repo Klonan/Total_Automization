@@ -41,8 +41,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = SU(150),
     cooldown_deviation = 0.2,
-    range = 32,
-    min_attack_distance = 28,
+    range = 40,
+    min_attack_distance = 32,
     projectile_creation_distance = 0.5,
     sound = 
     {
@@ -74,7 +74,7 @@ local bot =
           starting_speed = SD(0),
           direction_deviation = 0.05,
           range_deviation = 0.05,
-          max_range = 36
+          max_range = 40
           }
         }
       }

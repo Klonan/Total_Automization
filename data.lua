@@ -20,9 +20,9 @@ require "data/unit_control/unit_control"
 require "data/units/units"
 require "data/changes/changes"
 
-for name, font in pairs (data.raw.font) do
-  font.size = font.size * 1.33
-end
+--for name, font in pairs (data.raw.font) do
+--  font.size = font.size * 1.33
+--end
 --[[
 local slot = data.raw["gui-style"].default.slot_button
 slot.width = 64

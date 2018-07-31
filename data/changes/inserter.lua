@@ -1,7 +1,7 @@
 --Remove stack inserters
 
 util.prototype.remove_entity_prototype(data.raw.inserter["stack-inserter"])
-util.prototype.remove_entity_prototype(data.raw.inserter["filter-stack-inserter"])
+util.prototype.remove_entity_prototype(data.raw.inserter["stack-filter-inserter"])
 
 --Just scale their inserting speeds...
 

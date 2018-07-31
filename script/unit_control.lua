@@ -664,7 +664,7 @@ local on_player_cursor_stack_changed = function(event)
   data.stack_event_check[player.index] = nil
 end
 
-local idle_command = {type = defines.command.wander, radius = 0.1}
+local idle_command = {type = defines.command.wander, radius = 1}
 
 process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
