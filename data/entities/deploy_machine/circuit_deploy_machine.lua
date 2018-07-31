@@ -28,6 +28,7 @@ machine.fluid_boxes =
 machine.scale_entity_info_icon = true
 machine.always_draw_idle_animation = false
 machine.working_visualisations = nil
+machine.minable.result = name
 
 local item = {
   type = "item",

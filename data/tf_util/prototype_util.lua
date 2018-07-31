@@ -247,12 +247,14 @@ local remove_from_achievements = function(name)
 end
 
 local remove_entity_prototype = function(ent)
+  if not ent then return end
   --So, if we actually delete the prototype, we get some error about traversing old prototypes for migrations or some BS... so we just nuke all items and hide them
   --log(ent.name)
   remove_from_items(ent.name)
   remove_from_achievements(ent.name)
   ent.minable = nil
   ent.order = "Z-DELETED"
+  ent.autoplace = nil
 end
 
 local remove_item_prototype = function(item)

@@ -1,4 +1,4 @@
-local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-2"])
+local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-3"])
 local name = require("shared").deployers.iron_unit
 machine.name = name
 machine.localised_name = name
@@ -24,6 +24,7 @@ machine.fluid_boxes =
   off_when_no_fluid_recipe = false
 }
 machine.scale_entity_info_icon = true
+machine.minable.result = name
 
 local item = {
   type = "item",
