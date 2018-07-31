@@ -49,6 +49,7 @@ teleporter_item.localised_name = name
 teleporter_item.place_result = name
 teleporter_item.icon = path.."teleporter-icon.png"
 teleporter_item.icon_size = 97
+teleporter_item.subgroup = "circuit-network"
 
 
 local fire = require("data/tf_util/tf_fire_util")
@@ -62,9 +63,23 @@ teleporter_explosion.sound =
   volume = 1
 }
 
+local recipe = {
+  type = "recipe",
+  name = name,
+  localised_name = name,
+  enabled = true,
+  ingredients =
+  {
+    {"iron-plate", 4}
+  },
+  energy_required = 5,
+  result = name
+}
+
 data:extend
 {
   teleporter,
   teleporter_item,
-  teleporter_explosion
+  teleporter_explosion,
+  recipe
 }

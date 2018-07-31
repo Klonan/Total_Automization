@@ -194,6 +194,7 @@ local teleporter_triggered = function(entity)
   gui.clear()
   local frame = gui.add{type = "frame", direction = "vertical", caption = "Teleporter Network"}
   frame.style.maximal_height = player.display_resolution.height * 0.9
+  frame.style.maximal_width = player.display_resolution.width * 0.9
   player.opened = frame
   local gui_param = {frame = frame, source = new_teleporter, force = force}
   data.teleporter_frames[frame.index] = gui_param
