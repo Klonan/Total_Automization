@@ -25,7 +25,8 @@ local libs = {
   unit_deployment = require("script/unit_deployment"),
   unit_control = require "script/unit_control",
   command_center = require("script/command_center"),
-  killcam = require("script/killcam"),
+  --killcam = require("script/killcam"),
+  setup = require("script/setup"),
 }
 
 

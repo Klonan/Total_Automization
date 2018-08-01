@@ -86,7 +86,8 @@ data.entities =
   command_center_turret = "Command Center Turret",
   big_miner = "Big Mining Drill",
   small_miner = "Small Mining Drill",
-  teleporter = "Teleporter"
+  teleporter = "Teleporter",
+  gun_turret = "Gun Turret"
 }
 
 data.deployers =

@@ -27,22 +27,25 @@ local on_player_created = function(event)
     count = count + 5
   end
   local team1 = {
-    blaster_bot = 40,
-    plasma_bot = 80
+    blaster_bot = 200,
+    laser_bot = 80,
+    plasma_bot = 20,
+    acid_worm = 80,
+    piercing_biter = 50
   }
   local pos = {x = -40, y = 0}
   for name, count in pairs (team1) do
     for x = 1, count do
       local vec = get_position(math.random(1000))
-      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      --player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
     end 
   end
   team2 = {
-    --blaster_bot = 50,
+    plasma_bot = 5,
     --smg_guy = 100,
     --rocket_guy = 20,
-    flame_car = 20,
-    shell_tank = 80
+    --shell_tank = 150,
+    --shell_tank = 80
     --scatter_spitter = 30,
     --piercing_biter = 30,
     --rocket_guy = 30,
@@ -52,7 +55,7 @@ local on_player_created = function(event)
   for name, count in pairs (team2) do
     for x = 1, count do
       local vec = get_position(math.random(1000))
-      --player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
+      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
     end 
   end
   player.get_quickbar().insert(names.unit_tools.unit_selection_tool)
@@ -60,7 +63,6 @@ local on_player_created = function(event)
   --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
   --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
   player.insert(names.entities.teleporter)
-  player.force.disable_research()
 end
 
 local events = 

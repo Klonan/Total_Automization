@@ -8,5 +8,6 @@ util.prototype.remove_entity_prototype(data.raw.inserter["stack-filter-inserter"
 for k, inserter in pairs (data.raw.inserter) do
   inserter.extension_speed = SD(inserter.extension_speed)
   inserter.rotation_speed = SD(inserter.rotation_speed)
+  inserter.override_stack_size = 2
 end
 

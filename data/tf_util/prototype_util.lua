@@ -221,6 +221,20 @@ local remove_from_items = function(name)
       util.remove_from_list(item.rocket_launch_products, name)
     end
   end
+  local items = data.raw["item-with-entity-data"]
+  for k, item in pairs (items) do
+    if item.place_result == name then
+      remove_item_from_recipes(item.name)
+      items[k] = nil
+      return
+    end
+    if item.rocket_launch_product == name then
+      item.rocket_launch_product = nil
+    end
+    if item.rocket_launch_products then
+      util.remove_from_list(item.rocket_launch_products, name)
+    end
+  end
 end
 
 local find_mention
