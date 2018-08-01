@@ -9,6 +9,7 @@ turret.preparing_speed = SD(0.05)
 turret.order = "noob"
 turret.prepare_range = 42
 turret.max_health = 1200
+turret.minable.result = name
 turret.attack_parameters =
 {
   type = "projectile",
