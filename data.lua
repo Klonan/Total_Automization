@@ -18,7 +18,7 @@ require "data/stickers/healing"
 require "data/hotkeys"
 require "data/unit_control/unit_control"
 require "data/units/units"
-require "data/changes/changes"
+--require "data/changes/changes"
 
 --for name, font in pairs (data.raw.font) do
 --  font.size = font.size * 1.33

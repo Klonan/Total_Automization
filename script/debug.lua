@@ -60,6 +60,7 @@ local on_player_created = function(event)
   --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
   --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
   player.insert(names.entities.teleporter)
+  player.force.disable_research()
 end
 
 local events = 

@@ -292,5 +292,6 @@ lib.remove_recipe_from_technologies = remove_recipe_from_technologies
 lib.remove_entity_prototype = remove_entity_prototype
 lib.remove_item_prototype = remove_item_prototype
 lib.remove_technology_effect_type = remove_technology_effect_type
+lib.remove_technology = remove_technology
 
 return lib

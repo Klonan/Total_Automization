@@ -4,6 +4,7 @@ local modules = data.raw.module
 
 for k, item in pairs (modules) do
   util.prototype.remove_item_prototype(item)
+  item.limitation = nil
 end
 
 --And so, we don't need beacons

@@ -70,7 +70,8 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"steel-plate", 45},
+    {"electronic-circuit", 100},
   },
   energy_required = 5,
   result = name
