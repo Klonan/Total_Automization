@@ -27,6 +27,7 @@ local libs = {
   command_center = require("script/command_center"),
   --killcam = require("script/killcam"),
   setup = require("script/setup"),
+  setup_time = require("script/setup_time")
 }
 
 
