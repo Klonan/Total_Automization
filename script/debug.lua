@@ -44,10 +44,11 @@ local on_player_created = function(event)
   end
   team2 = {
     --plasma_bot = 5,
-    smg_guy = 50,
+    rocket_guy = 50,
+    smg_guy = 200,
     --flame_car = 20,
     --rocket_guy = 20,
-    --shell_tank = 10,
+    shell_tank = 20,
     --shell_tank = 80
     --scatter_spitter = 30,
     --piercing_biter = 30,

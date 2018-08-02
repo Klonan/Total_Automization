@@ -2,8 +2,10 @@ local names = require("shared").entities
 --Don't scale the setup time here, we do it in the function body to preserve real seconds
 local setupable =
 {
-  [names.small_gun_turret] = 30 * 60,
-  [names.big_gun_turret] = 30 * 60
+  [names.small_gun_turret] = 20 * 60,
+  [names.big_gun_turret] = 40 * 60,
+  [names.laser_turret] = 30 * 60,
+
 }
 
 local data =

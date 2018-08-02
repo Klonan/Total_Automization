@@ -37,8 +37,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = SU(90),
     cooldown_deviation = 0.25,
-    range = 36,
-    min_attack_distance = 28,
+    range = 32,
+    min_attack_distance = 26,
     projectile_creation_distance = 0.5,
     sound = {
       {filename = path.."rocket_guy_shoot.ogg", volume = 0.5}
@@ -46,7 +46,7 @@ local bot =
     ammo_type =
     {
       category = "bullet",
-      target_type = "entity",
+      target_type = "direction",
       action =
       {
         type = "direct",
@@ -58,8 +58,8 @@ local bot =
           starting_speed = SD(1.5),
           starting_speed_deviation = SD(0.05),
           --direction_deviation = 0.1,
-          --range_deviation = 0.1,
-          max_range = 40
+          range_deviation = 0.1,
+          max_range = 32
           },
           {
             type = "instant",
@@ -115,9 +115,9 @@ util.scale_boxes(bot, scale)
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
 projectile.acceleration = SD(0)
---projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
+projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
 --projectile.force_condition = "not-same"
-projectile.direction_only = false
+projectile.direction_only = true
 projectile.action =
 {
   type = "direct",

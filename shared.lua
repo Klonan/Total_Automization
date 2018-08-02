@@ -89,6 +89,7 @@ data.entities =
   teleporter = "Teleporter",
   small_gun_turret = "Small Gun Turret",
   big_gun_turret = "Big Gun Turret",
+  laser_turret = "Laser Turret",
   setup_time_animation = "Setup Animation"
 }
 
