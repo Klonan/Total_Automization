@@ -12,7 +12,7 @@ local unit =
   icon_size = sprite_base.icon_size,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
-  max_health = 115,
+  max_health = 155,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -32,8 +32,8 @@ local unit =
     type = "projectile",
     ammo_category = "bullet",
     cooldown = SU(1),
-    range = 16,
-    min_attack_distance = 10,
+    range = 15,
+    min_attack_distance = 12,
     projectile_creation_distance = 1.5,
     cyclic_sound =
     {
@@ -67,17 +67,17 @@ local unit =
       {
         {
           type = "direct",
-          repeat_count = 2,
+          repeat_count = 1,
           action_delivery =
           {
             type = "projectile",
             projectile = name.." Projectile",
-            starting_speed = SD(0.5),
-            starting_speed_deviation = SD(0.025),
-            direction_deviation = 0.3,
-            range_deviation = 0.2,
-            starting_frame_deviation = 5,
-            max_range = 18
+            starting_speed = SD(0.6),
+            starting_speed_deviation = SD(0.05),
+            direction_deviation = math.pi * 0.25,
+            --range_deviation = 0.05,
+            --starting_frame_deviation = 5,
+            max_range = 20
           }
         }
       }
@@ -130,11 +130,11 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 0.25 , type = util.damage_type("flame_car")}
+        damage = {amount = 0.8 , type = util.damage_type("flame_car")}
       },
       {
         type = "create-sticker",
-        sticker = "Afterburn Sticker"
+        sticker = name.." Sticker"
       }
     }
   }
@@ -143,6 +143,17 @@ projectile.acceleration = SA(-0.0075)
 projectile.final_action = nil
 projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
+
+local sticker = util.copy(data.raw.sticker["fire-sticker"])
+sticker.name = name.." Sticker"
+sticker.duration_in_ticks = SU(3 * 60)
+sticker.target_movement_modifier = 1
+sticker.damage_per_tick = { amount = SD(5 / 60), type = util.damage_type("flame_car_sticker") }
+sticker.spread_fire_entity = nil
+sticker.fire_spread_cooldown = nil
+sticker.fire_spread_radius = nil
+sticker.animation.scale = 0.5
+sticker.stickers_per_square_meter = 25
 
 local item = {
   type = "item",
@@ -171,4 +182,4 @@ local recipe = {
 }
 
 
-data:extend{unit, projectile, item, recipe}
+data:extend{unit, projectile, item, recipe, sticker}

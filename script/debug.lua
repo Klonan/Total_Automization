@@ -27,24 +27,27 @@ local on_player_created = function(event)
     count = count + 5
   end
   local team1 = {
-    blaster_bot = 200,
-    laser_bot = 80,
-    plasma_bot = 20,
-    acid_worm = 80,
-    piercing_biter = 50
+    --beetle = 80
+    blaster_bot = 50,
+    --laser_bot = 20,
+    --tazer_bot = 30,
+    --plasma_bot = 10,
+    --acid_worm = 80,
+    --piercing_biter = 50
   }
   local pos = {x = -40, y = 0}
   for name, count in pairs (team1) do
     for x = 1, count do
-      local vec = get_position(math.random(1000))
-      --player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      local vec = get_position(math.random(400))
+      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
     end 
   end
   team2 = {
-    plasma_bot = 5,
-    --smg_guy = 100,
+    --plasma_bot = 5,
+    smg_guy = 50,
+    --flame_car = 20,
     --rocket_guy = 20,
-    --shell_tank = 150,
+    --shell_tank = 10,
     --shell_tank = 80
     --scatter_spitter = 30,
     --piercing_biter = 30,
@@ -54,7 +57,7 @@ local on_player_created = function(event)
   local pos = {x = 20, y = 0}
   for name, count in pairs (team2) do
     for x = 1, count do
-      local vec = get_position(math.random(1000))
+      local vec = get_position(math.random(400))
       player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
     end 
   end
