@@ -1,4 +1,4 @@
-local name = require("shared").entities.gun_turret
+local name = require("shared").entities.small_gun_turret
 local turret = util.copy(data.raw["ammo-turret"]["gun-turret"])
 
 turret.name = name
@@ -75,7 +75,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 4 , type = util.damage_type("gun_turret")}
+        damage = {amount = 4 , type = util.damage_type(name)}
       }
     }
   }

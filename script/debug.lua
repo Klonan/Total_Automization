@@ -39,7 +39,7 @@ local on_player_created = function(event)
   for name, count in pairs (team1) do
     for x = 1, count do
       local vec = get_position(math.random(400))
-      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      --player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
     end 
   end
   team2 = {

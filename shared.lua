@@ -87,7 +87,8 @@ data.entities =
   big_miner = "Big Mining Drill",
   small_miner = "Small Mining Drill",
   teleporter = "Teleporter",
-  gun_turret = "Gun Turret",
+  small_gun_turret = "Small Gun Turret",
+  big_gun_turret = "Big Gun Turret",
   setup_time_animation = "Setup Animation"
 }
 

@@ -1,9 +1,14 @@
 local util = require("util")
+
+local is_sprite_def = function(array)
+  return array.width and array.height and (array.filename or array.stripes)
+end
+
 local recursive_hack_scale
 recursive_hack_scale = function(array, scale)
   for k, v in pairs (array) do
     if type(v) == "table" then
-      if v.width and v.height and v.filename then
+      if is_sprite_def(v) then
         v.scale = (v.scale or 1) * scale
         if v.shift then
           --v.shift[1], v.shift[2] = v.shift[1] * scale, v.shift[2] * scale
@@ -19,7 +24,7 @@ local recursive_hack_animation_speed
 recursive_hack_animation_speed = function(array, scale)
   for k, v in pairs (array) do
     if type(v) == "table" then
-      if v.width and v.height and v.filename and v.animation_speed then
+      if is_sprite_def(v) then
         v.animation_speed = v.animation_speed * scale
       end
       recursive_hack_animation_speed(v, scale)
@@ -32,7 +37,7 @@ local recursive_hack_tint
 recursive_hack_tint = function(array, tint)
   for k, v in pairs (array) do
     if type(v) == "table" then
-      if v.width and v.height and (v.filename or v.stripes)  then
+      if is_sprite_def(v)  then
         v.tint = tint
       end
       recursive_hack_tint(v, tint)
@@ -45,7 +50,7 @@ local recursive_hack_make_hr
 recursive_hack_make_hr = function(prototype)
   for k, v in pairs (prototype) do
     if type(v) == "table" then
-      if v.width and v.height and v.hr_version and (v.filename or v.stripes) then
+      if is_sprite_def(v) and v.hr_version then
         prototype[k] = v.hr_version
         --v.scale = v.scale * 0.5  
         v.hr_version = nil
@@ -119,14 +124,14 @@ end
 
 util.damage_type = function(name)
   if not data.raw["damage-type"][name] then
-    data:extend{{type = "damage-type", name = name}}
+    data:extend{{type = "damage-type", name = name, localised_name = name}}
   end
   return name
 end
 
 util.ammo_category = function(name)
   if not data.raw["ammo-category"][name] then
-    data:extend{{type = "ammo-category", name = name}}
+    data:extend{{type = "ammo-category", name = name, localised_name = name}}
   end
   return name
 end
