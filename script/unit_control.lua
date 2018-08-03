@@ -33,15 +33,6 @@ local next_command_type =
   attack = 5,
 }
 
-local clean = function(player)
-  player.clean_cursor()
-  local item = data.stack_event_check[player.index]
-  if not item then return end
-  local count = player.get_item_count(item.item)
-  if not (count > 0) then return end
-  player.remove_item{name = item.item, count = count}
-end
-
 local set_scout_command = function(unit)
   if unit.type ~= "unit" then return end
   local position = unit.position
@@ -130,43 +121,33 @@ local gui_actions =
     if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
-    clean(player)
     player.cursor_stack.set_stack{name = names.unit_move_tool}
     player.cursor_stack.label = "Issue move command"
-    data.stack_event_check[player.index] = {item = names.unit_move_tool, ignore_tick = game.tick}
   end,
   patrol_button = function(event)
     if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
-    clean(player)
     player.cursor_stack.set_stack{name = names.unit_patrol_tool}
     player.cursor_stack.label = "Add patrol waypoint"
-    data.stack_event_check[player.index] = {item = names.unit_patrol_tool, ignore_tick = game.tick}
   end,
   attack_move_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
-    clean(player)
     player.cursor_stack.set_stack{name = names.unit_attack_move_tool}
     player.cursor_stack.label = "Issue attack move command"
-    data.stack_event_check[player.index] = {item = names.unit_attack_move_tool, ignore_tick = game.tick}
   end,
   attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
-    clean(player)
     player.cursor_stack.set_stack{name = names.unit_attack_tool}
     player.cursor_stack.label = "Issue attack command"
-    data.stack_event_check[player.index] = {item = names.unit_attack_tool, ignore_tick = game.tick}
   end,
   force_attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
-    clean(player)
     player.cursor_stack.set_stack{name = names.unit_force_attack_tool}
     player.cursor_stack.label = "Issue force attack command"
-    data.stack_event_check[player.index] = {item = names.unit_force_attack_tool, ignore_tick = game.tick}
   end,
   stop_button = function(event)
     local group = get_selected_units(event.player_index)
@@ -652,18 +633,6 @@ local on_entity_died = function(event)
   deregister_unit(event.entity)
 end
 
-local on_player_cursor_stack_changed = function(event)
-  local item = data.stack_event_check[event.player_index]
-  if not item then return end
-  if event.tick == item.ignore_tick then return end
-  local player = game.players[event.player_index]
-  local count = player.get_item_count(item.item)
-  if count > 0 then
-    player.remove_item{name = item.item, count = count}
-  end
-  data.stack_event_check[player.index] = nil
-end
-
 local idle_command = {type = defines.command.wander, radius = 1}
 
 process_command_queue = function(unit_data, result)
@@ -791,7 +760,6 @@ local events =
   [defines.events.on_gui_closed] = on_gui_closed,
   [defines.events.on_gui_click] = on_gui_click,
   [defines.events.on_entity_died] = on_entity_died,
-  [defines.events.on_player_cursor_stack_changed] = on_player_cursor_stack_changed,
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
