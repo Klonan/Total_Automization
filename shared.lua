@@ -83,14 +83,14 @@ data.entities =
 {
   recon_outpost = "Recon Outpost",
   command_center = "Command Center",
-  command_center_turret = "Command Center Turret",
   big_miner = "Big Mining Drill",
   small_miner = "Small Mining Drill",
   teleporter = "Teleporter",
   small_gun_turret = "Small Gun Turret",
   big_gun_turret = "Big Gun Turret",
   laser_turret = "Laser Turret",
-  setup_time_animation = "Setup Animation"
+  tesla_turret = "Tesla Turret",
+  setup_time_animation = "Setup Animation",
 }
 
 data.deployers =

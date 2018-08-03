@@ -3,6 +3,7 @@ local turret = util.copy(data.raw["electric-turret"]["laser-turret"])
 
 turret.energy_source = {type = "void"}
 turret.name = name
+turret.type = "turret"
 turret.localised_name = name
 turret.prepare_range = 40
 turret.attack_parameters =
