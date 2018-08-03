@@ -66,7 +66,7 @@ local item = {
   icon_size = turret.icon_size,
   flags = {},
   order = "b-"..name,
-  stack_size= 1,
+  stack_size = 1,
   place_result = name,
   subgroup = "defensive-structure",
 }
