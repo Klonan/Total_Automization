@@ -8,8 +8,8 @@ machine.icon_size = graphics.icon_size
 local scale = 2
 util.recursive_hack_make_hr(machine)
 util.recursive_hack_scale(machine, scale)
-util.scale_boxes(machine, scale)
-machine.fluid_boxes = nil
+machine.collision_box = {{-2.2, -2.2},{2.2, 2.2}}
+machine.selection_box = {{-2.4, -2.4},{2.4, 2.4}}
 machine.crafting_categories = {name}
 machine.crafting_speed = SD(1)
 machine.ingredient_count = 100

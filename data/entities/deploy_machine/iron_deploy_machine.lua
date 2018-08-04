@@ -5,8 +5,8 @@ machine.localised_name = name
 local scale = 2
 util.recursive_hack_make_hr(machine)
 util.recursive_hack_scale(machine, scale)
-util.scale_boxes(machine, scale)
-machine.fluid_boxes = nil
+machine.collision_box = {{-2.7, -2.7},{2.7, 2.7}}
+machine.selection_box = {{-2.9, -2.9},{2.9, 2.9}}
 machine.crafting_categories = {name}
 machine.crafting_speed = SD(1)
 machine.ingredient_count = 100

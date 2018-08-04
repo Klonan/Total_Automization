@@ -321,7 +321,6 @@ local unit_selection = function(event)
   data.open_frames[player.index] = frame
   --player.opened = frame
   make_unit_gui(frame)
-  player.clean_cursor()
 end
 
 local make_move_command = function(param)

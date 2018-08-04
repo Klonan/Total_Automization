@@ -1,4 +1,3 @@
---WIP
 local names = require("shared").unit_tools
 local path = util.path("data/unit_control/")
 
@@ -7,8 +6,8 @@ local unit_selection_tool =
   type = "selection-tool",
   name = names.unit_selection_tool,
   localised_name = names.unit_selection_tool,
-  selection_mode = {"friend", "any-entity"},
-  alt_selection_mode = {"friend", "any-entity"},
+  selection_mode = {"friend", "entity-with-health"},
+  alt_selection_mode = {"friend", "entity-with-health"},
   entity_type_filters = {"unit"},
   alt_entity_type_filters = {"unit"},
   selection_cursor_box_type = "copy",
@@ -32,8 +31,8 @@ local deployer_selection_tool =
   type = "selection-tool",
   name = names.deployer_selection_tool,
   localised_name = names.deployer_selection_tool,
-  selection_mode = {"friend", "any-entity"},
-  alt_selection_mode = {"friend", "any-entity"},
+  selection_mode = {"friend", "entity-with-health"},
+  alt_selection_mode = {"friend", "entity-with-health"},
   entity_filters = deploy_filter,
   alt_entity_filters = deploy_filter,
   selection_cursor_box_type = "copy",
