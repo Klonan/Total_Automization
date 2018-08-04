@@ -6,11 +6,12 @@ turret.name = name
 turret.type = "turret"
 turret.localised_name = name
 turret.prepare_range = 40
+turret.rotation_speed = 0.001
 turret.attack_parameters =
 {
   type = "beam",
   ammo_category = "electric",
-  cooldown = SU(1),
+  cooldown = SU(2),
   range = 36,
   projectile_center = {-0.09375, -0.2},
   projectile_creation_distance = 1.4,
@@ -29,7 +30,7 @@ turret.attack_parameters =
         type = "beam",
         beam = name.." Beam",
         max_length = 40,
-        duration = SU(2),
+        duration = SU(3),
         source_offset = {0.15, -0.5},
       }
     }
@@ -41,7 +42,7 @@ turret.minable.result = name
 
 local beam = util.copy(data.raw.beam["laser-beam"])
 beam.name = name.." Beam"
-beam.damage_interval = SU(1)
+beam.damage_interval = SU(3)
 beam.action =
 {
   type = "direct",
@@ -52,7 +53,7 @@ beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 1.0, type = "electric"}
+        damage = { amount = 0.8, type = util.damage_type(name)}
       }
     }
   }
@@ -66,7 +67,7 @@ local item = {
   icon_size = turret.icon_size,
   flags = {},
   order = "b-"..name,
-  stack_size = 1,
+  stack_size = 10,
   place_result = name,
   subgroup = "defensive-structure",
 }
@@ -78,9 +79,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 4}
+    {"steel-plate", 15},
+    {"electronic-circuit", 15},
+    {"battery", 10}
   },
-  energy_required = 5,
+  energy_required = 15,
   result = name
 }
 

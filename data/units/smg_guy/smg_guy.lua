@@ -146,7 +146,7 @@ local item = {
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "iron-units",
-  order = "a-"..name,
+  order = "b-"..name,
   stack_size= 1
 }
 
@@ -158,9 +158,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"light-armor", 1},
+    {"submachine-gun", 1},
+    {"firearm-magazine", 10}
   },
-  energy_required = 5,
+  energy_required = 15,
   result = name
 }
 

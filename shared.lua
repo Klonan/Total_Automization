@@ -92,6 +92,10 @@ data.entities =
   tesla_turret = "Tesla Turret",
   rocket_turret = "Rocket Turret",
   setup_time_animation = "Setup Animation",
+  stone_wall = "Stone Wall",
+  stone_gate = "Stone Gate",
+  concrete_wall = "Concrete Wall",
+  concrete_gate = "Concrete Gate",
 }
 
 data.deployers =

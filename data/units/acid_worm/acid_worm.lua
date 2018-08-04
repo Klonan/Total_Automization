@@ -175,7 +175,7 @@ local item = {
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "bio-units",
-  order = "d-"..name,
+  order = "e-"..name,
   stack_size = 1
 }
 
@@ -187,9 +187,10 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"coal", 40},
+    {type = "fluid", name = "sulfuric-acid", amount = 100}
   },
-  energy_required = 5,
+  energy_required = 75,
   result = name
 }
 

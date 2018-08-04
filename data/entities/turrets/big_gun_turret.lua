@@ -128,7 +128,7 @@ local item = {
   icon_size = turret.icon_size,
   flags = {},
   order = "c-"..name,
-  stack_size= 1,
+  stack_size= 5,
   place_result = name,
   subgroup = "defensive-structure",
 }
@@ -140,9 +140,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 4}
+    {"stone-brick", 50}
   },
-  energy_required = 5,
+  energy_required = 25,
   result = name
 }
 

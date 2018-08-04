@@ -217,7 +217,7 @@ local item = {
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "circuit-units",
-  order = "d-"..name,
+  order = "e-"..name,
   stack_size = 1
 }
 
@@ -229,9 +229,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"processing-unit", 1},
+    {"battery", 8},
+    {"copper-cable", 20}
   },
-  energy_required = 5,
+  energy_required = 75,
   result = name
 }
 

@@ -207,7 +207,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "iron-units",
-  order = "d-"..name,
+  order = "e-"..name,
   stack_size = 1
 }
 
@@ -219,9 +219,10 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"engine-unit", 15},
+    {"cannon-shell", 10}
   },
-  energy_required = 5,
+  energy_required = 45,
   result = name
 }
 

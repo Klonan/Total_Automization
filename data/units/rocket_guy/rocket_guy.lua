@@ -116,7 +116,7 @@ local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
 projectile.acceleration = SD(0)
 projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
---projectile.force_condition = "not-same"
+projectile.force_condition = "not-same"
 projectile.direction_only = true
 projectile.action =
 {
@@ -146,7 +146,7 @@ local item = {
   icon_size = bot.icon_size,
   flags = {},
   subgroup = "iron-units",
-  order = "c-"..name,
+  order = "d-"..name,
   stack_size = 1
 }
 
@@ -158,9 +158,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"heavy-armor", 1},
+    {"rocket-launcher", 1},
+    {"rocket", 10}
   },
-  energy_required = 5,
+  energy_required = 25,
   result = name
 }
 

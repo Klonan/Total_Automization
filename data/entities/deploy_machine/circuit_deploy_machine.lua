@@ -37,7 +37,7 @@ local item = {
   icon_size = machine.icon_size,
   flags = {},
   subgroup = "circuit-units",
-  order = name,
+  order = "aa"..name,
   place_result = name,
   stack_size = 50
 }
@@ -55,4 +55,19 @@ local subgroup =
   order = "a"
 }
 
-data:extend{machine, item, category, subgroup}
+local recipe = {
+  type = "recipe",
+  name = name,
+  localised_name = name,
+  enabled = true,
+  ingredients =
+  {
+    {"electronic-circuit", 50},
+    {"copper-cable", 100},
+    {"copper-plate", 50}
+  },
+  energy_required = 10,
+  result = name
+}
+
+data:extend{machine, item, category, subgroup, recipe}

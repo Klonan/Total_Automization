@@ -163,7 +163,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "iron-units",
-  order = "b-"..name,
+  order = "c-"..name,
   stack_size = 1
 }
 
@@ -175,9 +175,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"engine-unit", 4},
+    {"flamethrower", 1},
+    {"flamethrower-ammo", 10}
   },
-  energy_required = 5,
+  energy_required = 20,
   result = name
 }
 

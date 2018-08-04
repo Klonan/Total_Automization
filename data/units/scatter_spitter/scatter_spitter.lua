@@ -170,7 +170,7 @@ local item = {
   icon_size = unit.icon_size,
   flags = {},
   subgroup = "bio-units",
-  order = "b-"..name,
+  order = "c-"..name,
   stack_size= 1
 }
 
@@ -182,10 +182,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4},
+    {"coal", 15},
+    {"sulfur", 10},
     {type = "fluid", name = "water", amount = 1}
   },
-  energy_required = 5,
+  energy_required = 35,
   result = name
 }
 

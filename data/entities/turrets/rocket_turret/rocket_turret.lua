@@ -1,17 +1,17 @@
 --Oh yea boi
 
-local path = util.path("data/entities/turrets/")
+local path = util.path("data/entities/turrets/rocket_turret/")
 local name = require("shared").entities.rocket_turret
 
 local up_door_sprite = util.copy(data.raw.roboport.roboport).door_animation_up.hr_version
-up_door_sprite.shift = {0.100625, -0.890}
+up_door_sprite.shift = util.by_pixel(-0.25, -25.5)
 up_door_sprite.direction_count = 1
 local down_door_sprite = util.copy(data.raw.roboport.roboport).door_animation_down.hr_version
-down_door_sprite.shift = {0.100625, -0.234375}
+down_door_sprite.shift = util.by_pixel(-0.25,-5.75)
 down_door_sprite.direction_count = 1
 local base = util.copy(data.raw["ammo-turret"]["gun-turret"]).base_picture
 util.recursive_hack_make_hr(base)
-util.recursive_hack_scale(base, 1.5)
+--util.recursive_hack_scale(base, 1.5)
 local sprite = function(param)
   local up = util.copy(up_door_sprite)
   local down = util.copy(down_door_sprite)
@@ -26,16 +26,16 @@ local turret =
   type = "turret",
   name = name,
   localised_name = name,
-  icon = "__base__/graphics/icons/computer.png",
-  icon_size = 32,
+  icon = path.."rocket_turret_icon.png",
+  icon_size = 150,
   flags = {"placeable-player", "player-creation"},
   minable = {mining_time = 0.5, result = name},
   max_health = 600,
   corpse = "medium-remnants",
-  collision_box = {{-1.4, -1.4 }, {1.4, 1.4}},
-  selection_box = {{-1.5, -1.5 }, {1.5, 1.5}},
+  collision_box = {{-0.9, -0.9 }, {0.9, 0.9}},
+  selection_box = {{-1, -1 }, {1, 1}},
   rotation_speed = 0.04,
-  preparing_speed = 0.04,
+  preparing_speed = 0.08,
   folding_speed = 0.04,
   dying_explosion = "medium-explosion",
   attacking_speed = 0.5,
@@ -50,11 +50,10 @@ local turret =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(90),
-    cooldown_deviation = 0.5,
-    range = 40,
-    min_attack_distance = 32,
-    projectile_creation_distance = 0.5,
+    cooldown = SU(100),
+    cooldown_deviation = 0.2,
+    range = 50,
+    gun_center_shift = {0, -1},
     sound = { filename = "__base__/sound/fight/rocket-launcher.ogg", volume = 0.6 },
     ammo_type =
     {
@@ -66,8 +65,9 @@ local turret =
         action_delivery =
         {
           {
-          type = "stream",
-          stream = name.." Stream",
+            type = "stream",
+            stream = name.." Stream",
+            source_offset = {0, -5}
           }
         }
       }
@@ -76,26 +76,27 @@ local turret =
   call_for_help_radius = 40 
 }
 
-local particle_gfx = util.copy(data.raw.projectile["shotgun-pellet"])
+local particle_gfx = util.copy(data.raw.projectile["rocket"])
 
 local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
 stream.name = name.." Stream"
+stream.oriented_particle = true --Not merged
 stream.action =
 {
-  --{
-  --  type = "direct",
-  --  action_delivery =
-  --  {
-  --    type = "instant",
-  --    target_effects =
-  --    {
-  --      {
-  --        type = "create-entity",
-  --        entity_name = name.." Splash"
-  --      }
-  --    }
-  --  }
-  --},
+  {
+    type = "direct",
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "create-entity",
+          entity_name = "explosion"
+        }
+      }
+    }
+  },
   {
     type = "area",
     collision_mode = "distance-from-center",
@@ -108,19 +109,21 @@ stream.action =
       {
         {
           type = "damage",
-          damage = { amount = 3, type = "acid" }
+          damage = { amount = 15, type = util.damage_type("rocket_turret") }
         }
       }
     }
   }
 }
 stream.particle = particle_gfx.animation
+stream.shadow = particle_gfx.shadow
+--stream.shadow.draw_as_shadow = true
 stream.particle.scale = 1.5
-stream.particle_buffer_size = 100
-stream.particle_spawn_interval = SU(2)
-stream.particle_spawn_timeout = SU(30)
-stream.particle_vertical_acceleration = SA(0.981 / 60)
-stream.particle_horizontal_speed = SD(0.35)
+stream.particle_buffer_size = 10
+stream.particle_spawn_interval = SU(3)
+stream.particle_spawn_timeout = SU(15)
+stream.particle_vertical_acceleration = SA(1.981 / 60)
+stream.particle_horizontal_speed = SD(0.65)
 stream.particle_horizontal_speed_deviation = SD(0.03)
 stream.particle_start_alpha = 1
 stream.particle_end_alpha = 1
@@ -131,7 +134,7 @@ stream.particle_loop_exit_threshold = 1
 --stream.particle.tint = {r = 0.5, g = 0, b = 1}
 stream.spine_animation = nil
 stream.smoke_sources = nil
-stream.target_position_deviation = 3
+stream.target_position_deviation = 1.5
 
 local item = {
   type = "item",
@@ -142,7 +145,7 @@ local item = {
   flags = {},
   subgroup = "defensive-structure",
   order = "f-"..name,
-  stack_size = 1,
+  stack_size = 10,
   place_result = name
 }
 
@@ -150,11 +153,12 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.bio_unit,
   enabled = true,
   ingredients =
   {
-    {"iron-plate", 4}
+    {"stone-brick", 25},
+    {"iron-plate", 10},
+    {"rocket", 10},
   },
   energy_required = 5,
   result = name
