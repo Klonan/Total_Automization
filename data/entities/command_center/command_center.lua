@@ -158,8 +158,6 @@ chest.max_health = 1
 chest.flags = {"hide-alt-info", "not-deconstructable"}
 
 
-data:extend{radar, roboport, robot, robot_item, turret, beam, sticker,
-chest
-}
+data:extend{radar, roboport, robot, robot_item, chest}
 
 

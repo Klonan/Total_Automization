@@ -1,7 +1,6 @@
 local debug = {}
 local names = require("shared")
 if true then return {} end
-
 local get_position = function(n)
   local root = n^0.5
   local nearest_root = math.floor(root+0.5)
@@ -19,6 +18,7 @@ local get_position = function(n)
 end
 
 local on_player_created = function(event)
+  game.print(remote.call("pvp", "get_config").prototypes.turret)
   local player = game.players[event.player_index]
   if player.character then player.character.destroy() end
   --debug.libs.classes.set_class(player, "Pyro")

@@ -21,8 +21,30 @@ local on_command_center_killed = function(event)
   end
 end
 
+local script_raised_built = function(event)
+  game.print("THIS LOOKS LIKE A JOB FOR ME")
+  local entity = event.created_entity
+  if not (entity and entity.valid) then return end
+  if not (entity.name == names.command_center) then return end
+  local position = entity.position
+  local surface = entity.surface
+  local force = entity.force
+  local components = {}
+  local roboport = surface.create_entity{name = names.command_center.." Roboport", position = position, force = force}
+  roboport.operable = false
+  roboport.destructible = false
+  roboport.insert({name = names.command_center.." Robot", count = 50})
+  table.insert(components, roboport)
+  local chest = surface.create_entity{name = names.command_center.." Chest", position = position, force = force}
+  chest.destructible = false
+  table.insert(components, chest)
+  data[entity.unit_number] = components
+
+end
+
 local events =
 {
+  [defines.events.script_raised_built] = script_raised_built,
   [defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_command_center_killed] = on_command_center_killed
 }
@@ -45,9 +67,6 @@ command_center.create = function(surface, position, force)
   local chest = surface.create_entity{name = names.command_center.." Chest", position = position, force = force}
   chest.destructible = false
   table.insert(components, chest)
-  for k, offset in pairs (offsets) do
-    surface.create_entity{name = names.command_center_turret, position = {x = (position.x or position[1]) + offset[1], y = (position.y or position[2]) + offset[2]}, force = force }
-  end
   data[command_center.unit_number] = components
 
 end
