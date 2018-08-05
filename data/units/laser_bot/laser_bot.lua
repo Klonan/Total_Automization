@@ -31,6 +31,7 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
+  minable = {result = name, mining_time = 2},
   
   attack_parameters =
   {
@@ -124,7 +125,8 @@ local item = {
   flags = {},
   subgroup = "circuit-units",
   order = "d-"..name,
-  stack_size = 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {

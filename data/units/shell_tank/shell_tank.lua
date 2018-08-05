@@ -46,6 +46,7 @@ local unit =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
+  minable = {result = name, mining_time = 2},
   collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-1, -1}, {1, 1}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
@@ -208,7 +209,8 @@ local item = {
   flags = {},
   subgroup = "iron-units",
   order = "e-"..name,
-  stack_size = 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {

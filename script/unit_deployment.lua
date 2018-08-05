@@ -94,8 +94,17 @@ local on_tick = function(event)
   data.tick_check[event.tick] = nil
 end
 
+local on_entity_settings_pasted = function(event)
+  local source = event.source
+  local destination = event.destination
+  if not (source and source.valid and destination and destination.valid) then return end
+  if not map[source.name] then return end
+  if not map[destination.name] then return end
+end
+
 local events = {
   [defines.events.on_built_entity] = on_built_entity,
+  [defines.events.on_robot_built_entity] = on_built_entity,
   [defines.events.on_tick] = on_tick
 }
 

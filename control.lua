@@ -8,6 +8,8 @@ end
 
 handler = require("script/event_handler")
 
+control = {}
+
 local hotkeys = require("shared").hotkeys
 for k, name in pairs (hotkeys) do
   local event_name = script.generate_event_name()
@@ -36,13 +38,17 @@ remote.add_interface("tf", {get = function(func) func(libs) end})
 
 libs.debug.libs = libs
 
-script.on_event(defines.events, function(event)
-  for name, lib in pairs (libs) do
-    if lib.on_event then
-      lib.on_event(event)
+control.on_event = function()
+  return function(event)
+    for name, lib in pairs (libs) do
+      if lib.on_event then
+        lib.on_event(event)
+      end
     end
   end
-end)
+end
+
+script.on_event(defines.events, control.on_event())
 
 script.on_init(function()
   game.speed = settings.startup["game-speed"].value

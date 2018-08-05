@@ -44,6 +44,7 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
+  minable = {result = name, mining_time = 2},
   attack_parameters =
   {
     type = "projectile",
@@ -176,7 +177,8 @@ local item = {
   flags = {},
   subgroup = "bio-units",
   order = "e-"..name,
-  stack_size = 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {
@@ -187,7 +189,7 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"coal", 40},
+    {"coal", 100},
     {type = "fluid", name = "sulfuric-acid", amount = 100}
   },
   energy_required = 75,

@@ -21,6 +21,8 @@ unit.max_health = 45
 unit.dying_explosion = nil
 unit.corpse = nil
 unit.healing_per_tick = SD(0.5/60)
+unit.has_belt_immunity = true
+unit.minable = {result = name, mining_time = 2}
 
 local animation = util.copy(unit.attack_parameters.animation)
 for k, layer in pairs (animation.layers) do
@@ -69,7 +71,8 @@ local item = {
   flags = {},
   subgroup = "bio-units",
   order = "b-"..name,
-  stack_size= 1
+  stack_size= 1,
+  place_result = name
 }
 
 local recipe = {
@@ -80,10 +83,10 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"coal", 15},
+    {"coal", 35},
     {type = "fluid", name = "water", amount = 1}
   },
-  energy_required = 20,
+  energy_required = 25,
   result = name
 }
 

@@ -18,7 +18,8 @@ local unit_selection_tool =
   flags = {"goes-to-quickbar"},
   show_in_library = true,
   selection_color = {g = 1},
-  alt_selection_color = {r = 1},
+  alt_selection_color = {g = 1, b = 1},
+  draw_label_for_cursor_render = true,
 }
 
 local deploy_filter = {}
@@ -43,7 +44,8 @@ local deployer_selection_tool =
   flags = {"goes-to-quickbar"},
   show_in_library = true,
   selection_color = {g = 1},
-  alt_selection_color = {r = 1},
+  alt_selection_color = {g = 1, b = 1},
+  draw_label_for_cursor_render = true,
 }
 
 local unit_move_tool =

@@ -21,6 +21,7 @@ local bot =
   can_open_gates = true,
   resistances = nil,
   healing_per_tick = 0,
+  minable = {result = name, mining_time = 2},
   collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
@@ -147,7 +148,8 @@ local item = {
   flags = {},
   subgroup = "iron-units",
   order = "b-"..name,
-  stack_size= 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {

@@ -13,17 +13,6 @@ local data =
   indicators = {}
 }
 
---[[on_player_selected_area
-
-Called after a player selects an area with a selection-tool item.
-
-Contains
-player_index :: uint: The player doing the selection.
-area :: BoundingBox: The area selected.
-item :: string: The item used to select the area.
-entities :: array of LuaEntity: The entities selected.
-tiles :: array of LuaTile: The tiles selected.]]
-
 local next_command_type =
 {
   move = 1,
@@ -40,9 +29,6 @@ local set_scout_command = function(unit)
   local chunk_x = math.floor(position.x / 32)
   local chunk_y = math.floor(position.y / 32)
   --unit.surface.request_to_generate_chunks(position, scout_range)
-  local scout_range = 4
-  local max = 16
-  local any = false
   local map_chunk_width = surface.map_gen_settings.width / 64
   local map_chunk_height = surface.map_gen_settings.height / 64
   local in_map = function(chunk_position)
@@ -54,49 +40,36 @@ local set_scout_command = function(unit)
     end
     return true
   end
-  local eligible_chunks = {}
+  local insert = table.insert
+  local scout_range = 5
+  local visible_chunks = {}
+  local non_visible_chunks = {}
+  local uncharted_chunks = {}
   local checked = {}
-  while (not any) and (scout_range < max) do
-    for X = -scout_range, scout_range do
-      checked[X] = checked[X] or {}
-      for Y = -scout_range, scout_range do
-        if (not (X == 0 and Y == 0)) and not checked[X][Y] then
-          local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
-          if in_map(chunk_position) and (not unit.force.is_chunk_charted(surface, chunk_position))then
-            any = true
-            table.insert(eligible_chunks, chunk_position)
-          end
-          checked[X][Y] = true
+  for X = -scout_range, scout_range do
+    for Y = -scout_range, scout_range do
+      local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
+      if in_map(chunk_position) then
+        if (not unit.force.is_chunk_charted(surface, chunk_position)) then
+          insert(uncharted_chunks, chunk_position)
+        elseif (not unit.force.is_chunk_visible(surface, chunk_position)) then
+          insert(non_visible_chunks, chunk_position)
+        else
+          insert(visible_chunks, chunk_position)
         end
       end
     end
-    scout_range = scout_range + 1
   end
-  if #eligible_chunks == 0 then
-    scout_range = 4 
-    checked = {}
-    while (not any) and (scout_range < max) do
-      for X = -scout_range, scout_range do
-        checked[X] = checked[X] or {}
-        for Y = -scout_range, scout_range do
-          if (not (X == 0 and Y == 0)) and not checked[X][Y] then
-            local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
-            if in_map(chunk_position) and (not unit.force.is_chunk_visible(surface, chunk_position))then
-              any = true
-              table.insert(eligible_chunks, chunk_position)
-            end
-            checked[X][Y] = true
-          end
-        end
-      end
-      scout_range = scout_range + 1
-    end
+  local chunk
+  if #uncharted_chunks > 0 then
+    chunk = uncharted_chunks[math.random(#uncharted_chunks)]
+  elseif #non_visible_chunks > 0 then
+    chunk = non_visible_chunks[math.random(#non_visible_chunks)]
+  else
+    chunk = visible_chunks[math.random(#visible_chunks)]
   end
-  if #eligible_chunks == 0 then return false end
-  local chunk = eligible_chunks[math.random(#eligible_chunks)]
   local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 16, 4)
   if not tile_destination then return false end
-  
   unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
   return true
 end
@@ -121,6 +94,7 @@ local gui_actions =
     if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
+    player.clean_cursor()
     player.cursor_stack.set_stack{name = names.unit_move_tool}
     player.cursor_stack.label = "Issue move command"
   end,
@@ -128,24 +102,28 @@ local gui_actions =
     if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
+    player.clean_cursor()
     player.cursor_stack.set_stack{name = names.unit_patrol_tool}
     player.cursor_stack.label = "Add patrol waypoint"
   end,
   attack_move_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
+    player.clean_cursor()
     player.cursor_stack.set_stack{name = names.unit_attack_move_tool}
     player.cursor_stack.label = "Issue attack move command"
   end,
   attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
+    player.clean_cursor()
     player.cursor_stack.set_stack{name = names.unit_attack_tool}
     player.cursor_stack.label = "Issue attack command"
   end,
   force_attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
+    player.clean_cursor()
     player.cursor_stack.set_stack{name = names.unit_force_attack_tool}
     player.cursor_stack.label = "Issue force attack command"
   end,
@@ -250,13 +228,11 @@ end
 
 local deregister_unit = function(entity)
   if not (entity and entity.valid) then return end
-  if not (entity.type == "unit") then return end
   local unit_number = entity.unit_number
+  if not unit_number then return end
   local unit = data.units[unit_number]
-  if not unit then
-    --game.print("No unit to deregister")
-    return
-  end
+  if not unit then return end
+  data.units[unit_number] = nil
   local group = unit.group
   if group then
     --game.print("Deregistered unit from group")
@@ -628,7 +604,7 @@ local on_gui_click = function(event)
   return gui_actions[action.name](event, action)
 end
 
-local on_entity_died = function(event)
+local on_entity_removed = function(event)
   deregister_unit(event.entity)
 end
 
@@ -752,13 +728,26 @@ local suicide = function(event)
   if entity then entity.die() end
 end
 
+local on_entity_settings_pasted = function(event)
+  --Copy pasting deployers recipe.
+  local source = event.source
+  local destination = event.destination
+  if not (source and source.valid and destination and destination.valid) then return end
+  local unit_data = data.units[source.unit_number]
+  if not unit_data then return end
+  data.units[destination.unit_number] = util.copy(unit_data)
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
+  [defines.events.on_entity_settings_pasted] = on_entity_settings_pasted,
   [defines.events.on_player_alt_selected_area] = on_player_alt_selected_area,
   [defines.events.on_gui_closed] = on_gui_closed,
   [defines.events.on_gui_click] = on_gui_click,
-  [defines.events.on_entity_died] = on_entity_died,
+  [defines.events.on_entity_died] = on_entity_removed,
+  [defines.events.on_robot_mined_entity] = on_entity_removed,
+  [defines.events.on_player_mined_entity] = on_entity_removed,
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
@@ -784,7 +773,7 @@ unit_control.on_init = function()
 end
 
 unit_control.on_load = function()
-  data = global.unit_control or data
+  data = global.unit_control
 end
 
 return unit_control

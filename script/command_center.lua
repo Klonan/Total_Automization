@@ -22,7 +22,6 @@ local on_command_center_killed = function(event)
 end
 
 local script_raised_built = function(event)
-  game.print("THIS LOOKS LIKE A JOB FOR ME")
   local entity = event.created_entity
   if not (entity and entity.valid) then return end
   if not (entity.name == names.command_center) then return end
@@ -33,7 +32,9 @@ local script_raised_built = function(event)
   local roboport = surface.create_entity{name = names.command_center.." Roboport", position = position, force = force}
   roboport.operable = false
   roboport.destructible = false
-  roboport.insert({name = names.command_center.." Robot", count = 50})
+  --roboport.insert({name = names.command_center.." Robot", count = 50})
+  roboport.insert({name = "construction-robot", count = 150})
+  roboport.insert({name = "logistic-robot", count = 150})
   table.insert(components, roboport)
   local chest = surface.create_entity{name = names.command_center.." Chest", position = position, force = force}
   chest.destructible = false

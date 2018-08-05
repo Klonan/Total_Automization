@@ -31,6 +31,7 @@ local bot =
   move_while_shooting = true,
   can_open_gates = true,
   only_shoot_healthy = true,
+  minable = {result = name, mining_time = 2},
   attack_parameters =
   {
     type = "projectile",
@@ -147,7 +148,8 @@ local item = {
   flags = {},
   subgroup = "iron-units",
   order = "d-"..name,
-  stack_size = 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {

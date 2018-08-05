@@ -71,8 +71,10 @@ roboport.recharge_minimum = "40MJ"
 roboport.energy_usage = "50kW"
 -- per one charge slot
 roboport.charging_energy = "2000kW"
-roboport.logistics_radius = 0
-roboport.construction_radius = 100
+roboport.logistics_radius = 150
+roboport.construction_radius = 200
+--roboport.draw_logistic_radius_visualization
+
 roboport.charge_approach_distance = 7
 roboport.robot_slots_count = 7
 roboport.material_slots_count = 7
@@ -81,7 +83,6 @@ roboport.spawn_and_station_height = -0.4
 roboport.order = "noob"
 roboport.charging_station_count = 8
 roboport.charging_distance = 2
-roboport.robot_limit = 20
 roboport.charging_station_shift = {0, -1}
 roboport.base = command_center_picture
 roboport.base_patch =

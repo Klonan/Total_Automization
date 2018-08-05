@@ -13,6 +13,8 @@ machine.ingredient_count = 100
 machine.module_specification = nil
 machine.animation = machine.idle_animation
 machine.idle_animation = nil
+machine.minable = {result = name, mining_time = 5}
+machine.flags = {"placeable-neutral", "player-creation"}
 machine.fluid_boxes =
 {
   {
@@ -66,7 +68,7 @@ local recipe = {
     {"copper-cable", 100},
     {"copper-plate", 50}
   },
-  energy_required = 10,
+  energy_required = 100,
   result = name
 }
 

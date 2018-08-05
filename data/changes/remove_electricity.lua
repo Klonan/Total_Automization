@@ -27,6 +27,8 @@ for k, type in pairs (data.raw) do
     if ent.energy_source then
       ent.energy_source.type = "void"
     end
+    ent.energy_per_move = nil
+    ent.energy_per_tick = nil
   end
 end
 

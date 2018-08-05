@@ -87,6 +87,8 @@ local bot =
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
+  
+  minable = {result = name, mining_time = 2},
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
   working_sound = {
@@ -218,7 +220,8 @@ local item = {
   flags = {},
   subgroup = "circuit-units",
   order = "e-"..name,
-  stack_size = 1
+  stack_size = 1,
+  place_result = name
 }
 
 local recipe = {
