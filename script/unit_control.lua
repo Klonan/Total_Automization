@@ -91,7 +91,6 @@ local make_unit_gui
 local gui_actions =
 {
   move_button = function(event)
-    if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
@@ -99,7 +98,6 @@ local gui_actions =
     player.cursor_stack.label = "Issue move command"
   end,
   patrol_button = function(event)
-    if not data.selected_units[event.player_index] then return end
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
@@ -199,12 +197,12 @@ make_unit_gui = function(frame)
   local index = frame.player_index
   local group = get_selected_units(index)
   if not group then return end
-  frame.clear()
   if table_size(group) == 0 then
     util.deregister_gui(frame, data.button_action_index)
     frame.destroy()
     return
   end
+  frame.clear()
   local map = {}
   for unit_number, ent in pairs (group) do
     map[ent.name] = (map[ent.name] or 0) + 1
@@ -274,10 +272,11 @@ local unit_selection = function(event)
   end
   local units = data.units
   for k, ent in pairs (entities) do
-    deregister_unit(ent)
     local unit_index = ent.unit_number
+    local unit_data = units[unit_index]
+    deregister_unit(ent)
     group[unit_index] = ent
-    units[unit_index] = units[unit_index] or
+    units[unit_index] = unit_data or
     {
       entity = ent,
       command_queue = {},
