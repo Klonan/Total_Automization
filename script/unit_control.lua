@@ -197,8 +197,8 @@ make_unit_gui = function(frame)
   local index = frame.player_index
   local group = get_selected_units(index)
   if not group then return end
+  util.deregister_gui(frame, data.button_action_index)
   if table_size(group) == 0 then
-    util.deregister_gui(frame, data.button_action_index)
     frame.destroy()
     return
   end

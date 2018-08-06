@@ -1,6 +1,6 @@
 local debug = {}
 local names = require("shared")
-if true then return {} end
+--if true then return {} end
 local get_position = function(n)
   local root = n^0.5
   local nearest_root = math.floor(root+0.5)
@@ -72,7 +72,7 @@ end
 
 local events = 
 {
-  [defines.events.on_player_created] = on_player_created
+  --[defines.events.on_player_created] = on_player_created
 }
 
 debug.on_event = handler(events)
