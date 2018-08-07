@@ -534,6 +534,8 @@ local attack_closest = function(unit, entities)
       distraction = defines.distraction.none,
       target = closest
     }
+    --Screw this for now, maybe if stickers can apply to all entities...
+    --surface.create_entity{name = names.enemy_selection_sticker, position = closest.position, target = closest, force = force}
     return true
   else
     return false

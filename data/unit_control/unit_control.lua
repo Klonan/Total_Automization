@@ -175,30 +175,22 @@ attack_move_indicator.animations[1].filename = path.."attack_move_indicator.png"
 local selection_sticker = util.copy(data.raw.sticker["fire-sticker"])
 selection_sticker.name = names.unit_selection_sticker
 selection_sticker.localised_name = names.unit_selection_sticker
-
 selection_sticker.duration_in_ticks = 2 ^ 31
 selection_sticker.target_movement_modifier = 1
 selection_sticker.damage_per_tick = nil
 selection_sticker.spread_fire_entity = nil
 selection_sticker.fire_spread_cooldown = 0
 selection_sticker.fire_spread_radius = 0
---selection_sticker.render_singular = true
 selection_sticker.animation = nil
-selection_sticker.selection_box_type = "logistics"
-local noob = {
-  width = 128,
-  height = 128,
-  line_length = 1,
-  frame_count = 1,
-  axially_symmetrical = false,
-  direction_count = 1,
-  priority = "high",
-  animation_speed = 1,
-  scale = 0.5,
-  filename = path.."unit_select.png",
-}
+selection_sticker.selection_box_type = "entity"
 selection_sticker.stickers_per_square_meter = 0
 selection_sticker.force_visibility = "same"
+
+local enemy_target_sticker = util.copy(selection_sticker)
+enemy_target_sticker.name = names.enemy_selection_sticker
+enemy_target_sticker.localised_name = names.enemy_selection_sticker
+enemy_target_sticker.duration_in_ticks = SU(60 * 4)
+enemy_target_sticker.selection_box_type = "not-allowed"
 
 
 local deployer_selection_sticker = util.copy(data.raw["simple-entity-with-owner"]["simple-entity-with-owner"])
@@ -210,7 +202,7 @@ deployer_selection_sticker.pictures = nil
 deployer_selection_sticker.picture = nil
 deployer_selection_sticker.selectable_in_game = false
 deployer_selection_sticker.collision_box = {{0,0},{0,0}}
-deployer_selection_sticker.render_layer = "object"
+deployer_selection_sticker.render_layer = "selection-box"
 deployer_selection_sticker.animations = {
 {
   width = 128,
@@ -237,6 +229,7 @@ data:extend{
   move_indicator,
   attack_move_indicator,
   selection_sticker,
+  --enemy_target_sticker,
   deployer_selection_sticker
 }
 

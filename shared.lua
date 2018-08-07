@@ -62,7 +62,8 @@ data.unit_tools =
   move_indicator = "Move Indicator",
   attack_move_indicator = "Attack Move Indicator",
   unit_selection_sticker = "Unit Selection Sticker",
-  deployer_selection_sticker = "Deployer Selection Sticker"
+  deployer_selection_sticker = "Deployer Selection Sticker",
+  enemy_selection_sticker = "Enemy Selection Sticker"
 }
 
 data.units =
