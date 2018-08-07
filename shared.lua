@@ -61,6 +61,8 @@ data.unit_tools =
   unit_force_attack_tool = "Force attack targets",
   move_indicator = "Move Indicator",
   attack_move_indicator = "Attack Move Indicator",
+  unit_selection_sticker = "Unit Selection Sticker",
+  deployer_selection_sticker = "Deployer Selection Sticker"
 }
 
 data.units =

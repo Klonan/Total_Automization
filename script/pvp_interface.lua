@@ -29,7 +29,7 @@ local register_events = function()
   for name, id in pairs (pvp_events) do
     defines.events[name] = id
   end
-  script.on_event(defines.events, control.on_event())
+  --script.on_event(defines.events, control.on_event())
   events = 
   {
     [defines.events.on_round_start] = on_round_start,
@@ -41,11 +41,11 @@ end
 local on_init = function()
   register_events()
   local config = remote.call("pvp", "get_config")
-  config.prototypes.turret = names.entities.big_gun_turret
-  config.prototypes.wall = names.entities.concrete_wall
-  config.prototypes.gate = names.entities.concrete_gate
+  config.prototypes.turret = names.entities.small_gun_turret
+  config.prototypes.wall = names.entities.stone_wall
+  config.prototypes.gate = names.entities.stone_gate
   config.prototypes.silo = names.entities.command_center
-  config.prototypes.artillery = names.entities.rocket_turret
+  config.prototypes.artillery = names.entities.tesla_turret
   config.prototypes.chest = "logistic-chest-storage"
   config.silo_offset = {0,0}
   config.inventory_list.medium[names.entities.small_miner] = 50

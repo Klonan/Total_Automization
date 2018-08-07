@@ -18,15 +18,10 @@ local get_position = function(n)
 end
 
 local on_player_created = function(event)
-  game.print(remote.call("pvp", "get_config").prototypes.turret)
+
   local player = game.players[event.player_index]
-  if player.character then player.character.destroy() end
-  --debug.libs.classes.set_class(player, "Pyro")
-  local count = 5
-  for name, class in pairs(debug.libs.classes.class_list) do
-    --player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
-    count = count + 5
-  end
+
+
   local team1 = {
     --beetle = 80
     blaster_bot = 50,
@@ -40,9 +35,31 @@ local on_player_created = function(event)
   for name, count in pairs (team1) do
     for x = 1, count do
       local vec = get_position(math.random(400))
-      --player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
     end 
   end
+
+
+  if true then return end
+
+  local biter = player.surface.create_entity{name = "small-biter", position = {-10, -10}, force = "player"}
+  player.surface.create_entity{name = "Selection Sticker", position = biter.position, target = biter, force = "enemy"}
+
+
+
+
+
+
+
+
+  if player.character then player.character.destroy() end
+  --debug.libs.classes.set_class(player, "Pyro")
+  local count = 5
+  for name, class in pairs(debug.libs.classes.class_list) do
+    --player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
+    count = count + 5
+  end
+
   team2 = {
     --plasma_bot = 5,
     --rocket_guy = 50,
@@ -72,7 +89,7 @@ end
 
 local events = 
 {
-  --[defines.events.on_player_created] = on_player_created
+  [defines.events.on_player_created] = on_player_created
 }
 
 debug.on_event = handler(events)
@@ -82,7 +99,5 @@ debug.on_init = function()
     surface.always_day = true
   end
 end
-
-remote.add_interface("debug", {dump = function() log(serpent.block(global)) end})
 
 return debug

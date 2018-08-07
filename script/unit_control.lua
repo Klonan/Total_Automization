@@ -87,6 +87,14 @@ local get_selected_units = function(player_index)
 end
 
 local make_unit_gui
+local deselect_unit = function(param)
+  if not param then return end
+  local sticker = param.sticker
+  if (sticker and sticker.valid) then
+    sticker.destroy()
+  end
+  param.sticker = nil
+end
 
 local gui_actions =
 {
@@ -162,9 +170,11 @@ local gui_actions =
     local group = get_selected_units(event.player_index)
     if not group then return end
     local right = (event.button == defines.mouse_button_type.right)
+    local units = data.units
     if event.control or right then
       for unit_number, entity in pairs (group) do
         if entity.name == unit_name then
+          deselect_unit(units[unit_number])
           group[unit_number] = nil
           if right then break end
         end
@@ -172,12 +182,16 @@ local gui_actions =
     else
       for unit_number, entity in pairs (group) do
         if entity.name ~= unit_name then
+          deselect_unit(units[unit_number])
           group[unit_number] = nil
         end
       end
     end
     local frame = data.open_frames[event.player_index]
-    if not frame then return end
+    if not (frame and frame.valid) then
+      data.open_frames[event.player_index] = nil
+      return
+    end
     make_unit_gui(frame)
   end
 }
@@ -224,13 +238,20 @@ make_unit_gui = function(frame)
   butts.style.align = "center"
 end
 
-local deregister_unit = function(entity)
+deregister_unit = function(entity)
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
   if not unit_number then return end
   local unit = data.units[unit_number]
   if not unit then return end
   data.units[unit_number] = nil
+
+  local sticker = unit.sticker
+  if sticker and sticker.valid then
+    sticker.destroy()
+  end
+  unit.sticker = nil
+
   local group = unit.group
   if group then
     --game.print("Deregistered unit from group")
@@ -261,16 +282,18 @@ local unit_selection = function(event)
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
   local surface = player.surface
+  local force = player.force
   local area = event.area
   local center = util.center(area)
   local index = player.index
-  local group
-  if append then
-    group = get_selected_units(index)
-  else
+  local units = data.units
+  local group = get_selected_units(index)
+  if not append then
+    for unit_number, ent in pairs (group) do
+      deselect_unit(units[unit_number])
+    end
     group = {}
   end
-  local units = data.units
   for k, ent in pairs (entities) do
     local unit_index = ent.unit_number
     local unit_data = units[unit_index]
@@ -284,6 +307,11 @@ local unit_selection = function(event)
     }
     units[unit_index].group = group
     units[unit_index].player = index
+    if ent.type == "unit" then
+      units[unit_index].sticker = surface.create_entity{name = names.unit_selection_sticker, position = ent.position, force = force, target = ent}
+    else
+      units[unit_index].sticker = surface.create_entity{name = names.deployer_selection_sticker, position = ent.position, force = force}
+    end
   end
   data.selected_units[index] = group
   local gui = player.gui.left

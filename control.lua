@@ -8,8 +8,6 @@ end
 
 handler = require("script/event_handler")
 
-control = {}
-
 local hotkeys = require("shared").hotkeys
 for k, name in pairs (hotkeys) do
   local event_name = script.generate_event_name()
@@ -35,8 +33,11 @@ local libs = {
 
 
 remote.add_interface("tf", {get = function(func) func(libs) end})
+remote.add_interface("debug", {dump = function() log(serpent.block(global)) end})
 
 libs.debug.libs = libs
+
+local control = {}
 
 control.on_event = function()
   return function(event)
@@ -48,32 +49,43 @@ control.on_event = function()
   end
 end
 
-script.on_event(defines.events, control.on_event())
+control.on_init = function()
+  return function()
+    game.speed = settings.startup["game-speed"].value
+    for name, lib in pairs (libs) do
+      if lib.on_init then
+        lib.on_init()
+      end
+    end
+    script.on_event(defines.events, control.on_event())
+  end
+end
 
-script.on_init(function()
-  game.speed = settings.startup["game-speed"].value
-  for name, lib in pairs (libs) do
-    if lib.on_init then
-      lib.on_init()
+control.on_load = function()
+  return
+  function()
+    for name, lib in pairs (libs) do
+      if lib.on_load then
+        lib.on_load()
+      end
+    end
+    script.on_event(defines.events, control.on_event())
+  end
+end
+
+control.on_configuration_changed = function()
+  return
+  function(data)
+    for name, lib in pairs (libs) do
+      if lib.on_configuration_changed then
+        lib.on_configuration_changed(data)
+      end
     end
   end
-end)
+end
 
-script.on_load(function()
-  for name, lib in pairs (libs) do
-    if lib.on_load then
-      lib.on_load()
-    end
-  end
-end)
+script.on_init(control.on_init())
 
-script.on_configuration_changed(function(data)
-  for name, lib in pairs (libs) do
-    if lib.on_configuration_changed then
-      lib.on_configuration_changed(data)
-    end
-  end
-end)
+script.on_load(control.on_load())
 
-
---todo control points
+script.on_configuration_changed(control.on_configuration_changed())
