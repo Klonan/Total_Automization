@@ -41,7 +41,7 @@ local set_scout_command = function(unit)
     return true
   end
   local insert = table.insert
-  local scout_range = 5
+  local scout_range = 6
   local visible_chunks = {}
   local non_visible_chunks = {}
   local uncharted_chunks = {}
@@ -68,10 +68,9 @@ local set_scout_command = function(unit)
   else
     chunk = visible_chunks[math.random(#visible_chunks)]
   end
-  local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 16, 4)
-  if not tile_destination then return false end
+  local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+  if not tile_destination then return end
   unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
-  return true
 end
 
 local get_selected_units = function(player_index)
@@ -702,11 +701,7 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.scout then
-    if result == defines.behavior_result.fail or (not  set_scout_command(entity)) then
-      entity.set_command(idle_command)
-      unit_data.idle = true
-      unit_data.command_queue = {}
-    end
+    set_scout_command(entity)
     return
   end
 
@@ -789,15 +784,17 @@ unit_control.on_event = handler(events)
 
 unit_control.on_init = function()
   global.unit_control = data
-  game.map_settings.path_finder.max_steps_worked_per_tick = 1000000
-  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000000000
-  game.map_settings.path_finder.short_request_max_steps = 5000
-  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 50000
-  game.map_settings.path_finder.max_clients_to_accept_any_new_request = 50000
+  game.map_settings.path_finder.max_steps_worked_per_tick = 100000
+  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  game.map_settings.path_finder.short_request_max_steps = 1000
+  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 2000
+  game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  game.map_settings.path_finder.short_cache_size = 50
+  game.map_settings.path_finder.long_cache_size = 250
   game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
   game.map_settings.steering.moving.radius = 0
   game.map_settings.steering.moving.default = 0
-  game.map_settings.max_failed_behavior_count = 50
+  game.map_settings.max_failed_behavior_count = 2
   
 end
 
