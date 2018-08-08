@@ -26,12 +26,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 60 * 15,
-  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
-  sticker_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  min_persue_time = SU(60 * 15),
+  selection_box = {{-2.0, -2.0}, {2.0, 2.0}},
+  collision_box = {{-1.5, -1.5}, {1.5, 1.5}},
+  sticker_box = {{-1.5, -1.5}, {1.5, 1.5}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -113,8 +113,7 @@ local bot =
   run_animation = {layers = {base.in_motion, base.shadow_in_motion, in_motion_mask}}
 }
 util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 2)
-util.scale_boxes(bot, 2)
+util.recursive_hack_scale(bot, 3)
 
 local projectile = util.copy(data.raw.projectile["acid-projectile-purple"])
 projectile.name = name.." Projectile"

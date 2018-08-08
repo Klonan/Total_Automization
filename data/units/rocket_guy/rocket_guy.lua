@@ -21,11 +21,11 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
+  collision_box = {{-0.6, -0.6}, {0.6, 0.6}},
+  selection_box = {{-0.8, -2.2}, {0.8, 0.4}},
   sticker_box = {{-0.3, -1.5}, {0.3, 0.2}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
@@ -107,10 +107,8 @@ local bot =
   run_animation = base.animations[2].running
 }
 
-local scale = 1.5
 util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, scale)
-util.scale_boxes(bot, scale)
+util.recursive_hack_scale(bot, 1.5)
 
 
 local projectile = util.copy(data.raw.projectile.rocket)

@@ -24,7 +24,7 @@ local on_player_created = function(event)
 
   local team1 = {
     --beetle = 80
-    blaster_bot = 50,
+    --blaster_bot = 50,
     --laser_bot = 20,
     --tazer_bot = 30,
     --plasma_bot = 10,
@@ -32,8 +32,8 @@ local on_player_created = function(event)
     --piercing_biter = 50
   }
   local pos = {x = -40, y = 0}
-  for name, count in pairs (team1) do
-    for x = 1, count do
+  for name, count in pairs (names.units) do
+    for x = 1, 1 do
       local vec = get_position(math.random(400))
       player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
     end 

@@ -5,8 +5,23 @@ local base = util.copy(data.raw["combat-robot"]["destroyer"])
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
 --  layer.frame_count = 1
 --end
+util.recursive_hack_make_hr(base)
+util.recursive_hack_scale(base, 2)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
+
+local shift = {0, 1}
+local shift_layer = function(layer)
+  layer.shift = layer.shift or {0,0}
+  layer.shift[1] = layer.shift[1] + shift[1]
+  layer.shift[2] = layer.shift[2] + shift[2]
+end
+for k, layer in pairs (base.idle.layers) do
+  shift_layer(layer)
+end
+for k, layer in pairs (base.in_motion.layers) do
+  shift_layer(layer)
+end
 local bot =
 {
   type = "unit",
@@ -22,12 +37,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 60 * 15,
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  min_persue_time = SU(60 * 15),
+  selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
+  collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
+  sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -93,9 +108,6 @@ local bot =
   },
   run_animation = base.in_motion
 }
-util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 1.5)
-util.scale_boxes(bot, 1.5)
 
 local beam = util.copy(data.raw.beam["laser-beam"])
 beam.name = name.." Beam"

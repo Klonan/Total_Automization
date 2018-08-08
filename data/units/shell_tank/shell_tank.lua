@@ -3,6 +3,7 @@ local name = require("shared").units.shell_tank
 local sprite_base = util.copy(data.raw.car.tank)
 local path = util.path("data/units/shell_tank/")
 util.recursive_hack_make_hr(sprite_base)
+util.recursive_hack_scale(sprite_base, 1.5)
 for k, layer in pairs (sprite_base.animation.layers) do
   layer.frame_count = 1
   layer.max_advance = nil
@@ -11,7 +12,7 @@ for k, layer in pairs (sprite_base.animation.layers) do
     for k, strip in pairs (layer.stripes) do
       strip.width_in_frames = 1
     end
-    if layer.apply_runtime_tint then
+    if layer.apply_runtime_tint or layer.draw_as_shadow then
       local new_stripes = {}
       for k, stripe in pairs (layer.stripes) do
         if k % 2 ~= 0 then
@@ -28,7 +29,6 @@ for k, layer in pairs (sprite_base.turret_animation.layers) do
 end
 
 
---util.recursive_hack_scale(sprite_base, 1.5)
 
 
 local unit =
@@ -47,8 +47,8 @@ local unit =
   resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-1, -1}, {1, 1}},
-  selection_box = {{-1, -1}, {1, 1}},
+  collision_box = {{-2, -2}, {2, 2}},
+  selection_box = {{-2, -2}, {2, 2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
@@ -113,7 +113,7 @@ local unit =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.18),
+  movement_speed = SD(0.15),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,

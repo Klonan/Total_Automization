@@ -22,8 +22,9 @@ local next_command_type =
   attack = 5,
 }
 
-local set_scout_command = function(unit)
+local set_scout_command = function(unit, failure)
   if unit.type ~= "unit" then return end
+  log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
   local position = unit.position
   local surface = unit.surface
   local chunk_x = math.floor(position.x / 32)
@@ -42,6 +43,7 @@ local set_scout_command = function(unit)
   end
   local insert = table.insert
   local scout_range = 6
+  if failure then scout_range = 8 end
   local visible_chunks = {}
   local non_visible_chunks = {}
   local uncharted_chunks = {}
@@ -61,15 +63,25 @@ local set_scout_command = function(unit)
     end
   end
   local chunk
-  if #uncharted_chunks > 0 then
-    chunk = uncharted_chunks[math.random(#uncharted_chunks)]
-  elseif #non_visible_chunks > 0 then
-    chunk = non_visible_chunks[math.random(#non_visible_chunks)]
-  else
-    chunk = visible_chunks[math.random(#visible_chunks)]
-  end
-  local tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
-  if not tile_destination then return end
+  local tile_destination
+  repeat
+    if #uncharted_chunks > 0 and not failure then
+      index = math.random(#uncharted_chunks)
+      chunk = uncharted_chunks[index]
+      table.remove(uncharted_chunks, index)
+      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+    elseif #non_visible_chunks > 0 and not failure then
+      index = math.random(#non_visible_chunks)
+      chunk = non_visible_chunks[index]
+      table.remove(non_visible_chunks, index)
+      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+    else
+      index = math.random(#visible_chunks)
+      chunk = visible_chunks[index]
+      table.remove(visible_chunks, index)
+      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+    end
+  until tile_destination
   unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
 end
 
@@ -276,7 +288,6 @@ end
 local unit_selection = function(event)
   local entities = event.entities
   if not entities then return end
-  if #entities == 0 then return end
   local append = (event.name == defines.events.on_player_alt_selected_area)
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
@@ -319,10 +330,26 @@ local unit_selection = function(event)
     util.deregister_gui(old_frame, data.button_action_index)
     old_frame.destroy()
   end
-  local frame = gui.add{type = "frame", caption = "units", direction = "vertical"}
+  local frame = gui.add{type = "frame", caption = "Unit control", direction = "vertical"}
   data.open_frames[player.index] = frame
   --player.opened = frame
   make_unit_gui(frame)
+end
+
+local get_offset = function(entities)
+  local map = {}
+  local small = 1
+  for k, entity in pairs (entities) do
+    if not map[entity.name] then
+      map[entity.name] = entity.prototype
+    end
+  end
+  local rad = util.radius
+  local max = math.max
+  for name, prototype in pairs (map) do
+    small = max(small, rad(prototype.selection_box) * 2)
+  end
+  return small
 end
 
 local make_move_command = function(param)
@@ -330,6 +357,7 @@ local make_move_command = function(param)
   local distraction = param.distraction or defines.distraction.by_enemy
   local offset = param.spacing or 1
   local group = param.group
+  offset = get_offset(group)
   local surface = param.surface
   local append = param.append
   local indicator = surface.create_entity{name = param.indicator or names.move_indicator, position = position, force = param.force}
@@ -636,7 +664,7 @@ local on_entity_removed = function(event)
   deregister_unit(event.entity)
 end
 
-local idle_command = {type = defines.command.wander, radius = 1}
+local idle_command = {type = defines.command.stop, radius = 1}
 
 process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
@@ -701,7 +729,7 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.scout then
-    set_scout_command(entity)
+    set_scout_command(entity, result == defines.behavior_result.fail)
     return
   end
 
@@ -784,10 +812,10 @@ unit_control.on_event = handler(events)
 
 unit_control.on_init = function()
   global.unit_control = data
-  game.map_settings.path_finder.max_steps_worked_per_tick = 100000
+  game.map_settings.path_finder.max_steps_worked_per_tick = 10000
   game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  game.map_settings.path_finder.short_request_max_steps = 1000
-  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 2000
+  game.map_settings.path_finder.short_request_max_steps = 200
+  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
   game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
   game.map_settings.path_finder.short_cache_size = 50
   game.map_settings.path_finder.long_cache_size = 250

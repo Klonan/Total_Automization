@@ -18,12 +18,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
-  min_persue_time = 8 * 60,
-  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
-  sticker_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  min_persue_time = SU(60 * 15),
+  selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
+  collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
+  sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -91,7 +91,6 @@ local bot =
 }
 util.recursive_hack_make_hr(bot)
 util.recursive_hack_scale(bot, 2)
-util.scale_boxes(bot, 2)
 
 local corpse =
 {

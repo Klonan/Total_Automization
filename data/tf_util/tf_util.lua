@@ -11,7 +11,7 @@ recursive_hack_scale = function(array, scale)
       if is_sprite_def(v) then
         v.scale = (v.scale or 1) * scale
         if v.shift then
-          --v.shift[1], v.shift[2] = v.shift[1] * scale, v.shift[2] * scale
+          v.shift[1], v.shift[2] = v.shift[1] * scale, v.shift[2] * scale
         end
       end
       recursive_hack_scale(v, scale)

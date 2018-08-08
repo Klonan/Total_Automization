@@ -14,8 +14,8 @@ unit.movement_speed = SD(0.3)
 unit.max_pursue_distance = 64
 unit.min_persue_time = SU(8 * 60)
 unit.map_color = {b = 0.5, g = 1}
-unit.collision_box = {{-0.5, -0.5},{0.5, 0.5}}
-unit.selection_box = {{-0.5, -0.5},{0.5, 0.5}}
+unit.collision_box = {{-0.6, -0.6},{0.6, 0.6}}
+unit.selection_box = {{-1.0, -1.0},{1.0, 1.0}}
 unit.sticker_box = {{-0.5, -1},{0.5, 0.5}}
 unit.max_health = 45
 unit.dying_explosion = nil

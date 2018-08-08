@@ -22,12 +22,12 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
-  selection_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
+  selection_box = {{-1.0, -1.0}, {1.0, 1.0}},
+  sticker_box = {{-0.3, -0.3}, {0.3, 0.3}},
   distraction_cooldown = SU(15),
   move_while_shooting = true,
   can_open_gates = true,
@@ -109,8 +109,7 @@ local bot =
   run_animation = base.in_motion
 }
 util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 1.5)
-util.scale_boxes(bot, 1.5)
+util.recursive_hack_scale(bot, 2)
 
 local projectile = util.copy(data.raw.projectile["laser"])
 projectile.name = name.." Projectile"

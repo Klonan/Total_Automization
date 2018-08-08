@@ -15,7 +15,7 @@ unit.max_pursue_distance = 64
 unit.min_persue_time = SU(8 * 60)
 unit.map_color = {b = 0.5, g = 1}
 unit.collision_box = {{-1, -1},{1, 1}}
-unit.selection_box = {{-1, -1},{1, 1}}
+unit.selection_box = {{-1.2, -1.2},{1.2, 1.2}}
 unit.sticker_box = {{-1, -1},{1, 1}}
 unit.max_health = 220
 unit.dying_explosion = nil
@@ -60,7 +60,7 @@ unit.attack_parameters =
   sound = sound,
   animation = animation
 }
---util.recursive_hack_scale(unit, 0.2)
+--util.recursive_hack_scale(unit, 4)
 
 local item = {
   type = "item",
