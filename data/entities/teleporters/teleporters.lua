@@ -12,6 +12,7 @@ teleporter.dying_explosion = nil
 teleporter.action = nil
 teleporter.force_die_on_attack = true
 teleporter.trigger_force = "friend"
+teleporter.create_ghost_on_death = false
 teleporter.order = name
 teleporter.picture_safe =
 {

@@ -5,7 +5,7 @@ local concrete_wall = names.concrete_wall
 local concrete_gate = names.concrete_gate
 
 local wall = util.copy(data.raw.wall["stone-wall"])
-
+local stone_tint = {r = 0.6, g = 0.6, b = 0.6}
 wall.name = stone_wall
 wall.localised_name = stone_wall
 wall.max_health = 500
@@ -14,7 +14,7 @@ wall.icons = {
   {
     icon = wall.icon,
     icon_size = wall.icon_size,
-    tint = {r = 0.5, g = 0.5, b = 0.5}
+    tint = stone_tint
   }
 }
 wall.icon = nil
@@ -43,7 +43,7 @@ local recipe = {
   energy_required = 2,
   result = stone_wall
 }
-util.recursive_hack_tint(wall, {r = 0.5, g = 0.5, b = 0.5})
+util.recursive_hack_tint(wall, stone_tint)
 data:extend{wall, item, recipe}
 
 local gate = util.copy(data.raw.gate["gate"])
@@ -56,7 +56,7 @@ gate.icons = {
   {
     icon = gate.icon,
     icon_size = gate.icon_size,
-    tint = {r = 0.5, g = 0.5, b = 0.5}
+    tint = stone_tint
   }
 }
 
@@ -85,7 +85,7 @@ local recipe = {
   result = stone_gate
 }
 
-util.recursive_hack_tint(gate, {r = 0.5, g = 0.5, b = 0.5})
+util.recursive_hack_tint(gate, stone_tint)
 data:extend{gate, item, recipe}
 
 local wall = util.copy(data.raw.wall["stone-wall"])
