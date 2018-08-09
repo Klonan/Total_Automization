@@ -140,7 +140,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 50}
+    {"stone-brick", 50},
+    {"firearm-magazine", 25},
+    {"steel-plate", 15}
   },
   energy_required = 25,
   result = name

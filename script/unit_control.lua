@@ -819,9 +819,9 @@ unit_control.on_init = function()
   game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
   game.map_settings.path_finder.short_cache_size = 50
   game.map_settings.path_finder.long_cache_size = 250
-  game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  game.map_settings.steering.moving.radius = 0
-  game.map_settings.steering.moving.default = 0
+  --game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  --game.map_settings.steering.moving.radius = 0
+  --game.map_settings.steering.moving.default = 0
   game.map_settings.max_failed_behavior_count = 2
   
 end

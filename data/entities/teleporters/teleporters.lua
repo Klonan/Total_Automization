@@ -64,6 +64,10 @@ teleporter_explosion.sound =
   volume = 1
 }
 
+local teleporter_explosion_2 = util.copy(teleporter_explosion)
+teleporter_explosion_2.name = "teleporter-explosion-no-sound"
+teleporter_explosion_2.sound = nil
+
 local recipe = {
   type = "recipe",
   name = name,
@@ -83,5 +87,6 @@ data:extend
   teleporter,
   teleporter_item,
   teleporter_explosion,
+  teleporter_explosion_2,
   recipe
 }

@@ -11,7 +11,10 @@ local data =
 }
 
 local create_flash = function(surface, position)
-  return surface.create_entity{name = "teleporter-explosion", position = position}
+  surface.create_entity{name = "teleporter-explosion", position = position}
+  for k = 1, 3 do
+    surface.create_entity{name = "teleporter-explosion-no-sound", position = position}
+  end
 end
 
 local close_frame = function(frame)
