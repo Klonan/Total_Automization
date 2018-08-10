@@ -1,6 +1,6 @@
 local debug = {}
 local names = require("shared")
-if true then return {} end
+--if true then return {} end
 local get_position = function(n)
   local root = n^0.5
   local nearest_root = math.floor(root+0.5)
@@ -22,33 +22,26 @@ local on_player_created = function(event)
   local player = game.players[event.player_index]
 
 
+  --if true then return end
+
   local team1 = {
-    --beetle = 80
-    --blaster_bot = 50,
+    --beetle = 80,
+    --blaster_bot = 20,
     --laser_bot = 20,
     --tazer_bot = 30,
-    --plasma_bot = 10,
-    --acid_worm = 80,
+    --plasma_bot = 20,
+    --acid_worm = 20,
     --piercing_biter = 50
+    --scatter_spitter = 25
+    smg_guy = 50
   }
   local pos = {x = -40, y = 0}
-  for name, count in pairs (names.units) do
-    for x = 1, 1 do
-      local vec = get_position(math.random(400))
-      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
-    end 
-  end
-
-
-  if true then return end
-
-  local biter = player.surface.create_entity{name = "small-biter", position = {-10, -10}, force = "player"}
-  player.surface.create_entity{name = "Selection Sticker", position = biter.position, target = biter, force = "enemy"}
-
-
-
-
-
+    for name, count in pairs (team1) do
+      for x = 1, count do
+        local vec = get_position(math.random(400))
+        player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      end 
+    end
 
 
 
@@ -61,16 +54,18 @@ local on_player_created = function(event)
   end
 
   team2 = {
+    --beetle = 85
     --plasma_bot = 5,
     --rocket_guy = 50,
-    smg_guy = 50,
-    flame_car = 20,
-    rocket_guy = 20,
-    shell_tank = 20,
+    --smg_guy = 20,
+    --flame_car = 20,
+    --rocket_guy = 20,
+    --shell_tank = 20,
     --shell_tank = 80
     --scatter_spitter = 30,
     --piercing_biter = 30,
     --rocket_guy = 30,
+    laser_bot = 20
     --acid_worm = 10
   }
   local pos = {x = 20, y = 0}
