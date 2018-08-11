@@ -271,9 +271,21 @@ local remove_entity_prototype = function(ent)
   ent.autoplace = nil
 end
 
+local remove_from_minable = function(name)
+  for k, type in pairs (data.raw) do
+    for j, v in pairs (type) do
+      if v.minable and v.minable.result == name then
+        v.minable = nil
+      end
+    end
+  end
+end
+
 local remove_item_prototype = function(item)
+  if not item then log("Well item to remove was nil anyway so great job") return end
   remove_item_from_recipes(item.name)
   remove_item_from_technologies(item.name)
+  remove_from_minable(item.name)
   data.raw.item[item.name] = nil
   item = nil
 end

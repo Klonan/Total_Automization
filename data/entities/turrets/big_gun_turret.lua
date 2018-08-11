@@ -4,23 +4,23 @@ local turret = util.copy(data.raw["ammo-turret"]["gun-turret"])
 util.recursive_hack_make_hr(turret)
 util.recursive_hack_scale(turret, 2)
 
-for k, layer in pairs (turret.base_picture.layers) do
-  layer.shift = {0, 0.5}
-end
-local recursive_fix_these_turret_shawdows
-recursive_fix_these_turret_shawdows = function(table)
-  for k, v in pairs (table) do
-    if type(v) == "table" then
-      if v.draw_as_shadow then
-        v.shift = v.shift or {0,0}
-        v.shift[1] = v.shift[1] + 0.5
-        v.shift[2] = v.shift[2] + 0.5
-      end
-      recursive_fix_these_turret_shawdows(v)
-    end
-  end
-end
-recursive_fix_these_turret_shawdows(turret)
+--for k, layer in pairs (turret.base_picture.layers) do
+--  layer.shift = {0, 0.5}
+--end
+--local recursive_fix_these_turret_shawdows
+--recursive_fix_these_turret_shawdows = function(table)
+--  for k, v in pairs (table) do
+--    if type(v) == "table" then
+--      if v.draw_as_shadow then
+--        v.shift = v.shift or {0,0}
+--        v.shift[1] = v.shift[1] + 0.5
+--        v.shift[2] = v.shift[2] + 0.5
+--      end
+--      recursive_fix_these_turret_shawdows(v)
+--    end
+--  end
+--end
+--recursive_fix_these_turret_shawdows(turret)
 turret.name = name
 turret.localised_name = name
 turret.type = "turret"
@@ -40,7 +40,7 @@ turret.attack_parameters =
   cooldown_deviation = 0.5,
   range = 44,
   projectile_creation_distance = 1.39375 * 2,
-  projectile_center = {0, -0.0875 * 2},
+  projectile_center = {0, -1},
   sound = {
     variations = make_heavy_gunshot_sounds(),
     aggregation =

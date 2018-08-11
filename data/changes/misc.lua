@@ -12,3 +12,9 @@ recipe.results =
 {
   {type = "fluid", name = "crude-oil", amount = 15}
 }
+
+--Don't need rocket silos or any of that junk
+
+util.prototype.remove_entity_prototype(data.raw["rocket-silo"]["rocket-silo"])
+util.prototype.remove_item_prototype(data.raw.item["satellite"])
+util.prototype.remove_item_prototype(data.raw.item["escape-pod"])
