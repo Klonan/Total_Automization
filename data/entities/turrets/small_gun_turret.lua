@@ -8,7 +8,7 @@ turret.energy_source = {type = "void"}
 turret.preparing_speed = SD(0.05)
 turret.order = "noob"
 turret.prepare_range = 42
-turret.max_health = 1200
+turret.max_health = 800
 turret.minable.result = name
 turret.attack_parameters =
 {
@@ -118,8 +118,8 @@ local recipe = {
   ingredients =
   {
     {"stone-brick", 20},
-    {"firearm-magazine", 5},
-    {"iron-plate", 10}
+    {"iron-gear-wheel", 8},
+    {"copper-plate", 10}
   },
   energy_required = 10,
   result = name

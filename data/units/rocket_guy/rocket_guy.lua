@@ -158,9 +158,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"heavy-armor", 1},
-    {"rocket-launcher", 1},
-    {"rocket", 10}
+    {"steel-plate", 15},
+    {"iron-gear-wheel", 10},
+    {"explosives", 10}
   },
   energy_required = 25,
   result = name

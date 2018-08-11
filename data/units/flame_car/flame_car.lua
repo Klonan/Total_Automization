@@ -177,9 +177,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"engine-unit", 4},
-    {"flamethrower", 1},
-    {"flamethrower-ammo", 10}
+    {"engine-unit", 10},
+    {"iron-gear-wheel", 5},
+    {"solid-fuel", 15}
   },
   energy_required = 20,
   result = name

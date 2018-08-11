@@ -49,7 +49,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "iron-units",
-  group = "units",
+  group = "combat",
   order = "a"
 }
 

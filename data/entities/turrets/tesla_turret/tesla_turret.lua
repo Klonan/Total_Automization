@@ -171,7 +171,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 4}
+    {"stone-brick", 30},
+    {"battery", 10},
+    {"copper-cable", 25}
   },
   energy_required = 5,
   result = name

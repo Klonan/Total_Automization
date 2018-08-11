@@ -160,9 +160,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"light-armor", 1},
-    {"submachine-gun", 1},
-    {"firearm-magazine", 10}
+    {"iron-plate", 15},
+    {"iron-gear-wheel", 10},
+    {"iron-stick", 10}
   },
   energy_required = 15,
   result = name

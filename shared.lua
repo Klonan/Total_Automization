@@ -92,6 +92,7 @@ data.entities =
   small_gun_turret = "Small Gun Turret",
   big_gun_turret = "Big Gun Turret",
   laser_turret = "Laser Turret",
+  blaster_turret = "Blaster Turret",
   tesla_turret = "Tesla Turret",
   rocket_turret = "Rocket Turret",
   setup_time_animation = "Setup Animation",

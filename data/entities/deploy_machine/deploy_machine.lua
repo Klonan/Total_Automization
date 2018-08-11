@@ -9,7 +9,7 @@ local group =
   icon_size = 32
 }
 
-data:extend{group}
+--data:extend{group}
 
 
 require("iron_deploy_machine")

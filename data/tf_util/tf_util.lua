@@ -14,6 +14,17 @@ recursive_hack_scale = function(array, scale)
           v.shift[1], v.shift[2] = v.shift[1] * scale, v.shift[2] * scale
         end
       end
+      if v.source_offset then
+        v.source_offset[1] = v.source_offset[1] * scale
+        v.source_offset[2] = v.source_offset[2] * scale
+      end
+      if v.projectile_center then
+        v.projectile_center[1] = v.projectile_center[1] * scale
+        v.projectile_center[2] = v.projectile_center[2] * scale
+      end
+      if v.projectile_creation_distance then
+        v.projectile_creation_distance = v.projectile_creation_distance * scale  
+      end
       recursive_hack_scale(v, scale)
     end
   end

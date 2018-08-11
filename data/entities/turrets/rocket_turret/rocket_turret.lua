@@ -80,7 +80,7 @@ local particle_gfx = util.copy(data.raw.projectile["rocket"])
 
 local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
 stream.name = name.." Stream"
-stream.oriented_particle = true --Not merged
+stream.oriented_particle = true
 stream.action =
 {
   {
@@ -109,7 +109,7 @@ stream.action =
       {
         {
           type = "damage",
-          damage = { amount = 15, type = util.damage_type("rocket_turret") }
+          damage = { amount = 10, type = util.damage_type(name) }
         }
       }
     }
@@ -158,7 +158,7 @@ local recipe = {
   {
     {"stone-brick", 25},
     {"iron-plate", 10},
-    {"rocket", 10},
+    {"explosives", 10},
   },
   energy_required = 5,
   result = name

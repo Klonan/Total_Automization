@@ -221,8 +221,10 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"engine-unit", 15},
-    {"cannon-shell", 10}
+    {"engine-unit", 10},
+    {"steel-plate", 15},
+    {"explosives", 10},
+    {"rocket-fuel", 10}
   },
   energy_required = 45,
   result = name

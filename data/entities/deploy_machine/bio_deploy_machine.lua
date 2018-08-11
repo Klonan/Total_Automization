@@ -68,7 +68,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "bio-units",
-  group = "units",
+  group = "combat",
   order = "b"
 }
 

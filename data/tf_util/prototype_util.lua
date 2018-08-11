@@ -195,6 +195,7 @@ local remove_recipe_from_technologies = function(name)
 end
 
 local remove_item_from_recipes = function(name)
+  if type(name) ~= "string" then error("I EXPECT A STRING") end
   --log("Removing item from recipes: "..name)
   local recipes = data.raw.recipe
   for k, recipe in pairs (recipes) do
@@ -207,6 +208,7 @@ local remove_item_from_recipes = function(name)
 end
 
 local remove_from_items = function(name)
+  if type(name) ~= "string" then error("I EXPECT A STRING") end
   local items = data.raw.item
   for k, item in pairs (items) do
     if item.place_result == name then
@@ -305,7 +307,6 @@ remove_technology_effect_type = function(dict)
     end
   end
 end
-
 
 local lib = {}
 lib.rename_item = rename_item

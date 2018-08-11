@@ -17,4 +17,4 @@ recipe.results =
 
 util.prototype.remove_entity_prototype(data.raw["rocket-silo"]["rocket-silo"])
 util.prototype.remove_item_prototype(data.raw.item["satellite"])
-util.prototype.remove_item_prototype(data.raw.item["escape-pod"])
+util.prototype.remove_item_prototype(data.raw.item["rocket-escape-pod"])

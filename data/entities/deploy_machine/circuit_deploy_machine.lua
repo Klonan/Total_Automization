@@ -53,7 +53,7 @@ local subgroup =
 {
   type = "item-subgroup",
   name = "circuit-units",
-  group = "units",
+  group = "combat",
   order = "a"
 }
 
