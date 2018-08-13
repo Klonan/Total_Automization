@@ -790,6 +790,15 @@ local on_entity_settings_pasted = function(event)
   data.units[destination.unit_number] = util.copy(unit_data)
 end
 
+local on_player_removed = function(event)
+  local frame = data.open_frames[event.player_index]
+  if frame then
+    util.deregister_gui(frame, data.button_action_index)
+    frame.destroy()
+    data.open_frames[event.player_index] = nil
+  end
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -805,7 +814,11 @@ local events =
   --[defines.event.on_player_created] = on_player_created
   [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button,
   [defines.events.on_unit_deployed] = on_unit_deployed,
-  [defines.events[hotkeys.suicide]] = suicide
+  [defines.events[hotkeys.suicide]] = suicide,
+  [defines.events.on_player_died] = on_player_removed,
+  [defines.events.on_player_left_game] = on_player_removed,
+  [defines.events.on_player_changed_force] = on_player_removed,
+  [defines.events.on_player_changed_surface] = on_player_removed
 }
 
 unit_control.on_event = handler(events)

@@ -79,6 +79,7 @@ local make_teleporter_gui = function(param)
   local force = param.force
   if not (force and force.valid) then return end
   local network = data.networks[force.name]
+  util.deregister_gui(frame, data.button_actions)
   frame.clear()
   local scroll = frame.add{type = "scroll-pane"}
   local player = game.players[frame.player_index]
@@ -251,14 +252,43 @@ local on_gui_closed = function(event)
   
 end
 
-local events = {
+local on_player_removed = function(event)
+  local player = game.players[event.player_index]
+  local frame = player.opened
+  if not (frame and frame.valid) then return end
+
+  --So, fuck knows anyway to check this is a proper gui element, just pcall some shit
+  if not pcall(function() local check = frame.index end) then return end
+  
+  if data.frames[frame.index] then 
+    util.deregister_gui(frame, data.button_actions)
+    data.frames[element.index] = nil
+    frame.destroy()
+    return
+  end
+
+  local param = data.teleporter_frames[frame.index]
+  if param then
+    close_teleporter_frame(param)
+    return
+  end
+
+end
+
+local events =
+{
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_gui_click] = on_gui_click,
   [defines.events.on_entity_died] = on_entity_died,
   [defines.events.on_player_mined_entity] = on_player_mined_entity,
   [defines.events.on_robot_mined_entity] = on_robot_mined_entity,
   [defines.events.on_gui_closed] = on_gui_closed,
+  [defines.events.on_player_died] = on_player_removed,
+  [defines.events.on_player_left_game] = on_player_removed,
+  [defines.events.on_player_changed_force] = on_player_removed,
+  [defines.events.on_player_changed_surface] = on_player_removed
 }
+
 
 local teleporters = {}
 
