@@ -117,8 +117,8 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 20},
-    {"iron-gear-wheel", 8},
+    {"stone-brick", 100},
+    {"iron-gear-wheel", 10},
     {"copper-plate", 10}
   },
   energy_required = 10,

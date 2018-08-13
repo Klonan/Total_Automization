@@ -15,7 +15,7 @@ turret.attack_parameters =
 {
   type = "beam",
   ammo_category = "electric",
-  cooldown = SU(2),
+  cooldown = SU(1),
   range = 36,
   projectile_center = {-0.09375, -1.2},
   projectile_creation_distance = 1.4 * 1.5,
@@ -33,7 +33,7 @@ turret.attack_parameters =
         type = "beam",
         beam = name.." Beam",
         max_length = 40,
-        duration = SU(3),
+        duration = SU(1),
         source_offset = {0.15, -0.5},
       }
     }
@@ -46,7 +46,7 @@ turret.minable.result = name
 
 local beam = util.copy(data.raw.beam["laser-beam"])
 beam.name = name.." Beam"
-beam.damage_interval = SU(3)
+beam.damage_interval = SU(1)
 beam.action =
 {
   type = "direct",
@@ -57,7 +57,7 @@ beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 4, type = util.damage_type(name)}
+        damage = { amount = 2, type = util.damage_type(name)}
       }
     }
   }
@@ -83,9 +83,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"steel-plate", 15},
-    {"electronic-circuit", 15},
-    {"battery", 10}
+    {"steel-plate", 25},
+    {"electronic-circuit", 20},
+    {"battery", 20}
   },
   energy_required = 15,
   result = name

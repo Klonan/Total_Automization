@@ -231,9 +231,10 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"processing-unit", 1},
-    {"battery", 8},
-    {"copper-cable", 20}
+    {"processing-unit", 2},
+    {"battery", 20},
+    {"copper-cable", 20},
+    {"copper-plate", 10}
   },
   energy_required = 75,
   result = name

@@ -222,9 +222,9 @@ local recipe = {
   ingredients =
   {
     {"engine-unit", 10},
-    {"steel-plate", 15},
-    {"explosives", 10},
-    {"rocket-fuel", 10}
+    {"steel-plate", 20},
+    {"explosives", 20},
+    {"rocket-fuel", 5}
   },
   energy_required = 45,
   result = name

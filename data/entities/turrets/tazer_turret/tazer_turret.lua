@@ -1,5 +1,5 @@
-local path = util.path("data/entities/turrets/tesla_turret/")
-local name = require("shared").entities.tesla_turret
+local path = util.path("data/entities/turrets/tazer_turret/")
+local name = require("shared").entities.tazer_turret
 local turret = util.copy(data.raw["turret"]["small-worm-turret"])
 turret.name = name
 turret.localised_name = name
@@ -11,7 +11,7 @@ turret.selection_box = {{-2, -2},{2, 2}}
 --turret.flags = {"not-deconstructable"}
 local picture = {layers = {
   {
-    filename = path.."tesla_turret.png",
+    filename = path.."tazer_turret.png",
     width = 330,
     height = 261,
     frame_count = 1,
@@ -19,7 +19,7 @@ local picture = {layers = {
     shift = {3, -1.8}
   },
   {
-    filename = path.."tesla_turret_mask.png",
+    filename = path.."tazer_turret_mask.png",
     flags = { "mask" },
     line_length = 1,
     width = 122,
@@ -36,7 +36,7 @@ local turret =
   type = "turret",
   name = name,
   localised_name = name,
-  icon = path.."tesla_turret_icon.png",
+  icon = path.."tazer_turret_icon.png",
   icon_size = 261,
   flags = {"placeable-player", "player-creation"},
   minable = {mining_time = 5, result = name},
@@ -54,7 +54,7 @@ local turret =
   starting_attack_animation = picture,
   starting_attack_sound = 
   {
-    filename = path.."tesla_turret_beam.ogg",
+    filename = path.."tazer_turret_beam.ogg",
     volume = 2
   },
   ending_attack_animation = picture,
@@ -93,6 +93,7 @@ util.recursive_hack_tint{r = 0, g = 1, b = 0}
 beam.name = name.." Beam"
 beam.localised_name = name.." Beam"
 beam.damage_interval = SU(23)
+beam.random_target_offset = true
 beam.action =
 {
   type = "direct",
@@ -143,7 +144,7 @@ sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
 sticker.animation = 
 {
-  filename = path.."tesla_turret_sticker.png",
+  filename = path.."tazer_turret_sticker.png",
   width = 37,
   height = 35,
   frame_count = 16,
@@ -171,9 +172,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 30},
+    {"stone-brick", 250},
     {"battery", 10},
-    {"copper-cable", 25}
+    {"copper-cable", 80}
   },
   energy_required = 5,
   result = name

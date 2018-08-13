@@ -168,11 +168,11 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"electronic-circuit", 15},
-    {"copper-cable", 20},
-    {"copper-plate", 10}
+    {"electronic-circuit", 8},
+    {"copper-cable", 15},
+    {"copper-plate", 5}
   },
-  energy_required = 35,
+  energy_required = 20,
   result = name
 }
 

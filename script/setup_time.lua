@@ -6,7 +6,7 @@ local setupable =
   [names.blaster_turret] = 20 * 60,
   [names.big_gun_turret] = 30 * 60,
   [names.laser_turret] = 30 * 60,
-  [names.tesla_turret] = 30 * 60,
+  [names.tazer_turret] = 30 * 60,
   [names.rocket_turret] = 30 * 60,
 
 }

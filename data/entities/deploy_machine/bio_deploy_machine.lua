@@ -79,7 +79,7 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"coal", 250},
+    {require("shared").items.biological_structure, 120},
   },
   energy_required = 100,
   result = name

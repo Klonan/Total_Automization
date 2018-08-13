@@ -156,9 +156,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 25},
-    {"iron-plate", 10},
-    {"explosives", 10},
+    {"stone-brick", 100},
+    {"iron-gear-wheel", 50},
+    {"explosives", 40},
   },
   energy_required = 5,
   result = name

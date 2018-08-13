@@ -140,7 +140,7 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"stone-brick", 50},
+    {"stone-brick", 250},
     {"iron-gear-wheel", 25},
     {"steel-plate", 15},
     {"copper-plate", 10}

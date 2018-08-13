@@ -190,8 +190,8 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"coal", 100},
-    {type = "fluid", name = "sulfuric-acid", amount = 100}
+    {require("shared").items.biological_structure, 125},
+    {type = "fluid", name = "sulfuric-acid", amount = 600}
   },
   energy_required = 75,
   result = name

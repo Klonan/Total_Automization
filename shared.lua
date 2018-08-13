@@ -93,7 +93,7 @@ data.entities =
   big_gun_turret = "Big Gun Turret",
   laser_turret = "Laser Turret",
   blaster_turret = "Blaster Turret",
-  tesla_turret = "Tesla Turret",
+  tazer_turret = "Tazer Turret",
   rocket_turret = "Rocket Turret",
   setup_time_animation = "Setup Animation",
   stone_wall = "Stone Wall",
@@ -107,6 +107,11 @@ data.deployers =
   iron_unit = "Iron Unit Deployer",
   bio_unit = "Bio Unit Deployer",
   circuit_unit = "Circuit Unit Deployer"
+}
+
+data.items =
+{
+  biological_structure = "Biological Structure"
 }
 
 return data

@@ -72,7 +72,7 @@ local bot =
           type = "beam",
           beam = name.." Beam",
           max_length = 40,
-          duration = SU(2),
+          duration = SU(1),
           --source_offset = {0.15, -0.5},
         }
       }
@@ -150,6 +150,7 @@ local recipe = {
   ingredients =
   {
     {"advanced-circuit", 8},
+    {"copper-plate", 20},
     {"copper-cable", 20}
   },
   energy_required = 35,

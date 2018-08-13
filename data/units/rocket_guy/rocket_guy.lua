@@ -160,7 +160,7 @@ local recipe = {
   {
     {"steel-plate", 15},
     {"iron-gear-wheel", 10},
-    {"explosives", 10}
+    {"explosives", 15}
   },
   energy_required = 25,
   result = name

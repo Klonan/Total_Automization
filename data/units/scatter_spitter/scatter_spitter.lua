@@ -188,9 +188,9 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"coal", 55},
-    {"sulfur", 10},
-    {type = "fluid", name = "water", amount = 1}
+    {require("shared").items.biological_structure, 40},
+    {"sulfur", 40},
+    {type = "fluid", name = "water", amount = 600}
   },
   energy_required = 35,
   result = name

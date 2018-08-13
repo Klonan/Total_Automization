@@ -62,7 +62,6 @@ local bot =
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
-  corpse = name.." Corpse",
   dying_explosion = "explosion",
   working_sound = {
     sound =
@@ -92,43 +91,12 @@ local bot =
 util.recursive_hack_make_hr(bot)
 util.recursive_hack_scale(bot, 2)
 
-local corpse =
-{
-  type = "corpse",
-  name = name.." Corpse",
-  icon = "__base__/graphics/icons/medium-biter-corpse.png",
-  icon_size = 32,
-  selectable_in_game = false,
-  selection_box = {{-1, -1}, {1, 1}},
-  flags = {"placeable-neutral", "placeable-off-grid", "building-direction-8-way", "not-on-map"},
-  subgroup="corpses",
-  order = "c[corpse]-a[biter]-b[medium]",
-  dying_speed = 0.04,
-  time_before_removed = 2 * 60 * 60,
-  final_render_layer = "corpse",
-  animation = {
-    layers =
-    {
-      {
-        filename = "__base__/graphics/entity/defender-robot/defender-robot.png",
-        width = 1,
-        height = 1,
-        frame_count = 16,
-        direction_count = 16,
-        --shift = {scale * 0.546875, scale * 0.21875},
-        priority = "very-low",
-        --scale = scale,
-        
-      }
-    }
-  }
-}
-
 local beam = util.copy(data.raw.beam["electric-beam"])
 
 beam.name = name.." Beam"
 beam.localised_name = name.." Beam"
 beam.damage_interval = SU(15)
+beam.random_target_offset = true
 beam.action =
 {
   type = "direct",
@@ -206,7 +174,8 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"battery", 8},
+    {"battery", 10},
+    {"electronic-circuit", 10},
     {"copper-cable", 20}
   },
   energy_required = 25,
@@ -217,7 +186,6 @@ data:extend{
   bot,
   beam,
   sticker,
-  corpse,
   item,
   recipe
 }

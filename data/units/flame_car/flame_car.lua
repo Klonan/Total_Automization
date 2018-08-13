@@ -177,7 +177,7 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {"engine-unit", 10},
+    {"engine-unit", 8},
     {"iron-gear-wheel", 5},
     {"solid-fuel", 15}
   },

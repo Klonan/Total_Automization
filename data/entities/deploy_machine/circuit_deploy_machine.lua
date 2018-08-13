@@ -65,7 +65,7 @@ local recipe = {
   ingredients =
   {
     {"electronic-circuit", 50},
-    {"copper-cable", 100},
+    {"copper-cable", 50},
     {"copper-plate", 50}
   },
   energy_required = 100,
