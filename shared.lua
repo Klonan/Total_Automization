@@ -100,6 +100,8 @@ data.entities =
   stone_gate = "Stone Gate",
   concrete_wall = "Concrete Wall",
   concrete_gate = "Concrete Gate",
+  sell_chest = "Trade Chest Sell",
+  buy_chest = "Trade Chest Buy",
 }
 
 data.deployers =

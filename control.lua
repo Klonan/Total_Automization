@@ -28,7 +28,8 @@ local libs = {
   killcam = require("script/killcam"),
   setup = require("script/setup"),
   setup_time = require("script/setup_time"),
-  pvp_interface = require("script/pvp_interface")
+  pvp_interface = require("script/pvp_interface"),
+  trade_chests = require("script/trade_chests")
 }
 
 

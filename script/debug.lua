@@ -1,6 +1,5 @@
 local debug = {}
 local names = require("shared")
-if true then return {} end
 local get_position = function(n)
   local root = n^0.5
   local nearest_root = math.floor(root+0.5)
@@ -20,10 +19,12 @@ end
 local on_player_created = function(event)
 
   local player = game.players[event.player_index]
-
+  player.insert(names.entities.buy_chest)
+  player.insert(names.entities.sell_chest)
 
   --if true then return end
 
+  if true then return {} end
   local team1 = {
     --beetle = 80,
     --blaster_bot = 20,
