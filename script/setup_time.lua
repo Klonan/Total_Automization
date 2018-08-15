@@ -49,7 +49,8 @@ local on_built_entity = function(event)
   local setup_time = setupable[entity.name]
   if not setup_time then return end
   entity.active = false
-  local setup_tick = event.tick + math.ceil(SU(setup_time))
+  local start_tick = event.tick
+  local setup_tick = start_tick + math.ceil(SU(setup_time))
   local text = entity.surface.create_entity{name = "tutorial-flying-text", position = entity.position, text = math.floor(setup_time / 60)}
   text.active = false
   local param = {entity = entity, text = text, setup_tick = setup_tick}
@@ -57,7 +58,7 @@ local on_built_entity = function(event)
   local insert = table.insert
   local entities = data.entities
   local interval = SU(60)
-  for k = 1, setup_tick, interval do
+  for k = start_tick + 1, setup_tick, interval do
     local tick = math.floor(k + 0.5)
     entities[tick] = entities[tick] or {}
     insert(entities[tick], param)

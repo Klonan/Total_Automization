@@ -52,6 +52,7 @@ local turret =
     ammo_category = "bullet",
     cooldown = SU(100),
     cooldown_deviation = 0.2,
+    min_range = 15,
     range = 50,
     gun_center_shift = {0, -1},
     sound = { filename = "__base__/sound/fight/rocket-launcher.ogg", volume = 0.6 },

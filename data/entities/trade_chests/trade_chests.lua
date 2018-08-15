@@ -21,7 +21,7 @@ buy_chest.picture =
     }
   }
 }
-buy_chest.filter_count = 5
+buy_chest.logistic_slots_count = 5
 
 local buy_item = util.copy(data.raw.item["logistic-chest-buffer"])
 buy_item.name = buy_name

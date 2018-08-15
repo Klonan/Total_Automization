@@ -12,6 +12,8 @@ local data =
 }
 
 local update_interval = 64
+local buy_tariff = 1.1 --10% tax
+local sell_tariff = 1 / 1.1 --10% tax
 
 local buy_name = require("shared").entities.buy_chest
 local sell_name = require("shared").entities.sell_chest
@@ -43,17 +45,17 @@ end
 
 local sell_from_chest = function(chest)
   local prices = data.prices
-  local force = chest.force
+  local force_name = chest.force.name
   local total = 0
   local contents = chest.get_inventory(defines.inventory.chest).get_contents()
   for name, count in pairs (contents) do
     local price = prices[name]
     if price then
-      total = total + (price * count)
+      total = total + ((price * count) * sell_tariff)
     end
   end
   chest.clear_items_inside()
-  data.funds[force.name] = (data.funds[force.name] or 0) + total
+  data.funds[force_name] = (data.funds[force_name] or 0) + total
 end
 
 local update_sell_chests = function(chests)
@@ -68,8 +70,8 @@ end
 
 local buy_for_chest = function(chest)
   local prices = data.prices
-  local force = chest.force
-  local funds = data.funds[force.name]
+  local force_name = chest.force.name
+  local funds = data.funds[force_name]
   if not funds then return end
   local contents = chest.get_inventory(defines.inventory.chest).get_contents()
   --I know it should be "chest.prototype.filter_count", but it hurts performance, and i know that it is 5
@@ -77,16 +79,14 @@ local buy_for_chest = function(chest)
     local stack = chest.get_request_slot(k)
     if stack then
       local stack_name = stack.name
-      local stack_count = stack.count
-      local already = contents[stack_name] or 0
-      if already < stack_count then
-        local buy_count = stack_count - already
-        local price = prices[stack_name]
-        if price then
-          local cost = price * buy_count
+      local price = prices[stack_name]
+      if price then
+        local buy_count = stack.count - (contents[stack_name] or 0)
+        if buy_count > 0 then
+          local cost = (price * buy_count) * buy_tariff
           if cost <= funds then
-            funds = funds - cost
-            chest.insert({name = stack_name, count = stack_count})
+            data.funds[force_name] = funds - cost
+            chest.insert({name = stack_name, count = buy_count})
           end
         end
       end

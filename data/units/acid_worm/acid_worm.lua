@@ -54,7 +54,7 @@ local bot =
     cooldown_deviation = 0.5,
     range = 40,
     min_attack_distance = 32,
-    projectile_creation_distance = 0.5,
+    projectile_creation_distance = 1.5,
     sound = base.starting_attack_sound,
     ammo_type =
     {
