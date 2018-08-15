@@ -66,7 +66,7 @@ local gui_click_actions =
       source.active = true
     end
     if player.character then
-      player.character.character_running_speed_modifier = 0
+      player.character.active = true
     end
   end
 }
@@ -100,7 +100,7 @@ local close_teleporter_frame = function(param)
   local player = game.players[frame.player_index]
   local character = player.character
   if character then
-    character.character_running_speed_modifier = 0
+    character.active = true
   end
   local source = param.source
   if (source and source.valid) then
@@ -189,7 +189,7 @@ local teleporter_triggered = function(entity)
   local character = surface.find_entities_filtered{type = "player", area = {{position.x - 2, position.y - 2}, {position.x + 2, position.y + 2}}, force = force}[1]
   if not character then return end
   new_teleporter.active = false
-  character.character_running_speed_modifier = -1
+  character.active = false
   local player = character.player
   if not player then return end
   local gui = player.gui.center
