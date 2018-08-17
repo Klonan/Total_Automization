@@ -19,8 +19,8 @@ end
 local on_player_created = function(event)
 
   local player = game.players[event.player_index]
-  player.insert(names.entities.buy_chest)
-  player.insert(names.entities.sell_chest)
+  --player.insert(names.entities.buy_chest)
+  --player.insert(names.entities.sell_chest)
 
   --if true then return end
 
