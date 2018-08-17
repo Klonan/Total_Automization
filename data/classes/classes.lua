@@ -30,14 +30,25 @@
     distance_per_frame = 0.13,
     maximum_corner_sliding_distance = 0.7,
 ]]
+--local path = util.path("data/classes/heavy/")
 
 names = require("shared").class_names
-require("data/classes/pyro/pyro")
-require("data/classes/heavy/heavy")
-require("data/classes/sniper/sniper")
-require("data/classes/medic/medic")
-require("data/classes/soldier/soldier")
-require("data/classes/demoman/demoman")
-require("data/classes/scout/scout")
-require("data/classes/engineer/engineer")
-require("data/classes/spy/spy")
+
+local heavy = util.base_player()
+heavy.name = names.heavy
+heavy.running_speed = util.speed(1.2)
+heavy.max_health = 250
+heavy.inventory_size = 100
+heavy.crafting_speed = 1.5
+
+local light = util.base_player()
+light.name = names.light
+light.running_speed = util.speed(1.5)
+light.max_health = 180
+light.inventory_size = 70
+util.recursive_hack_scale(light, 0.85)
+
+data:extend
+{
+  heavy, light
+}

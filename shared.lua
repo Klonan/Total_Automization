@@ -39,7 +39,8 @@ data.class_names =
   engineer = "Engineer",
   medic = "Medic",
   sniper = "Sniper",
-  spy = "Spy"
+  spy = "Spy",
+  light = "Light"
 }
 
 data.hotkeys =

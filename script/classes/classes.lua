@@ -7,23 +7,26 @@ hotkeys = require("shared").hotkeys
 
 classes =
 {
-  data =
-  {
-    elements = {}
-  }
+}
+
+local data =
+{
+  elements = {},
+  selected_class = {}
 }
 
 local class_list = 
 {
-  scout = require("script/classes/scout"),
-  soldier = require("script/classes/soldier"),
-  pyro = require("script/classes/pyro"),
-  demoman = require("script/classes/demoman"),
+  --scout = require("script/classes/scout"),
+  --soldier = require("script/classes/soldier"),
+  --pyro = require("script/classes/pyro"),
+  --demoman = require("script/classes/demoman"),
   heavy = require("script/classes/heavy"),
-  engineer = require("script/classes/engineer"),
-  medic = require("script/classes/medic"),
-  sniper = require("script/classes/sniper"),
-  spy = require("script/classes/spy")
+  light = require("script/classes/light"),
+  --engineer = require("script/classes/engineer"),
+  --medic = require("script/classes/medic"),
+  --sniper = require("script/classes/sniper"),
+  --spy = require("script/classes/spy")
 }
 
 local set_class = function(player, name, primary, secondary)
@@ -47,7 +50,7 @@ local stats =
   running_speed = "Movement Speed",
   --etc.
 }
-
+local choose_class_gui_init
 local gui_functions = 
 {
   class_button_action = function(event, param)
@@ -58,9 +61,8 @@ local gui_functions =
     local flow = param.class_flow
     flow.clear()
     local inner = flow.add{type = "flow", direction = "horizontal"}
-
     inner.style.vertically_squashable = true
-    local sprite = inner.add{type = "sprite", sprite = data.name}
+    --local sprite = inner.add{type = "sprite", sprite = data.name}
     local character = game.entity_prototypes[data.name]
     local inner_more = inner.add{type = "flow", direction = "vertical"}
     local info = inner_more.add{type = "frame", caption = data.name}
@@ -105,30 +107,37 @@ local gui_functions =
     end
 
     local confirm_button = inner_more.add{type = "button", caption = "GO GO GO"}
-    classes.data.elements[confirm_button.index] = {name = "confirm_button_action", param = {data = data, primaries = primaries, secondaries = secondaries, top_frame = param.top_frame}}
+    data.elements[confirm_button.index] = {name = "confirm_button_action", param = {data = data, primaries = primaries, secondaries = secondaries, top_frame = param.top_frame}}
   end,
   confirm_button_action = function(event, param)
     local element = event.element
     local player = game.players[event.player_index]
     local data = param.data
     set_class(player, data.name, data.primary_weapons[param.primaries.selected_index], data.secondary_weapons[param.secondaries.selected_index])
-    util.deregister_gui(param.top_frame, classes.data.elements)
+    util.deregister_gui(param.top_frame, data.elements)
     param.top_frame.destroy()
   end,
   close_gui = function(event, param)
-    util.deregister_gui(param.gui, classes.data.elements)
+    util.deregister_gui(param.gui, data.elements)
     param.gui.destroy()
+  end,
+  change_selected_class = function(event, param)
+    local listbox = event.element
+    if not (listbox and listbox.valid) then return end
+    local player = game.players[event.player_index]
+    data.selected_class[player.name] = listbox.get_item(listbox.selected_index)
+    choose_class_gui_init(player)
   end
 }
 
-local choose_class_gui_init = function(player)
+choose_class_gui_init = function(player)
 
   local gui = player.gui.center
-  util.deregister_gui(gui, classes.data.elements)
+  util.deregister_gui(gui, data.elements)
   gui.clear()
-  local frame = gui.add{type = "frame", direction = "vertical"}
+  local frame = gui.add{type = "frame", direction = "horizontal", caption = "CHOOSE YOUR LOADOUT"}
   player.opened = frame
-  classes.data.elements[frame.index] = {name = "close_gui", param = {gui = frame}}
+  data.elements[frame.index] = {name = "close_gui", param = {gui = frame}}
   frame.style = "image_frame"
   frame.style.width = player.display_resolution.width
   frame.style.height = player.display_resolution.height
@@ -138,39 +147,87 @@ local choose_class_gui_init = function(player)
   frame.style.right_padding = 32
   frame.style.align = "center"
   frame.style.vertical_align = "top"
-  local inner = frame.add{type = "flow", direction = "horizontal"}
-  inner.style.horizontally_stretchable = true
-  inner.style.align = "center"
-  local class_flow = frame.add{type = "flow"}
-  class_flow.style.horizontally_stretchable = true
-  class_flow.style.align = "center"
+  local class_frame = frame.add{type = "frame", caption = "Choose your class", direction = "vertical"}
+  class_frame.style.vertically_stretchable = false
+  local listbox = class_frame.add{type = "list-box"}
+  data.elements[listbox.index] = {name = "change_selected_class"}
+  data.selected_class[player.name] = data.selected_class[player.name] or "Light"
+  local selected_name = data.selected_class[player.name]
+  local entities = game.entity_prototypes
+  local count = 1
+  for k, class in pairs (class_names) do
+    if entities[class] then
+      listbox.add_item(class)
+      if class == selected_name then
+        listbox.selected_index = count
+      end
+      count = count + 1
+    end
+  end
+  listbox.style.horizontally_stretchable = true
 
-  local offense = inner.add{type = "frame", caption = "Offense", direction = "horizontal"}
-  for k, name in pairs ({"scout", "soldier", "pyro"}) do
-    local data = class_list[name]
-    local button = offense.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
-    button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
-    button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+  local info_table = class_frame.add{type = "table", column_count = 2}
+  local info = 
+  {
+    max_health = "Max Health",
+    running_speed = "Running Speed"
+  }
+  for key, name in pairs (info) do
+    info_table.add{type = "label", caption = name}
+    info_table.add{type = "label", caption = entities[selected_name][key]}
   end
+
+
   
-  local defense = inner.add{type = "frame", caption = "Defence", direction = "horizontal"}
-  for k, name in pairs ({"demoman", "heavy", "engineer"}) do
-    local data = class_list[name]
-    local button = defense.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
-    button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
-    button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+  local primary_gun_frame = frame.add{type = "frame", caption = "Choose your Primary weapon", direction = "vertical"}
+  primary_gun_frame.style.vertically_stretchable = false
+  local guns = primary_gun_frame.add{type = "list-box"}
+  for k, gun in pairs (weapon_names) do
+    guns.add_item(gun)
   end
+  guns.style.vertically_squashable = true
+  guns.style.horizontally_stretchable = true
+  primary_gun_frame.add{type = "label", caption = "Primary Ammo"}
+  local primary_ammo_list = primary_gun_frame.add{type = "list-box"}
   
-  local support = inner.add{type = "frame", caption = "Support", direction = "horizontal"}
-  for k, name in pairs ({"medic", "sniper", "spy"}) do
-    local data = class_list[name]
-    local button = support.add{type = "sprite-button", sprite = data.name, style = "slot_button"}
-    button.style.width = player.display_resolution.width / (table_size(class_list) * 1.5)
-    button.style.height = player.display_resolution.width / (table_size(class_list) * 1.5)
-    classes.data.elements[button.index] = {name = "class_button_action", param = {data = data, class_flow = class_flow, top_frame = frame}}
+  primary_ammo_list.style.horizontally_stretchable = true
+  primary_ammo_list.add_item("Pew")
+  primary_ammo_list.add_item("Pow")
+  primary_ammo_list.add_item("Pop")
+
+  
+  local secondary_gun_frame = frame.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
+  secondary_gun_frame.style.vertically_stretchable = false
+  local guns = secondary_gun_frame.add{type = "list-box"}
+  for k, gun in pairs (weapon_names) do
+    guns.add_item(gun)
   end
+  guns.style.vertically_squashable = true
+  guns.style.horizontally_stretchable = true
+  secondary_gun_frame.add{type = "label", caption = "secondary Ammo"}
+  local secondary_ammo_list = secondary_gun_frame.add{type = "list-box"}
+  
+  secondary_ammo_list.style.horizontally_stretchable = true
+  secondary_ammo_list.add_item("Pew")
+  secondary_ammo_list.add_item("Pow")
+  secondary_ammo_list.add_item("Pop")
+
+
+  local pistol_gun_frame = frame.add{type = "frame", caption = "Choose your pistol", direction = "vertical"}
+  pistol_gun_frame.style.vertically_stretchable = false
+  local guns = pistol_gun_frame.add{type = "list-box"}
+  for k, gun in pairs (weapon_names) do
+    guns.add_item(gun)
+  end
+  guns.style.vertically_squashable = true
+  guns.style.horizontally_stretchable = true
+  pistol_gun_frame.add{type = "label", caption = "Pistol Ammo"}
+  local pistol_ammo_list = pistol_gun_frame.add{type = "list-box"}
+  
+  pistol_ammo_list.style.horizontally_stretchable = true
+  pistol_ammo_list.add_item("Pew")
+  pistol_ammo_list.add_item("Pow")
+  pistol_ammo_list.add_item("Pop")
 
 end
 
@@ -188,12 +245,11 @@ local change_class_hotkey_pressed = function(event)
   choose_class_gui_init(player)
 end
 
-local on_gui_click = function(event)
-  local button = event.element
-  if not (button and button.valid) then return end
+local on_gui_interaction = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
 
-  --I need to think about this, might be hassle or good system...
-  local action = classes.data.elements[button.index]
+  local action = data.elements[element.index]
   if action then
     gui_functions[action.name](event, action.param)
   end
@@ -204,7 +260,7 @@ local on_gui_closed = function(event)
   if not (gui and gui.valid) then return end
 
   --I need to think about this, might be hassle or good system...
-  local action = classes.data.elements[gui.index]
+  local action = data.elements[gui.index]
   if action then
     gui_functions[action.name](event, action.param)
   end
@@ -213,8 +269,9 @@ end
 local events =
 {
   --[defines.events.on_player_joined_game] = on_player_joined_game,
-  [defines.events.on_gui_click] = on_gui_click,
-  [defines.events.on_gui_closed] = on_gui_closed,
+  [defines.events.on_gui_click] = on_gui_interaction,
+  [defines.events.on_gui_closed] = on_gui_interaction,
+  [defines.events.on_gui_selection_state_changed] = on_gui_interaction,
   [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
 
@@ -234,7 +291,7 @@ classes.on_event = function(event)
 end
 
 classes.on_init = function()
-  global.classes = global.classes or classes.data
+  global.classes = global.classes or data
   global.class_list = global.class_list or classes.class_list
   for class, data in pairs (class_list) do
     if data.on_init then
@@ -244,7 +301,7 @@ classes.on_init = function()
 end
 
 classes.on_load = function()
-  classes.data = global.classes or classes.data
+  data = global.classes or data
   classes.class_list = global.class_list or classes.class_list
   for class, data in pairs (class_list) do
     if data.on_load then
