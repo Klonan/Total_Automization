@@ -29,5 +29,14 @@ end
 
 util.copy = util.table.deepcopy
 
+util.first_key = function(map)
+  local k, v = next(map)
+  return k
+end
+
+util.first_value = function(map)
+  local k, v = next(map)
+  return v
+end
 
 return util

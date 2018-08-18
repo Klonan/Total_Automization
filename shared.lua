@@ -29,6 +29,57 @@ data.weapon_names =
   knife = "Knife"
 }
 
+data.primary_weapons =
+{
+  rocket_launcher = "Rocket Launcher",
+  sniper_rifle = "Sniper Rifle",
+  beam_rifle = "Beam Rifle",
+  grenade_launcher = "Grenade Launcher",
+  mine_layer ="Mine layer",
+  plasma_launcher = "Plasma launcher"
+}
+
+data.primary_ammo =
+{
+  rockets = "Rockets",
+  sniper_round = "Sniper Round",
+  grenade = "Grenade",
+  mine = "Mine",
+  beam_cell = "Beam Cell",
+  sticky_plasma = "Sticky Plasma"
+}
+
+data.secondary_weapons =
+{
+  smg = "SMG",
+  shotgun = "Shotgun",
+  laser_rifle = "Laser Rifle"
+  
+}
+
+data.secondary_ammo =
+{
+  smg_rounds = "SMG Rounds",
+  shotgun_shells = "Shotgun Shells",
+  pulse_laser_cell = "Pulse laser cell"
+}
+
+data.pistol_weapons =
+{
+  pistol = "Pistol",
+  revolver = "Revolver",
+  tazer = "Tazer",
+  flare_gun = "Flare Gun"
+}
+
+data.pistol_ammo =
+{
+  pistol_rounds = "Pistol Rounds",
+  magnum_rounds = "Magnum Rounds",
+  tazer_charge = "Tazer Charge",
+  incendiary_flare = "Incendiary Flare"
+}
+
 data.class_names =
 {
   scout = "Scout",

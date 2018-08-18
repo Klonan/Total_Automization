@@ -1,9 +1,9 @@
 defines.events.on_pre_player_changed_class = script.generate_event_name()
 
 local util = require("script/script_util")
-class_names = require("shared").class_names
-weapon_names = require("shared").weapon_names
 hotkeys = require("shared").hotkeys
+local names = require("shared")
+local loadouts = require("script/classes/loadouts")
 
 classes =
 {
@@ -12,22 +12,9 @@ classes =
 local data =
 {
   elements = {},
-  selected_class = {}
+  selected_loadouts = {}
 }
 
-local class_list = 
-{
-  --scout = require("script/classes/scout"),
-  --soldier = require("script/classes/soldier"),
-  --pyro = require("script/classes/pyro"),
-  --demoman = require("script/classes/demoman"),
-  heavy = require("script/classes/heavy"),
-  light = require("script/classes/light"),
-  --engineer = require("script/classes/engineer"),
-  --medic = require("script/classes/medic"),
-  --sniper = require("script/classes/sniper"),
-  --spy = require("script/classes/spy")
-}
 
 local set_class = function(player, name, primary, secondary)
   script.raise_event(defines.events.on_pre_player_changed_class, {player_index = player.index})
@@ -125,9 +112,23 @@ local gui_functions =
     local listbox = event.element
     if not (listbox and listbox.valid) then return end
     local player = game.players[event.player_index]
-    data.selected_class[player.name] = listbox.get_item(listbox.selected_index)
+    data.selected_loadouts[player.name].name = listbox.get_item(listbox.selected_index)
     choose_class_gui_init(player)
-  end
+  end,
+  change_selected_primary_weapon = function(event, param)
+    local listbox = event.element
+    if not (listbox and listbox.valid) then return end
+    local player = game.players[event.player_index]
+    data.selected_loadouts[player.name].primary_weapon = listbox.get_item(listbox.selected_index)
+    choose_class_gui_init(player)
+  end,
+  change_selected_primary_ammo = function(event, param)
+    local listbox = event.element
+    if not (listbox and listbox.valid) then return end
+    local player = game.players[event.player_index]
+    data.selected_loadouts[player.name].primary_ammo = listbox.get_item(listbox.selected_index)
+    choose_class_gui_init(player)
+  end,
 }
 
 choose_class_gui_init = function(player)
@@ -149,85 +150,66 @@ choose_class_gui_init = function(player)
   frame.style.vertical_align = "top"
   local class_frame = frame.add{type = "frame", caption = "Choose your class", direction = "vertical"}
   class_frame.style.vertically_stretchable = false
-  local listbox = class_frame.add{type = "list-box"}
-  data.elements[listbox.index] = {name = "change_selected_class"}
-  data.selected_class[player.name] = data.selected_class[player.name] or "Light"
-  local selected_name = data.selected_class[player.name]
-  local entities = game.entity_prototypes
+  local loadout_listbox = class_frame.add{type = "list-box"}
+  loadout_listbox.style.horizontally_stretchable = true
+  data.elements[loadout_listbox.index] = {name = "change_selected_class"}
+
+  local selected_loadout = data.selected_loadouts[player.name]
+  local selected_specification = loadouts[selected_loadout.name]
   local count = 1
-  for k, class in pairs (class_names) do
-    if entities[class] then
-      listbox.add_item(class)
-      if class == selected_name then
-        listbox.selected_index = count
-      end
-      count = count + 1
+  local index = 1
+  for name, loadout in pairs (loadouts) do
+    loadout_listbox.add_item(name)
+    if name == selected_loadout.name then
+      index = count
+    end
+    count = count + 1
+  end
+  loadout_listbox.selected_index = index
+
+  local info_table = class_frame.add{type = "table", column_count = 5, style = "slot_table"}
+  local equipments = game.equipment_prototypes
+  for name, count in pairs (loadouts[selected_loadout.name].equipment) do
+    local equipment = equipments[name]
+    if equipment then
+      info_table.add{type = "sprite-button", sprite = "equipment/"..name, number = count, style = "technology_slot_button"}    
     end
   end
-  listbox.style.horizontally_stretchable = true
-
-  local info_table = class_frame.add{type = "table", column_count = 2}
-  local info = 
-  {
-    max_health = "Max Health",
-    running_speed = "Running Speed"
-  }
-  for key, name in pairs (info) do
-    info_table.add{type = "label", caption = name}
-    info_table.add{type = "label", caption = entities[selected_name][key]}
-  end
-
-
   
   local primary_gun_frame = frame.add{type = "frame", caption = "Choose your Primary weapon", direction = "vertical"}
   primary_gun_frame.style.vertically_stretchable = false
-  local guns = primary_gun_frame.add{type = "list-box"}
-  for k, gun in pairs (weapon_names) do
-    guns.add_item(gun)
+  local primary_gun_list = primary_gun_frame.add{type = "list-box"}
+  data.elements[primary_gun_list.index] = {name = "change_selected_primary_weapon"}
+  local count = 1
+  local index = 1
+  local selected_primary = util.first_key(selected_specification.primary_weapons)
+  for name, ammos in pairs (selected_specification.primary_weapons) do
+    primary_gun_list.add_item(name)
+    if name == selected_loadout.primary_weapon then
+      index = count
+      selected_primary = name
+    end
+    count = count + 1
   end
-  guns.style.vertically_squashable = true
-  guns.style.horizontally_stretchable = true
+  primary_gun_list.selected_index = index
+  primary_gun_list.style.vertically_squashable = true
+  primary_gun_list.style.horizontally_stretchable = true
+
   primary_gun_frame.add{type = "label", caption = "Primary Ammo"}
   local primary_ammo_list = primary_gun_frame.add{type = "list-box"}
-  
+  data.elements[primary_ammo_list.index] = {name = "change_selected_primary_ammo"}
   primary_ammo_list.style.horizontally_stretchable = true
-  primary_ammo_list.add_item("Pew")
-  primary_ammo_list.add_item("Pow")
-  primary_ammo_list.add_item("Pop")
-
-  
-  local secondary_gun_frame = frame.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
-  secondary_gun_frame.style.vertically_stretchable = false
-  local guns = secondary_gun_frame.add{type = "list-box"}
-  for k, gun in pairs (weapon_names) do
-    guns.add_item(gun)
+  local index = 1
+  for k, ammo in pairs (selected_specification.primary_weapons[selected_primary]) do
+    primary_ammo_list.add_item(ammo)
+    if ammo == selected_loadout.primary_ammo then
+      index = k
+    end
+    count = count + 1
   end
-  guns.style.vertically_squashable = true
-  guns.style.horizontally_stretchable = true
-  secondary_gun_frame.add{type = "label", caption = "secondary Ammo"}
-  local secondary_ammo_list = secondary_gun_frame.add{type = "list-box"}
-  
-  secondary_ammo_list.style.horizontally_stretchable = true
-  secondary_ammo_list.add_item("Pew")
-  secondary_ammo_list.add_item("Pow")
-  secondary_ammo_list.add_item("Pop")
-
-
-  local pistol_gun_frame = frame.add{type = "frame", caption = "Choose your pistol", direction = "vertical"}
-  pistol_gun_frame.style.vertically_stretchable = false
-  local guns = pistol_gun_frame.add{type = "list-box"}
-  for k, gun in pairs (weapon_names) do
-    guns.add_item(gun)
-  end
-  guns.style.vertically_squashable = true
-  guns.style.horizontally_stretchable = true
-  pistol_gun_frame.add{type = "label", caption = "Pistol Ammo"}
-  local pistol_ammo_list = pistol_gun_frame.add{type = "list-box"}
-  
-  pistol_ammo_list.style.horizontally_stretchable = true
-  pistol_ammo_list.add_item("Pew")
-  pistol_ammo_list.add_item("Pow")
-  pistol_ammo_list.add_item("Pop")
+  primary_ammo_list.selected_index = index
+  primary_ammo_list.style.vertically_squashable = true
+  primary_ammo_list.style.horizontally_stretchable = true
 
 end
 
@@ -266,9 +248,33 @@ local on_gui_closed = function(event)
   end
 end
 
+local on_player_created = function(event)
+  local player = game.players[event.player_index]
+  local loadout_name, loadout = next(loadouts)
+  local player_loadout = {name = loadout_name}
+
+  local primary_name, primary_ammos = next(loadout.primary_weapons)
+  local primary_ammo_name = primary_ammos[1]
+  player_loadout.primary_weapon = primary_name
+  player_loadout.primary_ammo = primary_ammo_name
+
+  local secondary_name, secondary_ammos = next(loadout.secondary_weapons)
+  local secondary_ammo_name = secondary_ammos[1]
+  player_loadout.secondary_weapon = secondary_name
+  player_loadout.secondary_ammo = secondary_ammo_name
+
+  local pistol_name, pistol_ammos = next(loadout.pistol_weapons)
+  local pistol_ammo_name = pistol_ammos[1]
+  player_loadout.pistol_weapon = pistol_name
+  player_loadout.pistol_ammo = pistol_ammo_name
+
+  data.selected_loadouts[player.name] = player_loadout
+  --error(serpent.block(player_loadout))
+end
+
 local events =
 {
-  --[defines.events.on_player_joined_game] = on_player_joined_game,
+  [defines.events.on_player_created] = on_player_created,
   [defines.events.on_gui_click] = on_gui_interaction,
   [defines.events.on_gui_closed] = on_gui_interaction,
   [defines.events.on_gui_selection_state_changed] = on_gui_interaction,
@@ -277,27 +283,12 @@ local events =
 
 --error(serpent.block(events))
 
-local action = handler(events)
-
 classes.set_class = set_class
 
-classes.on_event = function(event)
-  action(event)
-  for class, data in pairs (class_list) do
-    if data.on_event then
-      data.on_event(event)
-    end
-  end
-end
+classes.on_event = handler(events)
 
 classes.on_init = function()
   global.classes = global.classes or data
-  global.class_list = global.class_list or classes.class_list
-  for class, data in pairs (class_list) do
-    if data.on_init then
-      data.on_init()
-    end
-  end
 end
 
 classes.on_load = function()
