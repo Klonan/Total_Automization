@@ -252,9 +252,17 @@ choose_class_gui_init = function(player)
   frame.style.right_padding = 16
   frame.style.align = "center"
   frame.style.vertical_align = "top"
-  local mid_flow = frame.add{type = "flow", direction = "horizontal"}
-  local loadout_frame = mid_flow.add{type = "frame", caption = "Choose your class", direction = "vertical"}
-  loadout_frame.style.vertically_stretchable = false
+  local align_table = frame.add{type = "table", column_count = 4}
+  align_table.style.column_alignments[1] = "top-left"
+  align_table.style.column_alignments[2] = "top-left"
+  align_table.style.column_alignments[3] = "top-left"
+  align_table.style.column_alignments[4] = "top-left"
+  align_table.style.vertically_stretchable = true
+  align_table.style.horizontally_stretchable = true
+
+  local loadout_frame = align_table.add{type = "frame", caption = "Choose your class", direction = "vertical"}
+  loadout_frame.style.vertically_stretchable = true
+  loadout_frame.style.horizontally_stretchable = true
   local loadout_listbox = loadout_frame.add{type = "list-box"}
   loadout_listbox.style.horizontally_stretchable = true
   data.elements[loadout_listbox.index] = {name = "change_selected_class"}
@@ -278,15 +286,11 @@ choose_class_gui_init = function(player)
   for name, count in pairs (loadouts[selected_loadout.name].equipment) do
     local equipment = equipments[name]
     if equipment then
-      local slot = info_table.add{type = "sprite-button", sprite = "equipment/"..name, number = count, style = "technology_slot_button"}    
-      slot.style.height = equipment.shape.height * 32
-      slot.style.width = equipment.shape.width * 32
+      local slot = info_table.add{type = "sprite-button", sprite = "equipment/"..name, number = count, style = "technology_slot_button"}
     end
   end
-  
-  local primary_flow = mid_flow.add{type = "flow", direction = "vertical"}
-  primary_flow.style.vertically_stretchable = true
-  local primary_gun_frame = primary_flow.add{type = "frame", caption = "Choose your Primary weapon", direction = "vertical"}
+
+  local primary_gun_frame = align_table.add{type = "frame", caption = "Choose your Primary weapon", direction = "vertical"}
   primary_gun_frame.style.vertically_stretchable = true
   local primary_gun_list = primary_gun_frame.add{type = "list-box"}
   data.elements[primary_gun_list.index] = {name = "change_selected_primary_weapon"}
@@ -307,31 +311,8 @@ choose_class_gui_init = function(player)
   primary_gun_list.style.horizontally_stretchable = true
   add_gun_info(primary_gun_frame, selected_primary)
 
-  local primary_ammo_frame = primary_flow.add{type = "frame", caption = "Choose Primary Ammo", direction = "vertical"}
-  primary_ammo_frame.style.vertically_stretchable = true
-  primary_ammo_frame.style.vertically_squashable = true
-  local primary_ammo_list = primary_ammo_frame.add{type = "list-box"}
-  data.elements[primary_ammo_list.index] = {name = "change_selected_primary_ammo"}
-  primary_ammo_list.style.horizontally_stretchable = true
-  local index = 1
-  local selected_ammo = util.first_value(selected_specification.primary_weapons[selected_primary])
-  for k, ammo in pairs (selected_specification.primary_weapons[selected_primary]) do
-    primary_ammo_list.add_item(ammo)
-    if ammo == selected_loadout.primary_ammo then
-      selected_ammo = ammo
-      index = k
-    end
-    count = count + 1
-  end
-  selected_loadout.primary_ammo = selected_ammo
-  primary_ammo_list.selected_index = index
-  primary_ammo_list.style.vertically_squashable = true
-  primary_ammo_list.style.horizontally_stretchable = true
-  add_ammo_info(primary_ammo_frame, selected_ammo)
-  
-  local secondary_flow = mid_flow.add{type = "flow", direction = "vertical"}
-  secondary_flow.style.vertically_stretchable = true
-  local secondary_gun_frame = secondary_flow.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
+    
+  local secondary_gun_frame = align_table.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
   secondary_gun_frame.style.vertically_stretchable = true
   local secondary_gun_list = secondary_gun_frame.add{type = "list-box"}
   data.elements[secondary_gun_list.index] = {name = "change_selected_secondary_weapon"}
@@ -352,7 +333,54 @@ choose_class_gui_init = function(player)
   secondary_gun_list.style.horizontally_stretchable = true
   add_gun_info(secondary_gun_frame, selected_secondary)
 
-  local secondary_ammo_frame = secondary_flow.add{type = "frame", caption = "Choose secondary Ammo", direction = "vertical"}
+  local pistol_gun_frame = align_table.add{type = "frame", caption = "Choose your pistol weapon", direction = "vertical"}
+  pistol_gun_frame.style.vertically_stretchable = true
+  local pistol_gun_list = pistol_gun_frame.add{type = "list-box"}
+  data.elements[pistol_gun_list.index] = {name = "change_selected_pistol_weapon"}
+  local count = 1
+  local index = 1
+  local selected_pistol = util.first_key(selected_specification.pistol_weapons)
+  for name, ammos in pairs (selected_specification.pistol_weapons) do
+    pistol_gun_list.add_item(name)
+    if name == selected_loadout.pistol_weapon then
+      index = count
+      selected_pistol = name
+    end
+    count = count + 1
+  end
+  selected_loadout.pistol_weapon = selected_pistol
+  pistol_gun_list.selected_index = index
+  pistol_gun_list.style.vertically_squashable = true
+  pistol_gun_list.style.horizontally_stretchable = true
+  add_gun_info(pistol_gun_frame, selected_pistol)
+
+  local spacer = align_table.add{type = "flow"}
+  spacer.style.vertically_stretchable = true
+
+  local primary_ammo_frame = align_table.add{type = "frame", caption = "Choose Primary Weapon Ammo", direction = "vertical"}
+  primary_ammo_frame.style.vertically_stretchable = true
+  primary_ammo_frame.style.vertically_squashable = true
+  local primary_ammo_list = primary_ammo_frame.add{type = "list-box"}
+  data.elements[primary_ammo_list.index] = {name = "change_selected_primary_ammo"}
+  primary_ammo_list.style.horizontally_stretchable = true
+  local index = 1
+  local selected_ammo = util.first_value(selected_specification.primary_weapons[selected_primary])
+  for k, ammo in pairs (selected_specification.primary_weapons[selected_primary]) do
+    primary_ammo_list.add_item(ammo)
+    if ammo == selected_loadout.primary_ammo then
+      selected_ammo = ammo
+      index = k
+    end
+    count = count + 1
+  end
+  selected_loadout.primary_ammo = selected_ammo
+  primary_ammo_list.selected_index = index
+  primary_ammo_list.style.vertically_squashable = true
+  primary_ammo_list.style.horizontally_stretchable = true
+  add_ammo_info(primary_ammo_frame, selected_ammo)
+
+
+  local secondary_ammo_frame = align_table.add{type = "frame", caption = "Choose Secondary Weapon Ammo", direction = "vertical"}
   secondary_ammo_frame.style.vertically_stretchable = true
   secondary_ammo_frame.style.vertically_squashable = true
   local secondary_ammo_list = secondary_ammo_frame.add{type = "list-box"}
@@ -374,31 +402,7 @@ choose_class_gui_init = function(player)
   secondary_ammo_list.style.horizontally_stretchable = true
   add_ammo_info(secondary_ammo_frame, selected_ammo)
   
-
-  local pistol_flow = mid_flow.add{type = "flow", direction = "vertical"}
-  pistol_flow.style.vertically_stretchable = true
-  local pistol_gun_frame = pistol_flow.add{type = "frame", caption = "Choose your pistol weapon", direction = "vertical"}
-  pistol_gun_frame.style.vertically_stretchable = true
-  local pistol_gun_list = pistol_gun_frame.add{type = "list-box"}
-  data.elements[pistol_gun_list.index] = {name = "change_selected_pistol_weapon"}
-  local count = 1
-  local index = 1
-  local selected_pistol = util.first_key(selected_specification.pistol_weapons)
-  for name, ammos in pairs (selected_specification.pistol_weapons) do
-    pistol_gun_list.add_item(name)
-    if name == selected_loadout.pistol_weapon then
-      index = count
-      selected_pistol = name
-    end
-    count = count + 1
-  end
-  selected_loadout.pistol_weapon = selected_pistol
-  pistol_gun_list.selected_index = index
-  pistol_gun_list.style.vertically_squashable = true
-  pistol_gun_list.style.horizontally_stretchable = true
-  add_gun_info(pistol_gun_frame, selected_pistol)
-
-  local pistol_ammo_frame = pistol_flow.add{type = "frame", caption = "Choose pistol Ammo", direction = "vertical"}
+  local pistol_ammo_frame = align_table.add{type = "frame", caption = "Choose Pistol Ammo", direction = "vertical"}
   pistol_ammo_frame.style.vertically_stretchable = true
   pistol_ammo_frame.style.vertically_squashable = true
   local pistol_ammo_list = pistol_ammo_frame.add{type = "list-box"}
@@ -422,8 +426,6 @@ choose_class_gui_init = function(player)
 
   local final_button_flow = frame.add{type = "flow"}
   final_button_flow.style.horizontally_stretchable = true
-  --final_button_flow.style.vertically_stretchable = true
-  --final_button_flow.style.align = "right"
   final_button_flow.style.vertical_align = "bottom"
 
   if player.character then
