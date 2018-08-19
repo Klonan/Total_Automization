@@ -31,6 +31,7 @@ data.weapon_names =
 
 data.weapons =
 {
+  submachine_gun = "Submachine Gun",
   rocket_launcher = "Rocket Launcher",
   sniper_rifle = "Sniper Rifle",
   beam_rifle = "Beam Rifle",

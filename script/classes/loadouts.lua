@@ -25,6 +25,10 @@ loadouts["Light"] =
       "shotgun-shell",
       "piercing-shotgun-shell"
     },
+    [weapons.shotgun] =
+    {
+      weapons.shotgun.." Ammo"
+    },
     [weapons.sniper_rifle] =
     {
       ammo.sniper_round
@@ -84,10 +88,9 @@ loadouts["Heavy"] =
 
   secondary_weapons =
   {
-    [weapons.smg] =
+    [weapons.submachine_gun] =
     {
-      ammo.smg_rounds,
-      ammo.smg_rounds,
+      weapons.submachine_gun.." Ammo"
     }
   },
 
@@ -99,7 +102,7 @@ loadouts["Heavy"] =
     },
     [weapons.revolver] =
     {
-      ammo.magnum_rounds
+      weapons.revolver.." Ammo"
     }
   }
 }
