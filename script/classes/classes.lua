@@ -31,12 +31,48 @@ local set_class = function(player, name, primary, secondary)
   end
 end
 
-local stats = 
-{
-  max_health = "Health",
-  running_speed = "Movement Speed",
-  --etc.
-}
+local spawn_player = function(player)
+  local loadout = data.selected_loadouts[player.name]
+  if not loadout then return error("NO LOADOUT FOR PLAYER "..player.name) end
+  local spec = loadouts[loadout.name]
+  local force = player.force
+  local surface = player.surface
+  local character = player.character
+  if not character then
+    local origin = force.get_spawn_position(surface)
+    local position = surface.find_non_colliding_position("player", origin, 100, 1)
+    character = surface.create_entity{name = "player", position = position, force = force}
+  end
+  local armor_inventory = character.get_inventory(defines.inventory.player_armor)
+  armor_inventory.clear()
+  local armor_stack = armor_inventory[1]
+  armor_stack.set_stack{name = "power-armor-mk2"}
+  local grid = armor_stack.grid
+  for name, count in pairs (spec.equipment) do
+    for k = 1, count do
+      grid.put{name = name}
+    end
+  end
+
+  local gun_inventory = character.get_inventory(defines.inventory.player_guns)
+  local ammo_inventory = character.get_inventory(defines.inventory.player_ammo)
+  ammo_inventory.clear()
+  gun_inventory.clear()
+  local items = game.item_prototypes
+  for k, name in pairs ({"primary", "secondary", "pistol"}) do
+    local gun_stack = gun_inventory[k]
+    local ammo_stack = ammo_inventory[k]
+    local gun_name = loadout[name.."_weapon"]
+    local ammo_name = loadout[name.."_ammo"]
+    if items[gun_name] and items[ammo_name] then
+      gun_stack.set_stack{name = gun_name}
+      ammo_stack.set_stack{name = ammo_name}
+    end
+  end
+
+
+end
+
 local choose_class_gui_init
 local gui_functions = 
 {
@@ -45,6 +81,7 @@ local gui_functions =
     local player = game.players[event.player_index]
     util.deregister_gui(param.gui, data.elements)
     param.gui.destroy()
+    spawn_player(player)
   end,
   close_gui = function(event, param)
     util.deregister_gui(param.gui, data.elements)
@@ -101,6 +138,101 @@ local gui_functions =
   end,
 }
 
+local gun_info =
+{
+  range = "Range",
+  min_range = "Min Range",
+  cooldown = "Cooldown",
+  damage_modifier = "Damage modifier",
+}
+
+local add_gun_info = function(frame, gun)
+  local gun_prototype = game.item_prototypes[gun]
+  if not gun_prototype then return end
+  local info_flow = frame.add{type = "flow", direction = "horizontal"}
+  info_flow.style.horizontally_stretchable = true
+  local sprite = info_flow.add{type = "sprite-button", sprite = "item/"..gun_prototype.name, tooltip = gun_prototype.localised_name, style = "technology_slot_button"}
+  local more_info_flow = info_flow.add{type = "flow", direction = "vertical"}
+  more_info_flow.style.horizontally_squashable = true
+  for key, name in pairs (gun_info) do
+    local value = gun_prototype.attack_parameters[key]
+    if value then
+      local label = more_info_flow.add{type = "label", caption = {"", name, {"colon"}, " ", math.floor(value*100)/100}}
+      label.style.horizontally_stretchable = true
+    end
+  end
+end
+
+local trigger_info =
+{
+  damage = "Damage",
+
+}
+
+local add_trigger_info
+add_trigger_info = function(gui, trigger, indent)
+  if not trigger then return end
+  
+  if trigger.repeat_count and trigger.repeat_count > 1 then    
+    local label = gui.add{type = "label", caption = {"", indent, "Repeat count", {"colon"}, " ", trigger.repeat_count}}
+    label.style.horizontally_stretchable = true
+  end
+
+  if trigger.radius then    
+    local label = gui.add{type = "label", caption = {"", indent, "Effect area Radius", {"colon"}, " ", trigger.radius}}
+    label.style.horizontally_stretchable = true
+  end
+
+  local action = trigger.action_delivery or {}
+  indent = indent.."      "
+  for k, delivery in pairs (action) do
+
+    if delivery.target_effects then
+      for k, effect in pairs (delivery.target_effects) do
+        if effect.damage then
+          local label = gui.add{type = "label", caption = {"", indent, "Damage", {"colon"}, " ", effect.damage.amount}}
+          label.style.horizontally_stretchable = true
+        end
+        if effect.action then
+          for k, trigger in pairs (effect.action) do
+            add_trigger_info(gui, trigger, indent)
+          end
+        end
+      end
+    end
+    if delivery.projectile then
+      local prototype = game.entity_prototypes[delivery.projectile]
+      local label = gui.add{type = "label", caption = {"", indent, "Create entity", {"colon"}, " ", prototype.localised_name}}
+      label.style.horizontally_stretchable = true
+      for k, trigger in pairs (prototype.attack_result or {}) do
+        add_trigger_info(gui, trigger, indent)
+      end
+      for k, trigger in pairs (prototype.final_attack_result or {}) do
+        add_trigger_info(gui, trigger, indent)
+      end
+    end
+  end
+end
+
+
+local add_ammo_info = function(frame, ammo)
+  local ammo_prototype = game.item_prototypes[ammo]
+  if not ammo_prototype then return end
+  local info_flow = frame.add{type = "flow", direction = "horizontal"}
+  local sprite = info_flow.add{type = "sprite-button", sprite = "item/"..ammo_prototype.name, tooltip = ammo_prototype.localised_name, style = "technology_slot_button"}
+  local more_info_flow = info_flow.add{type = "flow", direction = "vertical"}
+  if ammo_prototype.magazine_size > 1 then
+    local label = more_info_flow.add{type = "label", caption = {"", "Magazine size", {"colon"}, " ", ammo_prototype.magazine_size}}
+    label.style.horizontally_stretchable = true
+  end
+  local trigger_effects = ammo_prototype.get_ammo_result()
+  for k, trigger in pairs (trigger_effects) do
+    add_trigger_info(more_info_flow, trigger, "")
+  end
+end
+
+
+
 choose_class_gui_init = function(player)
 
   local gui = player.gui.center
@@ -123,6 +255,7 @@ choose_class_gui_init = function(player)
   local loadout_listbox = loadout_frame.add{type = "list-box"}
   loadout_listbox.style.horizontally_stretchable = true
   data.elements[loadout_listbox.index] = {name = "change_selected_class"}
+  local items = game.item_prototypes
 
   local selected_loadout = data.selected_loadouts[player.name]
   local selected_specification = loadouts[selected_loadout.name]
@@ -164,15 +297,18 @@ choose_class_gui_init = function(player)
   primary_gun_list.selected_index = index
   primary_gun_list.style.vertically_squashable = true
   primary_gun_list.style.horizontally_stretchable = true
+  add_gun_info(primary_gun_frame, selected_primary)
 
   primary_gun_frame.add{type = "label", caption = "Choose Primary Ammo", style = "description_label"}
   local primary_ammo_list = primary_gun_frame.add{type = "list-box"}
   data.elements[primary_ammo_list.index] = {name = "change_selected_primary_ammo"}
   primary_ammo_list.style.horizontally_stretchable = true
   local index = 1
+  local selected_ammo = util.first_value(selected_specification.primary_weapons[selected_primary])
   for k, ammo in pairs (selected_specification.primary_weapons[selected_primary]) do
     primary_ammo_list.add_item(ammo)
     if ammo == selected_loadout.primary_ammo then
+      selected_ammo = ammo
       index = k
     end
     count = count + 1
@@ -180,6 +316,20 @@ choose_class_gui_init = function(player)
   primary_ammo_list.selected_index = index
   primary_ammo_list.style.vertically_squashable = true
   primary_ammo_list.style.horizontally_stretchable = true
+
+  add_ammo_info(primary_gun_frame, selected_ammo)
+  ammo_prototype = items[selected_ammo]
+  if gun_prototype then
+    local info_flow = primary_gun_frame.add{type = "flow", direction = "horizontal"}
+    local sprite = info_flow.add{type = "sprite-button", sprite = "item/"..gun_prototype.name, tooltip = gun_prototype.localised_name, style = "technology_slot_button"}
+    local more_info_flow = info_flow.add{type = "flow", direction = "vertical"}
+    for key, name in pairs (gun_info) do
+      local value = gun_prototype.attack_parameters[key]
+      if value then
+        more_info_flow.add{type = "label", caption = {"", name, {"colon"}, " ", value}}
+      end
+    end
+  end
   
   local secondary_gun_frame = mid_flow.add{type = "frame", caption = "Choose your Secondary weapon", direction = "vertical"}
   secondary_gun_frame.style.vertically_stretchable = false

@@ -1,45 +1,58 @@
-local names = require("shared")
+local weapons = require("shared").weapons
+local ammo = require("shared").ammo
 
 local loadouts = {}
 
 loadouts["Light"] =
 {
   name = "Light",
+
   equipment =
   {
     ["fusion-reactor-equipment"] = 1,
     ["personal-roboport-equipment"] = 1,
     ["exoskeleton-equipment"] = 1
   },
+
   primary_weapons =
   {
-    [names.primary_weapons.sniper_rifle] =
+    ["Pistol"] =
     {
-      names.primary_ammo.sniper_round
+      "Pistol Ammo"
     },
-    [names.primary_weapons.beam_rifle] =
+    ["shotgun"] =
     {
-      names.primary_ammo.beam_cell
+      "shotgun-shell",
+      "piercing-shotgun-shell"
+    },
+    [weapons.sniper_rifle] =
+    {
+      ammo.sniper_round
+    },
+    [weapons.beam_rifle] =
+    {
+      ammo.beam_cell
     }
   },
 
   secondary_weapons =
   {
-    [names.secondary_weapons.smg] =
+    [weapons.smg] =
     {
-      names.secondary_ammo.smg_rounds,
-      names.secondary_ammo.smg_rounds,
+      ammo.smg_rounds,
+      ammo.smg_rounds,
     }
   },
+
   pistol_weapons =
   {
-    [names.pistol_weapons.pistol] =
+    ["Pistol"] =
     {
-      names.pistol_ammo.pistol_rounds
+      "firearm-magazine"
     },
-    [names.pistol_weapons.revolver] =
+    [weapons.revolver] =
     {
-      names.pistol_ammo.magnum_rounds
+      ammo.magnum_rounds
     }
   }
 }
@@ -47,41 +60,46 @@ loadouts["Light"] =
 loadouts["Heavy"] =
 {
   name = "Heavy",
+
   equipment =
   {
     ["fusion-reactor-equipment"] = 1,
     ["personal-roboport-equipment"] = 1,
     ["energy-shield-equipment"] = 1
   },
+
   primary_weapons =
   {
-    [names.primary_weapons.sniper_rifle] =
+    [weapons.sniper_rifle] =
     {
-      names.primary_ammo.sniper_round
+      "Sniper Rifle Ammo"
     },
-    [names.primary_weapons.rocket_launcher] =
+    [weapons.rocket_launcher] =
     {
-      names.primary_ammo.rockets
+      weapons.rocket_launcher.." Ammo",
+      "rocket",
+      "explosive-rocket"
     }
   },
 
   secondary_weapons =
   {
-    [names.secondary_weapons.smg] =
+    [weapons.smg] =
     {
-      names.secondary_ammo.smg_rounds,
-      names.secondary_ammo.smg_rounds,
+      ammo.smg_rounds,
+      ammo.smg_rounds,
     }
   },
+
   pistol_weapons =
   {
-    [names.pistol_weapons.pistol] =
+    [weapons.pistol] =
     {
-      names.pistol_ammo.pistol_rounds
+      ammo.pistol_rounds
     },
-    [names.pistol_weapons.revolver] =
+    [weapons.revolver] =
     {
-      names.pistol_ammo.magnum_rounds
+      ammo.magnum_rounds
     }
   }
 }
