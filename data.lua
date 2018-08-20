@@ -10,7 +10,6 @@ SA = function(v)
 end
 util = require "data/tf_util/tf_util"
 require "data/entities/entities"
-require "data/weapons/weapons"
 require "data/health_pickup"
 require "data/stickers/afterburn"
 require "data/stickers/healing"

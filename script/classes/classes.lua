@@ -12,28 +12,14 @@ classes =
 local data =
 {
   elements = {},
-  selected_loadouts = {}
+  selected_loadouts = {},
+  current_loadouts = {}
 }
 
-
-local set_class = function(player, name, primary, secondary)
-  script.raise_event(defines.events.on_pre_player_changed_class, {player_index = player.index})
-  if player.character then player.character.destroy() end
-  player.create_character(name)
-  local character = player.character
-  if primary then
-    character.insert(primary)
-    character.insert(primary.." Ammo")
-  end
-  if secondary then
-    character.insert(secondary)
-    character.insert(secondary.." Ammo")
-  end
-end
-
 local spawn_player = function(player)
-  local loadout = data.selected_loadouts[player.name]
-  if not loadout then return error("NO LOADOUT FOR PLAYER "..player.name) end
+  script.raise_event(defines.events.on_pre_player_changed_class, {player_index = player.index})
+  local loadout = data.current_loadouts[player.name]
+  if not loadout then return error("NO CURRENT LOADOUT FOR PLAYER "..player.name) end
   local spec = loadouts[loadout.name]
   local force = player.force
   local surface = player.surface
@@ -66,7 +52,7 @@ local spawn_player = function(player)
     local ammo_name = loadout[name.."_ammo"]
     if items[gun_name] and items[ammo_name] then
       gun_stack.set_stack{name = gun_name}
-      ammo_stack.set_stack{name = ammo_name}
+      ammo_stack.set_stack(ammo_name)
     end
   end
 
@@ -81,6 +67,8 @@ local gui_functions =
     local player = game.players[event.player_index]
     util.deregister_gui(param.gui, data.elements)
     param.gui.destroy()
+    local loadout = data.selected_loadouts[player.name]
+    data.current_loadouts[player.name] = util.copy(loadout)
     spawn_player(player)
   end,
   close_gui = function(event, param)
@@ -158,7 +146,7 @@ local add_gun_info = function(frame, gun)
   for key, info in pairs (gun_info) do
     local value = gun_prototype.attack_parameters[key]
     if value and (not info.default or info.default ~= value) then
-      local label = more_info_flow.add{type = "label", caption = {"", info.name, {"colon"}, " ", math.floor(value*100)/100}}
+      local label = more_info_flow.add{type = "label", caption = info.name..": ".. math.floor(value*100)/100}
       label.style.horizontally_stretchable = true
     end
   end
@@ -173,14 +161,17 @@ local trigger_info =
 local add_trigger_info
 add_trigger_info = function(gui, trigger, indent)
   if not trigger then return end
-  
+  if trigger.type == "line" then
+    local label = gui.add{type = "label", caption = {"", indent, "Damages entities in a straight line."}}
+    label.style.horizontally_stretchable = true
+  end
   if trigger.repeat_count and trigger.repeat_count > 1 then    
-    local label = gui.add{type = "label", caption = {"", indent, "Repeat count", {"colon"}, " ", trigger.repeat_count}}
+    local label = gui.add{type = "label", caption = {"", indent, "Repeat count: ", trigger.repeat_count}}
     label.style.horizontally_stretchable = true
   end
 
   if trigger.radius then    
-    local label = gui.add{type = "label", caption = {"", indent, "Effect area Radius", {"colon"}, " ", trigger.radius}}
+    local label = gui.add{type = "label", caption = {"", indent, "Effect area Radius: ", trigger.radius}}
     label.style.horizontally_stretchable = true
   end
 
@@ -191,7 +182,7 @@ add_trigger_info = function(gui, trigger, indent)
     if delivery.target_effects then
       for k, effect in pairs (delivery.target_effects) do
         if effect.damage then
-          local label = gui.add{type = "label", caption = {"", indent, "Damage", {"colon"}, " ", effect.damage.amount}}
+          local label = gui.add{type = "label", caption = {"", indent, "Damage: ", effect.damage.amount}}
           label.style.horizontally_stretchable = true
         end
         if effect.action then
@@ -203,7 +194,10 @@ add_trigger_info = function(gui, trigger, indent)
     end
     if delivery.projectile then
       local prototype = game.entity_prototypes[delivery.projectile]
-      local label = gui.add{type = "label", caption = {"", indent, "Create entity", {"colon"}, " ", prototype.localised_name}}
+      local label = gui.add{type = "label", caption = {"", indent, "Shoots a ", prototype.name}}
+      label.style.horizontally_stretchable = true
+      
+      local label = gui.add{type = "label", caption = {"", indent, "Projectile starting speed: ", math.floor(delivery.starting_speed * 100) / 100}}
       label.style.horizontally_stretchable = true
       for k, trigger in pairs (prototype.attack_result or {}) do
         add_trigger_info(gui, trigger, indent)
@@ -226,10 +220,14 @@ local add_ammo_info = function(frame, ammo)
   more_info_flow.style.vertically_squashable = true
   more_info_flow.style.vertically_stretchable = true
   if ammo_prototype.magazine_size > 1 then
-    local label = more_info_flow.add{type = "label", caption = {"", "Magazine size", {"colon"}, " ", ammo_prototype.magazine_size}}
+    local label = more_info_flow.add{type = "label", caption = "Magazine size: "..ammo_prototype.magazine_size}
     label.style.horizontally_stretchable = true
   end
-  local trigger_effects = ammo_prototype.get_ammo_result()
+  if ammo_prototype.reload_time > 0 then
+    local label = more_info_flow.add{type = "label", caption = "Reload time: "..ammo_prototype.reload_time}
+    label.style.horizontally_stretchable = true
+  end
+  local trigger_effects = ammo_prototype.get_ammo_type().action
   for k, trigger in pairs (trigger_effects) do
     add_trigger_info(more_info_flow, trigger, "")
   end
@@ -280,13 +278,19 @@ choose_class_gui_init = function(player)
     count = count + 1
   end
   loadout_listbox.selected_index = index
-
-  local info_table = loadout_frame.add{type = "table", column_count = 5, style = "slot_table"}
+  if selected_specification.description then
+    local description = loadout_frame.add{type = "label", caption = selected_specification.description, style = "bold_label"}
+    description.style.single_line = false
+    description.style.horizontally_stretchable = true
+  end
   local equipments = game.equipment_prototypes
-  for name, count in pairs (loadouts[selected_loadout.name].equipment) do
+  for name, count in pairs (selected_specification.equipment) do
     local equipment = equipments[name]
     if equipment then
-      local slot = info_table.add{type = "sprite-button", sprite = "equipment/"..name, number = count, style = "technology_slot_button"}
+      local flow = loadout_frame.add{type = "flow"}
+      flow.style.vertical_align = "center"
+      local sprite = flow.add{type = "sprite-button", sprite = "equipment/"..equipment.name, style = "technology_slot_button"}
+      flow.add{type = "label", caption = {"", count, " x ", equipment.localised_name}, style = "bold_label"}
     end
   end
 
@@ -461,17 +465,6 @@ local on_gui_interaction = function(event)
   if not (element and element.valid) then return end
 
   local action = data.elements[element.index]
-  if action then
-    gui_functions[action.name](event, action)
-  end
-end
-
-local on_gui_closed = function(event)
-  local gui = event.element
-  if not (gui and gui.valid) then return end
-
-  --I need to think about this, might be hassle or good system...
-  local action = data.elements[gui.index]
   if action then
     gui_functions[action.name](event, action)
   end

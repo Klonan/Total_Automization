@@ -6,7 +6,7 @@ local loadouts = {}
 loadouts["Light"] =
 {
   name = "Light",
-
+  description = "Gotta get places quick, no time for heavy energy shield modules. Quick quick quick quick quick",
   equipment =
   {
     ["fusion-reactor-equipment"] = 1,
@@ -16,9 +16,9 @@ loadouts["Light"] =
 
   primary_weapons =
   {
-    ["Pistol"] =
+    [weapons.machine_gun] =
     {
-      "Pistol Ammo"
+      ammo.machine_gun_ammo
     },
     ["shotgun"] =
     {
@@ -64,6 +64,7 @@ loadouts["Light"] =
 loadouts["Heavy"] =
 {
   name = "Heavy",
+  description = "Likes to take his time getting to places.",
 
   equipment =
   {

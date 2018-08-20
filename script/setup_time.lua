@@ -105,6 +105,3 @@ setup_time.on_init = function()
 end
 
 return setup_time
-
-
-
