@@ -72,7 +72,7 @@ local bot =
           starting_speed = SD(1.5),
           direction_deviation = 0.05,
           range_deviation = 0.05,
-          max_range = 24
+          max_range = 28
           }
         }
       }
@@ -125,27 +125,17 @@ projectile.action =
     target_effects =
     {
       {
+        type = "create-entity",
+        entity_name = "laser-bubble"
+      },
+      {
         type = "damage",
         damage = {amount = 8 , type = util.damage_type("blaster_bot")}
       }
     }
   }
 }
-projectile.final_action = 
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = "laser-bubble"
-      }
-    }
-  }
-}
+projectile.final_action = nil
 
 local item = {
   type = "item",

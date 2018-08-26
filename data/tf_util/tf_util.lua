@@ -184,6 +184,17 @@ util.remove_from_list = function(list, name)
   end
 end
 
+local recursive_hack_something
+recursive_hack_something = function(prototype, key, value)
+  for k, v in pairs (prototype) do
+    if type(v) == "table" then
+      recursive_hack_something(v, key, value)
+    end
+  end
+  prototype[key] = value
+end
+util.recursive_hack_something = recursive_hack_something
+
 util.copy = util.table.deepcopy
 
 util.prototype = require("data/tf_util/prototype_util")

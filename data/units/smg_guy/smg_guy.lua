@@ -1,4 +1,4 @@
-local path = util.path("data/units/smg_guy")
+local path = util.path("data/units/smg_guy/")
 local name = require("shared").units.smg_guy
 
 local base = util.copy(data.raw.player.player)
@@ -29,7 +29,7 @@ local bot =
   selection_box = {{-0.5, -1.6}, {0.5, 0.3}},
   sticker_box = {{-0.3, -1}, {0.2, 0.3}},
   distraction_cooldown = SU(15),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = true,
   attack_parameters =
   {
@@ -40,7 +40,22 @@ local bot =
     range = 24,
     min_attack_distance = 18,
     projectile_creation_distance = 0.5,
-    sound = make_light_gunshot_sounds(),
+    sound =
+    {
+      variations = 
+      {
+        {
+          filename = path.."smg_guy_shoot.ogg",
+          volume = 1
+        }
+      },
+      aggregation =
+      {
+        max_count = 2,
+        remove = true,
+        count_already_playing = true
+      }
+    },
     ammo_type =
     {
       category = "bullet",
@@ -57,7 +72,7 @@ local bot =
           starting_speed_deviation = SD(0.05),
           direction_deviation = 0.1,
           range_deviation = 0.1,
-          max_range = 24
+          max_range = 28
           },
           {
             type = "instant",
@@ -119,18 +134,7 @@ projectile.action =
       {
         type = "damage",
         damage = {amount = 2.5 , type = util.damage_type("smg_guy")}
-      }
-    }
-  }
-}
-projectile.final_action = 
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
+      },
       {
         type = "create-entity",
         entity_name = "explosion-hit"
@@ -138,6 +142,7 @@ projectile.final_action =
     }
   }
 }
+projectile.final_action = nil
 
 local item = {
   type = "item",

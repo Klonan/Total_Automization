@@ -18,33 +18,19 @@ loadouts["Light"] =
   {
     [weapons.machine_gun] =
     {
-      ammo.machine_gun_ammo
-    },
-    ["shotgun"] =
-    {
-      "shotgun-shell",
-      "piercing-shotgun-shell"
-    },
-    [weapons.shotgun] =
-    {
-      weapons.shotgun.." Ammo"
-    },
-    [weapons.sniper_rifle] =
-    {
-      ammo.sniper_round
-    },
-    [weapons.beam_rifle] =
-    {
-      ammo.beam_cell
+      ammo.standard_magazine,
+      ammo.explosive_magazine,
+      ammo.piercing_magazine,
+      ammo.extended_magazine
     }
   },
 
   secondary_weapons =
   {
-    [weapons.smg] =
+    [weapons.submachine_gun] =
     {
-      ammo.smg_rounds,
-      ammo.smg_rounds,
+      ammo.standard_magazine,
+      ammo.piercing_magazine
     }
   },
 
@@ -53,14 +39,10 @@ loadouts["Light"] =
     ["Pistol"] =
     {
       "firearm-magazine"
-    },
-    [weapons.revolver] =
-    {
-      ammo.magnum_rounds
     }
   }
 }
-
+if true then return loadouts end
 loadouts["Heavy"] =
 {
   name = "Heavy",

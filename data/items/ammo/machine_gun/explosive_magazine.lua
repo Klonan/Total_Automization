@@ -1,15 +1,15 @@
-local name = require("shared").ammo.machine_gun_ammo
-local projectile_name = "Machine Gun Round"
-local ammo = util.copy(data.raw.ammo["firearm-magazine"])
+local name = require("shared").ammo.explosive_magazine
+local ammo = util.copy(data.raw.ammo["piercing-rounds-magazine"])
 ammo.name = name
 ammo.localised_name = name
-ammo.magazine_size = 25
-ammo.stack_size = 75 / 25
-ammo.reload_time = SU(60)
+ammo.magazine_size = 15
+ammo.stack_size = 8
+ammo.reload_time = SU(75)
 ammo.ammo_type =
 {
   category = util.ammo_category("machine_gun"),
   target_type = "direction",
+  cooldown_modifier = 1.2,
   action =
   {
     {
@@ -31,19 +31,19 @@ ammo.ammo_type =
       action_delivery =
       {
         type = "projectile",
-        projectile = projectile_name,
-        starting_speed = SD(1),
+        projectile = name,
+        starting_speed = SD(0.8),
         direction_deviation = 0.01,
         range_deviation = 0.01,
-        max_range = 40
+        max_range = 30
       }
     }
   }
 }
 
 local projectile = util.copy(data.raw.projectile["cannon-projectile"])
-projectile.name = projectile_name
-projectile.localised_name = projectile_name
+projectile.name = name
+projectile.localised_name = name
 projectile.piercing_damage = 0
 projectile.force_condition = "not-same"
 projectile.action =
@@ -55,12 +55,28 @@ projectile.action =
     target_effects =
     {
       {
-        type = "create-explosion",
-        entity_name = "explosion-hit"
-      },
-      {
-        type = "damage",
-        damage = {amount = 8 , type = util.damage_type("machine_gun")}
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 2,
+          force = "not-same",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "damage",
+                damage = {amount = 5, type = util.damage_type("explosive_machine_gun")}
+              },
+              {
+                type = "create-entity",
+                entity_name = "explosion-hit"
+              }
+            }
+          }
+        }
       }
     }
   }

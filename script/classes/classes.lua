@@ -128,7 +128,7 @@ local gui_functions =
 
 local gun_info =
 {
-  range = {name = "Range"},
+  --range = {name = "Range"},
   min_range = {name = "Min Range", default = 0},
   cooldown = {name = "Cooldown"},
   damage_modifier = {name = "Damage modifier", default = 1}
@@ -194,10 +194,12 @@ add_trigger_info = function(gui, trigger, indent)
     end
     if delivery.projectile then
       local prototype = game.entity_prototypes[delivery.projectile]
-      local label = gui.add{type = "label", caption = {"", indent, "Shoots a ", prototype.name}}
-      label.style.horizontally_stretchable = true
+      --local label = gui.add{type = "label", caption = {"", indent, "Shoots a ", prototype.name}}
+      --label.style.horizontally_stretchable = true
       
-      local label = gui.add{type = "label", caption = {"", indent, "Projectile starting speed: ", math.floor(delivery.starting_speed * 100) / 100}}
+      local label = gui.add{type = "label", caption = {"", indent, "Projectile Starting Speed: ", math.floor(delivery.starting_speed * 100) / 100}}
+      label.style.horizontally_stretchable = true
+      local label = gui.add{type = "label", caption = {"", indent, "Projectile Range: ", math.floor(delivery.max_range * 100) / 100}}
       label.style.horizontally_stretchable = true
       for k, trigger in pairs (prototype.attack_result or {}) do
         add_trigger_info(gui, trigger, indent)

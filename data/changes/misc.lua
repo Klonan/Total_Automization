@@ -10,7 +10,7 @@ recipe.ingredients =
 recipe.main_product = "crude-oil"
 recipe.results =
 {
-  {type = "fluid", name = "crude-oil", amount = 15}
+  {type = "fluid", name = "crude-oil", amount = 150}
 }
 
 --Don't need rocket silos or any of that junk
@@ -18,3 +18,9 @@ recipe.results =
 util.prototype.remove_entity_prototype(data.raw["rocket-silo"]["rocket-silo"])
 util.prototype.remove_item_prototype(data.raw.item["satellite"])
 util.prototype.remove_item_prototype(data.raw.item["rocket-escape-pod"])
+
+for k, type in pairs (data.raw) do
+  for k, entity in pairs (type) do
+    entity.next_upgrade = nil
+  end
+end
