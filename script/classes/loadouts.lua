@@ -22,6 +22,19 @@ loadouts["Light"] =
       ammo.explosive_magazine,
       ammo.piercing_magazine,
       ammo.extended_magazine
+    },
+    [weapons.shotgun] =
+    {
+      ammo.standard_shells,
+      ammo.incendiary_shells,
+      ammo.slug_shells,
+    },
+    [weapons.double_barreled_shotgun] =
+    {
+      ammo.standard_shells,
+      ammo.incendiary_shells,
+      ammo.slug_shells,
+
     }
   },
 

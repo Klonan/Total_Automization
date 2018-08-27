@@ -131,7 +131,8 @@ local gun_info =
   --range = {name = "Range"},
   min_range = {name = "Min Range", default = 0},
   cooldown = {name = "Cooldown"},
-  damage_modifier = {name = "Damage modifier", default = 1}
+  damage_modifier = {name = "Damage modifier", default = 1},
+  ammo_consumption_modifier = {name = "Ammo Consumption Modifier", default = 1}
 }
 
 local add_gun_info = function(frame, gun)
@@ -472,8 +473,7 @@ local on_gui_interaction = function(event)
   end
 end
 
-local on_player_created = function(event)
-  local player = game.players[event.player_index]
+local default_loadout = function()
   local loadout_name, loadout = next(loadouts)
   local player_loadout = {name = loadout_name}
 
@@ -491,9 +491,12 @@ local on_player_created = function(event)
   local pistol_ammo_name = pistol_ammos[1]
   player_loadout.pistol_weapon = pistol_name
   player_loadout.pistol_ammo = pistol_ammo_name
+  return player_loadout
+end
 
-  data.selected_loadouts[player.name] = player_loadout
-  --error(serpent.block(player_loadout))
+local on_player_created = function(event)
+  local player = game.players[event.player_index]
+  data.selected_loadouts[player.name] = default_loadout()
 end
 
 local events =
@@ -513,16 +516,13 @@ classes.on_event = handler(events)
 
 classes.on_init = function()
   global.classes = global.classes or data
+  for k, player in pairs (game.players) do
+    data.selected_loadouts[player.name] = default_loadout()
+  end
 end
 
 classes.on_load = function()
   data = global.classes or data
-  classes.class_list = global.class_list or classes.class_list
-  for class, data in pairs (class_list) do
-    if data.on_load then
-      data.on_load()
-    end
-  end
 end
 
 classes.class_list = class_list

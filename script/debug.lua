@@ -27,7 +27,7 @@ local on_player_created = function(event)
   if true then return {} end
   local team1 = {
     --beetle = 80,
-    --blaster_bot = 20,
+    blaster_bot = 20,
     --laser_bot = 20,
     --tazer_bot = 30,
     --plasma_bot = 20,
@@ -47,27 +47,21 @@ local on_player_created = function(event)
 
 
   if player.character then player.character.destroy() end
-  --debug.libs.classes.set_class(player, "Pyro")
-  local count = 5
-  for name, class in pairs(debug.libs.classes.class_list) do
-    --player.surface.create_entity{name = class.name, position = {player.position.x + count, player.position.y}, force = player.force}
-    count = count + 5
-  end
 
   team2 = {
-    beetle = 85,
+    --beetle = 85,
     --plasma_bot = 5,
     --rocket_guy = 50,
-    --smg_guy = 20,
+    smg_guy = 20,
     --flame_car = 20,
     --rocket_guy = 20,
     --shell_tank = 20,
     --shell_tank = 80
-    scatter_spitter = 30,
-    piercing_biter = 30,
+    --scatter_spitter = 30,
+    --piercing_biter = 30,
     --rocket_guy = 30,
     --laser_bot = 20
-    acid_worm = 10
+    --acid_worm = 10
   }
   local pos = {x = 20, y = 0}
   for name, count in pairs (team2) do

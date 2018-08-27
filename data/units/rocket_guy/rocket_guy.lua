@@ -42,7 +42,15 @@ local bot =
     min_attack_distance = 26,
     projectile_creation_distance = 0.5,
     sound = {
-      {filename = path.."rocket_guy_shoot.ogg", volume = 0.5}
+      variations = {
+        {filename = path.."rocket_guy_shoot.ogg", volume = 1},
+      },
+      aggregation =
+      {
+        max_count = 2,
+        remove = true,
+        count_already_playing = true
+      }
     },
     ammo_type =
     {
@@ -56,7 +64,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(1.5),
+          starting_speed = SD(0.8),
           starting_speed_deviation = SD(0.05),
           --direction_deviation = 0.1,
           range_deviation = 0.1,

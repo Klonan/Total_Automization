@@ -4,3 +4,7 @@ require("machine_gun/explosive_magazine")
 require("machine_gun/standard_magazine")
 require("machine_gun/piercing_magazine")
 require("machine_gun/extended_magazine")
+
+require("shotgun/standard_shells")
+require("shotgun/incendiary_shells")
+require("shotgun/slug_shells")

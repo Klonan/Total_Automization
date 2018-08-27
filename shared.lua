@@ -33,7 +33,8 @@ data.weapons =
 {
   machine_gun = "Machine Gun",
   submachine_gun = "Submachine Gun",
-
+  shotgun = "Shotgun",
+  double_barreled_shotgun = "Double-barreled Shotgun",
 
 
 
@@ -44,7 +45,6 @@ data.weapons =
   mine_layer ="Mine layer",
   plasma_launcher = "Plasma launcher",
   smg = "SMG",
-  shotgun = "Shotgun",
   laser_rifle = "Laser Rifle",
   pistol = "Pistol",
   revolver = "Revolver",
@@ -58,6 +58,10 @@ data.ammo =
   explosive_magazine = "Explosive Magazine",
   piercing_magazine = "Piercing Magazine",
   extended_magazine = "Extended Magazine",
+
+  standard_shells = "Standard Shells",
+  incendiary_shells = "Incendiary Shells",
+  slug_shells = "Slug Shells",
 
 
 
@@ -152,6 +156,7 @@ data.entities =
   concrete_gate = "Concrete Gate",
   sell_chest = "Trade Chest Sell",
   buy_chest = "Trade Chest Buy",
+  damage_indicator_text = "Damage Indicator Text"
 }
 
 data.deployers =

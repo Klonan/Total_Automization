@@ -29,6 +29,7 @@ local libs = {
   setup = require("script/setup"),
   setup_time = require("script/setup_time"),
   pvp_interface = require("script/pvp_interface"),
+  --damage_indicator = require("script/damage_indicator"),
   --trade_chests = require("script/trade_chests")
 }
 
