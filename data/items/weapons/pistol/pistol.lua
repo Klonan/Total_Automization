@@ -1,4 +1,5 @@
-local path = util.path("data/weapons/pistol/")
+local path = util.path("data/items/weapons/pistol/")
+local name = 
 local gun = util.base_gun(names.pistol)
 gun.icon = path.."pistol.png"
 gun.icon_size = 512
