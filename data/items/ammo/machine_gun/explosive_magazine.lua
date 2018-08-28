@@ -55,6 +55,10 @@ projectile.action =
     target_effects =
     {
       {
+        type = "create-entity",
+        entity_name = "explosion"
+      },
+      {
         type = "nested-result",
         action =
         {
