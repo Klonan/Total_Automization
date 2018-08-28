@@ -1,6 +1,6 @@
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-2"])
 local graphics = util.copy(data.raw["unit-spawner"]["biter-spawner"])
-local name = require("shared").deployers.bio_unit
+local name = names.deployers.bio_unit
 machine.name = name
 machine.localised_name = name
 machine.icon = graphics.icon
@@ -79,7 +79,7 @@ local recipe = {
   enabled = true,
   ingredients =
   {
-    {require("shared").items.biological_structure, 120},
+    {names.items.biological_structure, 120},
   },
   energy_required = 100,
   result = name

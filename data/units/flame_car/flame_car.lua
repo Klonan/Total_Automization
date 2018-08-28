@@ -1,4 +1,4 @@
-local name = require("shared").units.flame_car
+local name = names.units.flame_car
 
 local sprite_base = util.copy(data.raw.car.car)
 local path = util.path("data/units/flame_car/")
@@ -173,7 +173,7 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.iron_unit,
+  category = names.deployers.iron_unit,
   enabled = true,
   ingredients =
   {

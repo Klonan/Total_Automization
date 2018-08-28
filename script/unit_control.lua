@@ -1,4 +1,4 @@
-local names = require("shared").unit_tools
+local tool_names = names.unit_tools
 
 local unit_control = {}
 
@@ -113,35 +113,35 @@ local gui_actions =
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
-    player.cursor_stack.set_stack{name = names.unit_move_tool}
+    player.cursor_stack.set_stack{name = tool_names.unit_move_tool}
     player.cursor_stack.label = "Issue move command"
   end,
   patrol_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
-    player.cursor_stack.set_stack{name = names.unit_patrol_tool}
+    player.cursor_stack.set_stack{name = tool_names.unit_patrol_tool}
     player.cursor_stack.label = "Add patrol waypoint"
   end,
   attack_move_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
-    player.cursor_stack.set_stack{name = names.unit_attack_move_tool}
+    player.cursor_stack.set_stack{name = tool_names.unit_attack_move_tool}
     player.cursor_stack.label = "Issue attack move command"
   end,
   attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
-    player.cursor_stack.set_stack{name = names.unit_attack_tool}
+    player.cursor_stack.set_stack{name = tool_names.unit_attack_tool}
     player.cursor_stack.label = "Issue attack command"
   end,
   force_attack_button = function(event)
     local player = game.players[event.player_index]
     if not (player and player.valid) then return end
     player.clean_cursor()
-    player.cursor_stack.set_stack{name = names.unit_force_attack_tool}
+    player.cursor_stack.set_stack{name = tool_names.unit_force_attack_tool}
     player.cursor_stack.label = "Issue force attack command"
   end,
   stop_button = function(event)
@@ -156,7 +156,7 @@ local gui_actions =
       data.units[unit_number].command_queue = {}
       data.units[unit_number].idle = true
     end
-    game.players[event.player_index].play_sound({path = names.unit_move_sound})
+    game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
   scout_button = function(event)
     local group = get_selected_units(event.player_index)
@@ -174,7 +174,7 @@ local gui_actions =
         data.idle = false
       end
     end
-    game.players[event.player_index].play_sound({path = names.unit_move_sound})
+    game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
   selected_units_button = function(event, action)
     local unit_name = action.unit
@@ -209,11 +209,11 @@ local gui_actions =
 
 local button_map = 
 {
-  [names.unit_move_tool] = "move_button",
-  [names.unit_patrol_tool] = "patrol_button",
-  [names.unit_attack_move_tool] = "attack_move_button",
-  [names.unit_attack_tool] = "attack_button",
-  [names.unit_force_attack_tool] = "force_attack_button",
+  [tool_names.unit_move_tool] = "move_button",
+  [tool_names.unit_patrol_tool] = "patrol_button",
+  [tool_names.unit_attack_move_tool] = "attack_move_button",
+  [tool_names.unit_attack_tool] = "attack_button",
+  [tool_names.unit_force_attack_tool] = "force_attack_button",
   ["Stop"] = "stop_button",
   ["Scout"] = "scout_button"
 }
@@ -318,9 +318,9 @@ local unit_selection = function(event)
     units[unit_index].group = group
     units[unit_index].player = index
     if ent.type == "unit" then
-      units[unit_index].sticker = surface.create_entity{name = names.unit_selection_sticker, position = ent.position, force = force, target = ent}
+      units[unit_index].sticker = surface.create_entity{name = tool_names.unit_selection_sticker, position = ent.position, force = force, target = ent}
     else
-      units[unit_index].sticker = surface.create_entity{name = names.deployer_selection_sticker, position = ent.position, force = force}
+      units[unit_index].sticker = surface.create_entity{name = tool_names.deployer_selection_sticker, position = ent.position, force = force}
     end
   end
   data.selected_units[index] = group
@@ -360,7 +360,7 @@ local make_move_command = function(param)
   offset = get_offset(group)
   local surface = param.surface
   local append = param.append
-  local indicator = surface.create_entity{name = param.indicator or names.move_indicator, position = position, force = param.force}
+  local indicator = surface.create_entity{name = param.indicator or tool_names.move_indicator, position = position, force = param.force}
   local tick_to_die = game.tick + SU(300)
   data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
   table.insert(data.indicators[tick_to_die], indicator)
@@ -418,9 +418,9 @@ local move_units = function(event)
     force = player.force,
     spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = names.move_indicator
+    indicator = tool_names.move_indicator
   }
-  game.players[event.player_index].play_sound({path = names.unit_move_sound})
+  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
 local attack_move_units = function(event)
@@ -438,9 +438,9 @@ local attack_move_units = function(event)
     force = player.force,
     spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = names.attack_move_indicator
+    indicator = tool_names.attack_move_indicator
   }
-  game.players[event.player_index].play_sound({path = names.unit_move_sound})
+  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
 local find_patrol_comand = function(queue)
@@ -462,7 +462,7 @@ local make_patrol_command = function(param)
   local group = param.group
   local surface = param.surface
   local append = param.append
-  local indicator = surface.create_entity{name = param.indicator or names.move_indicator, position = position, force = param.force}
+  local indicator = surface.create_entity{name = param.indicator or tool_names.move_indicator, position = position, force = param.force}
   local tick_to_die = game.tick + 300
   data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
   table.insert(data.indicators[tick_to_die], indicator)
@@ -524,9 +524,9 @@ local patrol_units = function(event)
     force = player.force,
     spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = names.move_indicator
+    indicator = tool_names.move_indicator
   }
-  game.players[event.player_index].play_sound({path = names.unit_move_sound})
+  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
 local quick_dist = function(p1, p2)
@@ -562,7 +562,7 @@ local attack_closest = function(unit, entities)
       target = closest
     }
     --Screw this for now, maybe if stickers can apply to all entities...
-    --surface.create_entity{name = names.enemy_selection_sticker, position = closest.position, target = closest, force = force}
+    --surface.create_entity{name = tool_names.enemy_selection_sticker, position = closest.position, target = closest, force = force}
     return true
   else
     return false
@@ -604,29 +604,29 @@ local attack_units = function(event)
   end
   local append = event.name == defines.events.on_player_alt_selected_area
   make_attack_command(group, event.entities, append)
-  game.players[event.player_index].play_sound({path = names.unit_move_sound})
+  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
 local selected_area_actions = 
 {
-  [names.unit_selection_tool] = unit_selection,
-  [names.deployer_selection_tool] = unit_selection,
-  [names.unit_move_tool] = move_units,
-  [names.unit_patrol_tool] = patrol_units,
-  [names.unit_attack_move_tool] = attack_move_units,
-  [names.unit_attack_tool] = attack_units,
-  [names.unit_force_attack_tool] = attack_units,
+  [tool_names.unit_selection_tool] = unit_selection,
+  [tool_names.deployer_selection_tool] = unit_selection,
+  [tool_names.unit_move_tool] = move_units,
+  [tool_names.unit_patrol_tool] = patrol_units,
+  [tool_names.unit_attack_move_tool] = attack_move_units,
+  [tool_names.unit_attack_tool] = attack_units,
+  [tool_names.unit_force_attack_tool] = attack_units,
 }
 
 local alt_selected_area_actions = 
 {
-  [names.unit_selection_tool] = unit_selection,
-  [names.deployer_selection_tool] = unit_selection,
-  [names.unit_attack_tool] = attack_units,
-  [names.unit_force_attack_tool] = attack_units,
-  [names.unit_attack_move_tool] = attack_move_units,
-  [names.unit_move_tool] = move_units,
-  [names.unit_patrol_tool] = patrol_units,
+  [tool_names.unit_selection_tool] = unit_selection,
+  [tool_names.deployer_selection_tool] = unit_selection,
+  [tool_names.unit_attack_tool] = attack_units,
+  [tool_names.unit_force_attack_tool] = attack_units,
+  [tool_names.unit_attack_move_tool] = attack_move_units,
+  [tool_names.unit_move_tool] = move_units,
+  [tool_names.unit_patrol_tool] = patrol_units,
 }
 
 local on_player_selected_area = function(event)
@@ -812,7 +812,7 @@ local events =
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
-  [defines.events[require("shared").hotkeys.unit_move]] = gui_actions.move_button,
+  [defines.events[names.hotkeys.unit_move]] = gui_actions.move_button,
   [defines.events.on_unit_deployed] = on_unit_deployed,
   [defines.events[hotkeys.suicide]] = suicide,
   [defines.events.on_player_died] = on_player_removed,

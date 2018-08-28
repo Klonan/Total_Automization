@@ -1,4 +1,4 @@
-local name = require("shared").weapons.shotgun
+local name = names.weapons.shotgun
 local path = util.path("data/items/weapons/shotgun/")
 
 local gun = util.copy(data.raw.gun["combat-shotgun"])
@@ -24,7 +24,7 @@ gun.attack_parameters =
 
 data:extend{gun}
 
-local name = require("shared").weapons.double_barreled_shotgun
+local name = names.weapons.double_barreled_shotgun
 local path = util.path("data/items/weapons/shotgun/")
 
 local gun = util.copy(data.raw.gun["shotgun"])

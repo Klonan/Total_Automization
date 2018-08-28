@@ -1,5 +1,5 @@
 local path = util.path("data/units/tazer_bot/")
-local name = require("shared").units.tazer_bot
+local name = names.units.tazer_bot
 local base = util.copy(data.raw["combat-robot"]["distractor"])
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
@@ -170,7 +170,7 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.circuit_unit,
+  category = names.deployers.circuit_unit,
   enabled = true,
   ingredients =
   {

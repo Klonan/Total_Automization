@@ -1,4 +1,4 @@
-local name = require("shared").ammo.extended_magazine
+local name = names.ammo.extended_magazine
 local ammo = util.copy(data.raw.ammo["firearm-magazine"])
 ammo.name = name
 ammo.localised_name = name

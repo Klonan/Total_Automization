@@ -1,5 +1,5 @@
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-3"])
-local name = require("shared").deployers.iron_unit
+local name = names.deployers.iron_unit
 machine.name = name
 machine.localised_name = name
 local scale = 2

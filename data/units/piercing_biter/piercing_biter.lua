@@ -1,5 +1,5 @@
 local path = util.path("data/units/scatter_spitter")
-local name = require("shared").units.piercing_biter
+local name = names.units.piercing_biter
 
 local unit = util.copy(data.raw.unit["big-biter"])
 unit.name = name
@@ -79,11 +79,11 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.bio_unit,
+  category = names.deployers.bio_unit,
   enabled = true,
   ingredients =
   {
-    {require("shared").items.biological_structure, 60},
+    {names.items.biological_structure, 60},
     {type = "fluid", name = "crude-oil", amount = 1200}
   },
   energy_required = 50,

@@ -1,4 +1,4 @@
-local name = require("shared").ammo.incendiary_shells
+local name = names.ammo.incendiary_shells
 local ammo = util.copy(data.raw.ammo["piercing-shotgun-shell"])
 ammo.name = name
 ammo.localised_name = name

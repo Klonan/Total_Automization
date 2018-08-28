@@ -1,5 +1,5 @@
 local path = util.path("data/units/acid_worm/")
-local name = require("shared").units.acid_worm
+local name = names.units.acid_worm
 
 local base = util.copy(data.raw.turret["big-worm-turret"])
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
@@ -186,11 +186,11 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.bio_unit,
+  category = names.deployers.bio_unit,
   enabled = true,
   ingredients =
   {
-    {require("shared").items.biological_structure, 125},
+    {names.items.biological_structure, 125},
     {type = "fluid", name = "sulfuric-acid", amount = 600}
   },
   energy_required = 75,

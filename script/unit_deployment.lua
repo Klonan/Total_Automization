@@ -6,8 +6,8 @@ local data =
 
 defines.events["on_unit_deployed"] = script.generate_event_name()
 
-local names = require("shared").deployers
-local units = require("shared").units
+local names = names.deployers
+local units = names.units
 local map = {}
 for k, deployer in pairs (names) do
   map[deployer] = true

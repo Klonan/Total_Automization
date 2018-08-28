@@ -1,5 +1,5 @@
 local path = util.path("data/units/plasma_bot/")
-local name = require("shared").units.plasma_bot
+local name = names.units.plasma_bot
 
 local base = util.copy(data.raw["logistic-robot"]["logistic-robot"])
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
@@ -227,7 +227,7 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.circuit_unit,
+  category = names.deployers.circuit_unit,
   enabled = true,
   ingredients =
   {

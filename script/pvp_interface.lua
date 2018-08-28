@@ -22,7 +22,7 @@ local on_round_start = function()
   end
 end
 
-local names = require("shared")
+local names = names
 local events = {}
 local register_events = function()
   local pvp_events = remote.call("pvp", "get_events")

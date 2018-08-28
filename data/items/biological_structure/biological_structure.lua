@@ -1,4 +1,4 @@
-local name = require("shared").items.biological_structure
+local name = names.items.biological_structure
 local path = util.path("data/items/biological_structure/")
 local item =
 {

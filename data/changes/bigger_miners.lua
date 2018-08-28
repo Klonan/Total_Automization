@@ -3,7 +3,7 @@ local p_util = require("data/tf_util/prototype_util")
 
 local old_name = "electric-mining-drill"
 local big_miner = data.raw["mining-drill"][old_name]
-local big_miner_name = require("shared").entities.big_miner
+local big_miner_name = names.entities.big_miner
 big_miner.minable.result = big_miner_name
 big_miner.name = big_miner_name
 data.raw["mining-drill"][big_miner_name] = big_miner
@@ -34,7 +34,7 @@ big_miner.input_fluid_box.pipe_connections =
 big_miner.radius_visualisation_picture.scale = 1
 
 local original_name = "burner-mining-drill"
-local small_miner_name = require("shared").entities.small_miner
+local small_miner_name = names.entities.small_miner
 local small_miner = data.raw["mining-drill"][original_name]
 data.raw["mining-drill"][small_miner_name] = small_miner
 data.raw["mining-drill"][original_name] = nil

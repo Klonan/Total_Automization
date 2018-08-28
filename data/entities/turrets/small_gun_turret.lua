@@ -1,4 +1,4 @@
-local name = require("shared").entities.small_gun_turret
+local name = names.entities.small_gun_turret
 local turret = util.copy(data.raw["ammo-turret"]["gun-turret"])
 
 turret.name = name

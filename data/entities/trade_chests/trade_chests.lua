@@ -1,5 +1,5 @@
 local path = util.path("data/entities/trade_chests/")
-local buy_name = require("shared").entities.buy_chest
+local buy_name = names.entities.buy_chest
 
 local buy_chest = util.copy(data.raw["logistic-container"]["logistic-chest-buffer"])
 buy_chest.name = buy_name
@@ -54,7 +54,7 @@ buy_recipe.order = "z-a"
 
 data:extend{buy_chest, buy_item, buy_recipe}
 
-local sell_name = require("shared").entities.sell_chest
+local sell_name = names.entities.sell_chest
 
 local sell_chest = util.copy(data.raw["logistic-container"]["logistic-chest-passive-provider"])
 sell_chest.name = sell_name

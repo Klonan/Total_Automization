@@ -1,5 +1,5 @@
 local path = util.path("data/entities/turrets/tazer_turret/")
-local name = require("shared").entities.tazer_turret
+local name = names.entities.tazer_turret
 local turret = util.copy(data.raw["turret"]["small-worm-turret"])
 turret.name = name
 turret.localised_name = name

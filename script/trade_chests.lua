@@ -15,8 +15,8 @@ local update_interval = 64
 local buy_tariff = 1.1 --10% tax
 local sell_tariff = 1 / 1.1 --10% tax
 
-local buy_name = require("shared").entities.buy_chest
-local sell_name = require("shared").entities.sell_chest
+local buy_name = names.entities.buy_chest
+local sell_name = names.entities.sell_chest
 
 local buy_chest_built = function(entity)
   local unit_number = entity.unit_number

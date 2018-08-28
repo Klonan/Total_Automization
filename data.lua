@@ -9,6 +9,7 @@ SA = function(v)
   return v / (speed ^ 2)
 end
 util = require "data/tf_util/tf_util"
+names = require("shared")
 require "data/entities/entities"
 require "data/health_pickup"
 require "data/stickers/afterburn"

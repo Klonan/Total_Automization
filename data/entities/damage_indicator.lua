@@ -1,4 +1,4 @@
-local name = require("shared").entities.damage_indicator_text
+local name = names.entities.damage_indicator_text
 local damage_indicator_text =
 {
   type = "flying-text",

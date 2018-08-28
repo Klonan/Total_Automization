@@ -1,6 +1,6 @@
 local command_center = {}
 local data = {}
-local names = require("shared").entities
+local names = names.entities
 defines.events["on_command_center_killed"] = script.generate_event_name()
 
 local on_entity_died = function(event)

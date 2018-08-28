@@ -1,4 +1,4 @@
-names = require("shared").weapon_names
+names = names.weapon_names
 local require = function(string) return require("data/weapons/"..string) end
 require("grenade_launcher/grenade_launcher")
 require("stickybomb_launcher/stickybomb_launcher")

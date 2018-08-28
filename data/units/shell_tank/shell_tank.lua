@@ -1,4 +1,4 @@
-local name = require("shared").units.shell_tank
+local name = names.units.shell_tank
 
 local sprite_base = util.copy(data.raw.car.tank)
 local path = util.path("data/units/shell_tank/")
@@ -217,7 +217,7 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.iron_unit,
+  category = names.deployers.iron_unit,
   enabled = true,
   ingredients =
   {

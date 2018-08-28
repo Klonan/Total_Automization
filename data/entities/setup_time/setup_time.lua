@@ -1,5 +1,5 @@
 local path = util.path("data/entities/setup_time/")
-local name = require("shared").entities.setup_time_animation
+local name = names.entities.setup_time_animation
 local setup_animation = util.copy(data.raw["simple-entity-with-owner"]["simple-entity-with-owner"])
 setup_animation.name = name
 setup_animation.localised_name = name

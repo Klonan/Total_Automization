@@ -1,4 +1,4 @@
-local hotkeys = require("shared").hotkeys
+local hotkeys = names.hotkeys
 local change_class =
 {
   type = "custom-input",

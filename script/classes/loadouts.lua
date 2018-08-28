@@ -1,5 +1,5 @@
-local weapons = require("shared").weapons
-local ammo = require("shared").ammo
+local weapons = names.weapons
+local ammo = names.ammo
 
 local loadouts = {}
 

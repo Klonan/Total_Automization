@@ -1,5 +1,5 @@
 local debug = {}
-local names = require("shared")
+local names = names
 local get_position = function(n)
   local root = n^0.5
   local nearest_root = math.floor(root+0.5)

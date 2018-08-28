@@ -1,8 +1,8 @@
 defines.events.on_pre_player_changed_class = script.generate_event_name()
 
 local util = require("script/script_util")
-hotkeys = require("shared").hotkeys
-local names = require("shared")
+hotkeys = names.hotkeys
+local names = names
 local loadouts = require("script/classes/loadouts")
 
 classes =

@@ -1,4 +1,4 @@
-local names = require("shared").entities
+local names = names.entities
 --Don't scale the setup time here, we do it in the function body to preserve real seconds
 local setupable =
 {

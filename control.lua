@@ -7,8 +7,10 @@ SD = function(v)
 end
 
 handler = require("script/event_handler")
+names = require("shared")
+util = require("script/script_util")
 
-local hotkeys = require("shared").hotkeys
+local hotkeys = names.hotkeys
 for k, name in pairs (hotkeys) do
   local event_name = script.generate_event_name()
   defines.events[name] = event_name

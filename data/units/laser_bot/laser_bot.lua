@@ -1,5 +1,5 @@
 local path = util.path("data/units/smg_guy")
-local name = require("shared").units.laser_bot
+local name = names.units.laser_bot
 
 local base = util.copy(data.raw["combat-robot"]["destroyer"])
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
@@ -145,7 +145,7 @@ local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  category = require("shared").deployers.circuit_unit,
+  category = names.deployers.circuit_unit,
   enabled = true,
   ingredients =
   {

@@ -1,5 +1,5 @@
 --Its a roboport
-local name = require("shared").entities.command_center
+local name = names.entities.command_center
 local path = util.path("data/entities/command_center/")
 
 local command_center_picture = {

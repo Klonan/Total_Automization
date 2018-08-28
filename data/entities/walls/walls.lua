@@ -1,4 +1,4 @@
-local names = require("shared").entities
+local names = names.entities
 local stone_wall = names.stone_wall
 local stone_gate = names.stone_gate
 local concrete_wall = names.concrete_wall

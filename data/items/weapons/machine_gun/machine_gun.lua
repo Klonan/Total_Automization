@@ -1,4 +1,4 @@
-local name = require("shared").weapons.machine_gun
+local name = names.weapons.machine_gun
 local path = util.path("data/items/weapons/machine_gun/")
 local gun = util.copy(data.raw.gun["submachine-gun"])
 gun.name = name

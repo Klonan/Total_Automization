@@ -1,4 +1,4 @@
-local name = require("shared").entities.laser_turret
+local name = names.entities.laser_turret
 local turret = util.copy(data.raw["electric-turret"]["laser-turret"])
 
 util.recursive_hack_scale(turret, 1.5)

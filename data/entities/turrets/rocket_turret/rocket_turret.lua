@@ -1,7 +1,7 @@
 --Oh yea boi
 
 local path = util.path("data/entities/turrets/rocket_turret/")
-local name = require("shared").entities.rocket_turret
+local name = names.entities.rocket_turret
 
 local up_door_sprite = util.copy(data.raw.roboport.roboport).door_animation_up.hr_version
 up_door_sprite.shift = util.by_pixel(-0.25, -25.5)
