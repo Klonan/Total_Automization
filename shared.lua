@@ -35,6 +35,7 @@ data.weapons =
   submachine_gun = "Submachine Gun",
   shotgun = "Shotgun",
   double_barreled_shotgun = "Double-barreled Shotgun",
+  pistol = "Pistol",
 
 
 
@@ -46,7 +47,6 @@ data.weapons =
   plasma_launcher = "Plasma launcher",
   smg = "SMG",
   laser_rifle = "Laser Rifle",
-  pistol = "Pistol",
   revolver = "Revolver",
   tazer = "Tazer",
   flare_gun = "Flare Gun"
@@ -58,10 +58,13 @@ data.ammo =
   explosive_magazine = "Explosive Magazine",
   piercing_magazine = "Piercing Magazine",
   extended_magazine = "Extended Magazine",
+  smart_magazine = "Smart Magazine",
 
   standard_shells = "Standard Shells",
   incendiary_shells = "Incendiary Shells",
   slug_shells = "Slug Shells",
+
+  pistol_magazine = "Pistol Magazine",
 
 
 

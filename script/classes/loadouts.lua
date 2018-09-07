@@ -21,6 +21,7 @@ loadouts["Light"] =
       ammo.standard_magazine,
       ammo.explosive_magazine,
       ammo.piercing_magazine,
+      ammo.smart_magazine,
       ammo.extended_magazine
     },
     [weapons.shotgun] =
@@ -43,15 +44,15 @@ loadouts["Light"] =
     [weapons.submachine_gun] =
     {
       ammo.standard_magazine,
-      ammo.piercing_magazine
+      ammo.piercing_magazine,
     }
   },
 
   pistol_weapons =
   {
-    ["Pistol"] =
+    [weapons.pistol] =
     {
-      "firearm-magazine"
+      ammo.pistol_magazine
     }
   }
 }

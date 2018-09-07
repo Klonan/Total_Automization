@@ -499,9 +499,14 @@ local on_player_created = function(event)
   data.selected_loadouts[player.name] = default_loadout()
 end
 
+local on_player_respawned = function(event)
+  spawn_player(game.players[event.player_index])
+end
+
 local events =
 {
   [defines.events.on_player_created] = on_player_created,
+  [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_gui_click] = on_gui_interaction,
   [defines.events.on_gui_closed] = on_gui_interaction,
   [defines.events.on_gui_selection_state_changed] = on_gui_interaction,

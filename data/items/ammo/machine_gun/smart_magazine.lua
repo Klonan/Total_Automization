@@ -1,14 +1,14 @@
-local name = names.ammo.piercing_magazine
+local name = names.ammo.smart_magazine
 local ammo = util.copy(data.raw.ammo["firearm-magazine"])
 ammo.name = name
 ammo.localised_name = name
-ammo.magazine_size = 15
-ammo.stack_size = 8
-ammo.reload_time = SU(75)
+ammo.magazine_size = 20
+ammo.stack_size = 10
+ammo.reload_time = SU(60)
 ammo.ammo_type =
 {
   category = util.ammo_category("machine_gun"),
-  target_type = "direction",
+  target_type = "entity",
   action =
   {
     {
@@ -31,10 +31,8 @@ ammo.ammo_type =
       {
         type = "projectile",
         projectile = name,
-        starting_speed = SD(1.2),
-        direction_deviation = 0.01,
-        range_deviation = 0.01,
-        max_range = 45
+        starting_speed = SD(1),
+        max_range = 40
       }
     }
   }
@@ -43,8 +41,9 @@ ammo.ammo_type =
 local projectile = util.copy(data.raw.projectile["cannon-projectile"])
 projectile.name = name
 projectile.localised_name = name
+projectile.piercing_damage = 0
 projectile.force_condition = "not-same"
-projectile.piercing_damage = 30
+projectile.direction_only = false
 projectile.action =
 {
   type = "direct",
@@ -59,13 +58,12 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 15 , type = util.damage_type("machine_gun")}
+        damage = {amount = 5 , type = util.damage_type("machine_gun")}
       }
     }
   }
 }
 projectile.final_action = nil
-util.recursive_hack_something(projectile.animation, "blend_mode", "additive")
 
 data:extend{ammo, projectile}
 
