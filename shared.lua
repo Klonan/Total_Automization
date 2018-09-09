@@ -37,11 +37,11 @@ data.weapons =
   double_barreled_shotgun = "Double-barreled Shotgun",
   pistol = "Pistol",
   revolver = "Revolver",
+  sniper_rifle = "Sniper Rifle",
 
 
 
   rocket_launcher = "Rocket Launcher",
-  sniper_rifle = "Sniper Rifle",
   beam_rifle = "Beam Rifle",
   grenade_launcher = "Grenade Launcher",
   mine_layer ="Mine layer",
@@ -66,6 +66,8 @@ data.ammo =
 
   pistol_magazine = "Pistol Magazine",
   revolver_rounds = "Revolver Rounds",
+
+  sniper_rounds = "Sniper Rounds",
 
 
 

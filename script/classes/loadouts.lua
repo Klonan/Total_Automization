@@ -35,7 +35,10 @@ loadouts["Light"] =
       ammo.standard_shells,
       ammo.incendiary_shells,
       ammo.slug_shells,
-
+    },
+    [weapons.sniper_rifle] =
+    {
+      ammo.sniper_rounds
     }
   },
 

@@ -39,7 +39,6 @@ local spawn_player = function(player)
       grid.put{name = name}
     end
   end
-
   local gun_inventory = character.get_inventory(defines.inventory.player_guns)
   local ammo_inventory = character.get_inventory(defines.inventory.player_ammo)
   ammo_inventory.clear()
@@ -52,12 +51,9 @@ local spawn_player = function(player)
     local ammo_name = loadout[name.."_ammo"]
     if items[gun_name] and items[ammo_name] then
       gun_stack.set_stack{name = gun_name}
-      gun_inventory.set_filter(k, gun_name)
       ammo_stack.set_stack(ammo_name)
-      ammo_inventory.set_filter(k, ammo_name)
     end
   end
-
 
 end
 
@@ -525,8 +521,8 @@ local check_guns = function(player)
     if items[gun_name] and (not gun_stack.valid_for_read or (gun_stack.valid_for_read and gun_stack.name ~= gun_name)) then
       pcall(remove_opened, player, gun_name)
       character.remove_item{name = gun_name, count = 100}
+      --gun_inventory.set_filter(k, gun_name)
       gun_stack.set_stack{name = gun_name}
-      gun_inventory.set_filter(k, gun_name)
       changed = true
     end
   end
