@@ -161,8 +161,8 @@ end
 util.base_ammo = function(name)
   return
   {
-    name = name.." Ammo",
-    localised_name = name.." Ammo",
+    name = name,
+    localised_name = name,
     type = "ammo",
     stack_size = 1, 
     magazine_size = 1,

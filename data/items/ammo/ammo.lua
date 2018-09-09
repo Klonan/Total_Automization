@@ -11,3 +11,4 @@ require("shotgun/incendiary_shells")
 require("shotgun/slug_shells")
 
 require("pistol/pistol_magazine")
+require("pistol/revolver_rounds")

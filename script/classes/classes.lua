@@ -217,7 +217,7 @@ end
 
 local add_ammo_info = function(frame, ammo)
   local ammo_prototype = game.item_prototypes[ammo]
-  if not ammo_prototype then return end
+  if not ammo_prototype then error(ammo.." not real?") return end
   local info_flow = frame.add{type = "flow", direction = "horizontal"}
   info_flow.style.vertically_stretchable = true
   local sprite = info_flow.add{type = "sprite-button", sprite = "item/"..ammo_prototype.name, tooltip = ammo_prototype.localised_name, style = "technology_slot_button"}

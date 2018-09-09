@@ -53,6 +53,10 @@ loadouts["Light"] =
     [weapons.pistol] =
     {
       ammo.pistol_magazine
+    },
+    [weapons.revolver] =
+    {
+      ammo.revolver_rounds
     }
   }
 }

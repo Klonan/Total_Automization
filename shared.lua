@@ -36,6 +36,7 @@ data.weapons =
   shotgun = "Shotgun",
   double_barreled_shotgun = "Double-barreled Shotgun",
   pistol = "Pistol",
+  revolver = "Revolver",
 
 
 
@@ -47,7 +48,6 @@ data.weapons =
   plasma_launcher = "Plasma launcher",
   smg = "SMG",
   laser_rifle = "Laser Rifle",
-  revolver = "Revolver",
   tazer = "Tazer",
   flare_gun = "Flare Gun"
 }
@@ -65,6 +65,7 @@ data.ammo =
   slug_shells = "Slug Shells",
 
   pistol_magazine = "Pistol Magazine",
+  revolver_rounds = "Revolver Rounds",
 
 
 
