@@ -15,6 +15,7 @@ local bot =
   icon_size = 107,
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
+  enemy_map_color = {r = 1},
   max_health = 140,
   radar_range = 2,
   order="b-b-b",
