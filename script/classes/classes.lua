@@ -52,7 +52,9 @@ local spawn_player = function(player)
     local ammo_name = loadout[name.."_ammo"]
     if items[gun_name] and items[ammo_name] then
       gun_stack.set_stack{name = gun_name}
+      gun_inventory.set_filter(k, gun_name)
       ammo_stack.set_stack(ammo_name)
+      ammo_inventory.set_filter(k, ammo_name)
     end
   end
 
@@ -60,7 +62,7 @@ local spawn_player = function(player)
 end
 
 local choose_class_gui_init
-local gui_functions = 
+local gui_functions =
 {
   confirm_loadout = function(event, param)
     local element = event.element
@@ -166,12 +168,12 @@ add_trigger_info = function(gui, trigger, indent)
     local label = gui.add{type = "label", caption = {"", indent, "Damages entities in a straight line."}}
     label.style.horizontally_stretchable = true
   end
-  if trigger.repeat_count and trigger.repeat_count > 1 then    
+  if trigger.repeat_count and trigger.repeat_count > 1 then
     local label = gui.add{type = "label", caption = {"", indent, "Repeat count: ", trigger.repeat_count}}
     label.style.horizontally_stretchable = true
   end
 
-  if trigger.radius then    
+  if trigger.radius then
     local label = gui.add{type = "label", caption = {"", indent, "Effect area Radius: ", trigger.radius}}
     label.style.horizontally_stretchable = true
   end
@@ -197,7 +199,7 @@ add_trigger_info = function(gui, trigger, indent)
       local prototype = game.entity_prototypes[delivery.projectile]
       --local label = gui.add{type = "label", caption = {"", indent, "Shoots a ", prototype.name}}
       --label.style.horizontally_stretchable = true
-      
+
       local label = gui.add{type = "label", caption = {"", indent, "Projectile Starting Speed: ", math.floor(delivery.starting_speed * 100) / 100}}
       label.style.horizontally_stretchable = true
       local label = gui.add{type = "label", caption = {"", indent, "Projectile Range: ", math.floor(delivery.max_range * 100) / 100}}
@@ -318,7 +320,7 @@ choose_class_gui_init = function(player)
   primary_gun_list.style.horizontally_stretchable = true
   add_gun_info(primary_gun_frame, selected_primary)
 
-    
+
   local secondary_gun_frame = align_table.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
   secondary_gun_frame.style.vertically_stretchable = true
   local secondary_gun_list = secondary_gun_frame.add{type = "list-box"}
@@ -408,7 +410,7 @@ choose_class_gui_init = function(player)
   secondary_ammo_list.style.vertically_squashable = true
   secondary_ammo_list.style.horizontally_stretchable = true
   add_ammo_info(secondary_ammo_frame, selected_ammo)
-  
+
   local pistol_ammo_frame = align_table.add{type = "frame", caption = "Choose Pistol Ammo", direction = "vertical"}
   pistol_ammo_frame.style.vertically_stretchable = true
   pistol_ammo_frame.style.vertically_squashable = true
@@ -503,12 +505,50 @@ local on_player_respawned = function(event)
   spawn_player(game.players[event.player_index])
 end
 
+local check_guns = function(player)
+  local character = player.character
+  if not (character and character.valid) then return end
+
+  local loadout = data.current_loadouts[player.name]
+  if not loadout then return end
+  local gun_inventory = character.get_inventory(defines.inventory.player_guns)
+
+  local remove_opened = function(player, name)
+    player.opened.remove_item{name = name, count = 100}
+  end
+
+  local changed = false
+  local items = game.item_prototypes
+  for k, name in pairs ({"primary", "secondary", "pistol"}) do
+    local gun_stack = gun_inventory[k]
+    local gun_name = loadout[name.."_weapon"]
+    if items[gun_name] and (not gun_stack.valid_for_read or (gun_stack.valid_for_read and gun_stack.name ~= gun_name)) then
+      pcall(remove_opened, player, gun_name)
+      character.remove_item{name = gun_name, count = 100}
+      gun_stack.set_stack{name = gun_name}
+      gun_inventory.set_filter(k, gun_name)
+      changed = true
+    end
+  end
+
+  return changed
+end
+
+local on_player_gun_inventory_changed = function(event)
+  local player = game.players[event.player_index]
+  if not (player and player.valid) then return end
+  if check_guns(player) then
+    player.print("Guns can only be changed through loadout selection.")
+  end
+end
+
 local events =
 {
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_gui_click] = on_gui_interaction,
   [defines.events.on_gui_closed] = on_gui_interaction,
+  [defines.events.on_player_gun_inventory_changed] = on_player_gun_inventory_changed,
   [defines.events.on_gui_selection_state_changed] = on_gui_interaction,
   [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
