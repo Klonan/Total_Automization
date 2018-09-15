@@ -25,7 +25,7 @@ local next_command_type =
 local set_scout_command = function(unit, failure)
   if unit.type ~= "unit" then return end
   --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
-  unit.surface.create_entity{name = "explosion", position = unit.position}
+  --unit.surface.create_entity{name = "explosion", position = unit.position}
   local position = unit.position
   local surface = unit.surface
   local chunk_x = math.floor(position.x / 32)
