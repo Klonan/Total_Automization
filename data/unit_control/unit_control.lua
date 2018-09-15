@@ -149,7 +149,8 @@ move_indicator.force_visibility = "same"
 move_indicator.pictures = nil
 move_indicator.picture = nil
 move_indicator.selectable_in_game = false
-move_indicator.collision_box = {{0,0},{0,0}}
+move_indicator.collision_box = nil
+move_indicator.collision_mask = {}
 move_indicator.render_layer = "lower-object"
 move_indicator.animations = {
 {
@@ -169,8 +170,6 @@ local attack_move_indicator = util.copy(move_indicator)
 attack_move_indicator.name = tools.attack_move_indicator
 attack_move_indicator.localised_name = tools.attack_move_indicator
 attack_move_indicator.animations[1].filename = path.."attack_move_indicator.png"
-
-
 
 local selection_sticker = util.copy(data.raw.sticker["fire-sticker"])
 selection_sticker.name = tools.unit_selection_sticker

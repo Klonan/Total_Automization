@@ -24,7 +24,8 @@ local next_command_type =
 
 local set_scout_command = function(unit, failure)
   if unit.type ~= "unit" then return end
-  log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
+  --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
+  unit.surface.create_entity{name = "explosion", position = unit.position}
   local position = unit.position
   local surface = unit.surface
   local chunk_x = math.floor(position.x / 32)
@@ -82,7 +83,7 @@ local set_scout_command = function(unit, failure)
       tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
     end
   until tile_destination
-  unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination}
+  unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination, radius = 8}
 end
 
 local get_selected_units = function(player_index)
@@ -317,11 +318,20 @@ local unit_selection = function(event)
     }
     units[unit_index].group = group
     units[unit_index].player = index
+    units[unit_index].sticker = surface.create_entity
+    {
+      name = "highlight-box",
+      position = ent.position,
+      source = ent,
+      render_player_index = index, --Not merged
+      box_type = "entity"
+    }
+    --[[
     if ent.type == "unit" then
       units[unit_index].sticker = surface.create_entity{name = tool_names.unit_selection_sticker, position = ent.position, force = force, target = ent}
     else
       units[unit_index].sticker = surface.create_entity{name = tool_names.deployer_selection_sticker, position = ent.position, force = force}
-    end
+    end]]
   end
   data.selected_units[index] = group
   local gui = player.gui.left
@@ -371,13 +381,17 @@ local make_move_command = function(param)
   local insert = table.insert
   for x = -radius, radius, offset do
     for y = -radius, radius, offset do
+      local entity
       index, entity = next(group, index)
       if entity then
+        local destination = {position.x + x, position.y + y}
+        --log(entity.unit_number.." = "..serpent.line(destination))
         local unit = (entity.type == "unit")
         local command = {
           command_type = next_command_type.move,
           type = type, distraction = distraction,
-          destination = find(entity.name, {position.x + x, position.y + y}, 16, 4) or entity.position,
+          radius = 0.2,
+          destination = find(entity.name, destination, 16, 1) or entity.position,
         }
         local unit_data = data.units[entity.unit_number]
         if append then
@@ -561,8 +575,8 @@ local attack_closest = function(unit, entities)
       distraction = defines.distraction.none,
       target = closest
     }
-    --Screw this for now, maybe if stickers can apply to all entities...
-    --surface.create_entity{name = tool_names.enemy_selection_sticker, position = closest.position, target = closest, force = force}
+    --surface.create_entity{name = "highlight-box", position = closest.position, source = closest, box_type = "not-allowed"}
+    --Still a 'maybe'
     return true
   else
     return false
@@ -698,17 +712,16 @@ process_command_queue = function(unit_data, result)
       next_command.destination_index = next_command.destination_index + 1
     end
     local next_destination = next_command.destinations[next_command.destination_index]
-    if next_destination then
-      entity.set_command{type = defines.command.go_to_location, destination = next_destination}
-    else
+    if not next_destination then
       next_command.destination_index = 1
       next_destination = next_command.destinations[next_command.destination_index]
-      if next_destination then
-        entity.set_command{type = defines.command.go_to_location, destination = next_destination}
-      else
-        error("Something really fucked with this command here mate: "..serpent.block(unit_data))
-      end
     end
+    entity.set_command
+    {
+      type = defines.command.go_to_location,
+      destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 16, 4) or entity.position,
+      radius = 0.2
+    }
     return
   end
 
