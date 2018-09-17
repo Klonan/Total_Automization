@@ -10,8 +10,10 @@ local data =
   open_frames = {},
   units = {},
   stack_event_check = {},
-  indicators = {}
+  indicators = {},
 }
+
+local checked_tables = {}
 
 local next_command_type =
 {
@@ -548,27 +550,36 @@ local quick_dist = function(p1, p2)
 end
 
 local attack_closest = function(unit, entities)
-  local closest
-  local min = 5000000000000000000000000
+  --local min = 5000000000000000000000000
   local position = unit.position
   local entities = entities
   local force = unit.force
   local surface = unit.surface
   local visible = force.is_chunk_visible
-  local quick_dist = quick_dist
-  for k, ent in pairs (entities) do
-    if ent.valid and visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
-      local sep = quick_dist(ent.position, position)
-      if sep < min then
-        min = sep
-        closest = ent
+  --local quick_dist = quick_dist
+  if not checked_tables[entities] then
+    for k, ent in pairs (entities) do
+      if not ent.valid or not visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
+        entities[k] = nil
       end
-    else
-      entities[k] = nil
     end
+    checked_tables[entities] = true
   end
+  local closest = unit.surface.get_closest(unit.position, entities)
+  
+  --for k, ent in pairs (entities) do
+  --  if ent.valid and visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
+  --    local sep = quick_dist(ent.position, position)
+  --    if sep < min then
+  --      min = sep
+  --      closest = ent
+  --    end
+  --  else
+  --    entities[k] = nil
+  --  end
+  --end
 
-  if closest then
+  if closest and closest.valid then
     unit.set_command
     {
       type = defines.command.attack,
@@ -676,6 +687,7 @@ end
 
 local on_entity_removed = function(event)
   deregister_unit(event.entity)
+  checked_tables = {}
 end
 
 local idle_command = {type = defines.command.stop, radius = 1}
@@ -767,6 +779,7 @@ end
 
 local on_tick = function(event)
   check_indicators(event.tick)
+  checked_tables = {}
 end
 
 local on_unit_deployed = function(event)
