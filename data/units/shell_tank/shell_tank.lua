@@ -48,7 +48,7 @@ local unit =
   resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-2, -2}, {2, 2}},
+  collision_box = {{-1.5, -1.5}, {1.5, 1.5}},
   selection_box = {{-2, -2}, {2, 2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,

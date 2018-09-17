@@ -78,14 +78,28 @@ local set_scout_command = function(unit, failure)
       chunk = non_visible_chunks[index]
       table.remove(non_visible_chunks, index)
       tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
-    else
+    elseif #visible_chunks > 0 then
       index = math.random(#visible_chunks)
       chunk = visible_chunks[index]
       table.remove(visible_chunks, index)
       tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+    else
+      tile_destination = surface.find_non_colliding_position(unit.name, unit.force.get_spawn_position(unit.surface), 32, 4)
     end
   until tile_destination
-  unit.set_command{type = defines.command.go_to_location, distraction = defines.distraction.by_enemy, destination = tile_destination, radius = 8}
+  unit.set_command
+  {
+    type = defines.command.go_to_location,
+    distraction = defines.distraction.by_enemy,
+    destination = tile_destination,
+    radius = 8,
+    pathfind_flags =
+    {
+      allow_destroy_friendly_entities = true,
+      cache = true,
+      low_priority = true
+    }
+  }
 end
 
 local get_selected_units = function(player_index)
@@ -394,6 +408,11 @@ local make_move_command = function(param)
           type = type, distraction = distraction,
           radius = 0.2,
           destination = find(entity.name, destination, 16, 1) or entity.position,
+          pathfind_flags =
+          {
+            allow_destroy_friendly_entities = true,
+            cache = false
+          }
         }
         local unit_data = data.units[entity.unit_number]
         if append then

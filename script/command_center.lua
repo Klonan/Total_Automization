@@ -22,7 +22,7 @@ local on_command_center_killed = function(event)
 end
 
 local script_raised_built = function(event)
-  local entity = event.created_entity
+  local entity = event.entity
   if not (entity and entity.valid) then return end
   if not (entity.name == names.command_center) then return end
   local position = entity.position
