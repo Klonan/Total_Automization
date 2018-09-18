@@ -29,7 +29,7 @@ local bot =
   selection_box = {{-0.8, -2.2}, {0.8, 0.4}},
   sticker_box = {{-0.3, -1.5}, {0.3, 0.2}},
   distraction_cooldown = SU(15),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = true,
   only_shoot_healthy = true,
   minable = {result = name, mining_time = 2},
@@ -65,7 +65,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(0.8),
+          starting_speed = SD(0.35),
           starting_speed_deviation = SD(0.05),
           --direction_deviation = 0.1,
           range_deviation = 0.1,

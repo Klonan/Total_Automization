@@ -26,7 +26,7 @@ local unit =
   min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = SU(30),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = true,
   minable = {result = name, mining_time = 2},
   attack_parameters =

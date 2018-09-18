@@ -4,6 +4,8 @@ local is_sprite_def = function(array)
   return array.width and array.height and (array.filename or array.stripes)
 end
 
+util.is_sprite_def = is_sprite_def
+
 local recursive_hack_scale
 recursive_hack_scale = function(array, scale)
   for k, v in pairs (array) do
@@ -194,6 +196,18 @@ recursive_hack_something = function(prototype, key, value)
   prototype[key] = value
 end
 util.recursive_hack_something = recursive_hack_something
+
+local recursive_hack_blend_mode
+recursive_hack_blend_mode = function(prototype, value)
+  for k, v in pairs (prototype) do
+    if type(v) == "table" then
+      if util.is_sprite_def(v) then
+        v.blend_mode = value
+      end
+      recursive_hack_blend_mode(v, value)
+    end
+  end
+end
 
 util.copy = util.table.deepcopy
 

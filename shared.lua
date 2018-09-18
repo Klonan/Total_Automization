@@ -38,10 +38,10 @@ data.weapons =
   pistol = "Pistol",
   revolver = "Revolver",
   sniper_rifle = "Sniper Rifle",
-
-
-
   rocket_launcher = "Rocket Launcher",
+
+
+
   beam_rifle = "Beam Rifle",
   grenade_launcher = "Grenade Launcher",
   mine_layer ="Mine layer",
@@ -68,7 +68,8 @@ data.ammo =
   revolver_rounds = "Revolver Rounds",
 
   sniper_rounds = "Sniper Rounds",
-
+  rocket = "Rocket",
+  cluster_rocket = "Cluster Rocket",
 
 
 

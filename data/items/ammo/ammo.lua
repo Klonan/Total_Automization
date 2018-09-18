@@ -15,3 +15,6 @@ require("pistol/revolver_rounds")
 
 
 require("sniper_rifle/sniper_rounds")
+
+require("rocket_launcher/rocket")
+require("rocket_launcher/cluster_rocket")

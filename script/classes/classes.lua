@@ -50,7 +50,11 @@ local spawn_player = function(player)
     local gun_name = loadout[name.."_weapon"]
     local ammo_name = loadout[name.."_ammo"]
     if items[gun_name] and items[ammo_name] then
+      gun_inventory.set_filter(k, nil)
+      gun_inventory.set_filter(k, gun_name)
       gun_stack.set_stack{name = gun_name}
+      ammo_inventory.set_filter(k, nil)
+      ammo_inventory.set_filter(k, ammo_name)
       ammo_stack.set_stack(ammo_name)
     end
   end
@@ -521,7 +525,8 @@ local check_guns = function(player)
     if items[gun_name] and (not gun_stack.valid_for_read or (gun_stack.valid_for_read and gun_stack.name ~= gun_name)) then
       pcall(remove_opened, player, gun_name)
       character.remove_item{name = gun_name, count = 100}
-      --gun_inventory.set_filter(k, gun_name)
+      gun_inventory.set_filter(k, nil)
+      gun_inventory.set_filter(k, gun_name)
       gun_stack.set_stack{name = gun_name}
       changed = true
     end
@@ -548,8 +553,6 @@ local events =
   [defines.events.on_gui_selection_state_changed] = on_gui_interaction,
   [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
-
---error(serpent.block(events))
 
 classes.set_class = set_class
 

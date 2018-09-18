@@ -1,34 +1,13 @@
-local path = util.path("data/weapons/rocket_launcher/")
-local gun = util.base_gun(names.rocket_launcher)
-gun.icon = path.."rocket_launcher.png"
-gun.icon_size = 512
-gun.stack_size = 1
-gun.attack_parameters =
-{
-  type = "projectile",
-  ammo_category = util.ammo_category("soldier-rocket"),
-  movement_slow_down_factor = 0.3,
-  cooldown = SU(48),
-  projectile_creation_distance = 0.6,
-  range = 45,
-  projectile_center = {-0.17, 0},
-  sound =
-  {
-    {
-      filename = path.."rocket_launcher_shoot.ogg"
-    }
-  }
-}
-
-local ammo = util.base_ammo(names.rocket_launcher)
+local name = names.ammo.rocket
+local ammo = util.copy(data.raw.ammo["rocket"])
+ammo.name = name
+ammo.localised_name = name
 ammo.magazine_size = 4
 ammo.stack_size = 20 / 4
-ammo.reload_time = SU(200 - 48)
-ammo.icon = path.."rocket_launcher_ammo.png"
-ammo.icon_size = 1106
+ammo.reload_time = SU(150)
 ammo.ammo_type =
 {
-  category = util.ammo_category("soldier-rocket"),
+  category = util.ammo_category("rocket_launcher"),
   target_type = "position",
   clamp_position = true,
   action =
@@ -37,8 +16,9 @@ ammo.ammo_type =
     action_delivery =
     {
       type = "projectile",
-      projectile = names.rocket_launcher.." Projectile",
-      starting_speed = SD(0.35),
+      projectile = name,
+      starting_speed = SD(0.1),
+      max_range = 45,
       source_effects =
       {
         type = "create-entity",
@@ -49,10 +29,12 @@ ammo.ammo_type =
 }
 
 local projectile = util.copy(data.raw.projectile.rocket)
-projectile.name = names.rocket_launcher.." Projectile"
-projectile.acceleration = SD(0)
+projectile.name = name
+projectile.acceleration = SA(0.01)
 projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
 projectile.force_condition = "not-same"
+projectile.direction_only = true
+projectile.max_speed = 0.2 --Not merged
 projectile.action =
 {
   type = "direct",
@@ -64,10 +46,6 @@ projectile.action =
       {
         type = "create-entity",
         entity_name = "big-explosion"
-      },
-      {
-        type = "damage",
-        damage = {amount = 45, type = util.damage_type("solider-rocket-hit")}
       },
       {
         type = "nested-result",
@@ -83,7 +61,7 @@ projectile.action =
             {
               {
                 type = "damage",
-                damage = {amount = 45, type = util.damage_type("soldier-rocket-explosion")}
+                damage = {amount = 45, type = util.damage_type("rocket")}
               },
               {
                 type = "create-entity",
@@ -97,4 +75,4 @@ projectile.action =
   }
 }
 
-data:extend{gun, ammo, projectile}
+data:extend{ammo, projectile}

@@ -30,7 +30,7 @@ local bot =
   selection_box = {{-1.0, -1.0}, {1.0, 1.0}},
   sticker_box = {{-0.3, -0.3}, {0.3, 0.3}},
   distraction_cooldown = SU(15),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = true,
   minable = {result = name, mining_time = 2},
   attack_parameters =

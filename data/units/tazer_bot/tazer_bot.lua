@@ -26,7 +26,7 @@ local bot =
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = SU(15),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = true,
   minable = {result = name, mining_time = 2},
   attack_parameters =

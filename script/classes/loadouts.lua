@@ -24,6 +24,11 @@ loadouts["Light"] =
       ammo.smart_magazine,
       ammo.extended_magazine
     },
+    [weapons.rocket_launcher] =
+    {
+      ammo.rocket,
+      ammo.cluster_rocket
+    },
     [weapons.shotgun] =
     {
       ammo.standard_shells,
