@@ -24,7 +24,8 @@ local next_command_type =
   attack = 5,
 }
 
-local set_scout_command = function(unit, failure)
+local set_scout_command = function(unit_data, failure)
+  local unit = unit_data.entity
   if unit.type ~= "unit" then return end
   --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
   --unit.surface.create_entity{name = "explosion", position = unit.position}
@@ -100,6 +101,7 @@ local set_scout_command = function(unit, failure)
       low_priority = true
     }
   }
+  unit_data.destination = tile_destination
 end
 
 local get_selected_units = function(player_index)
@@ -115,14 +117,116 @@ local get_selected_units = function(player_index)
 end
 
 local make_unit_gui
-local deselect_unit = function(param)
-  if not param then return end
-  local sticker = param.sticker
-  if (sticker and sticker.valid) then
-    sticker.destroy()
+
+local clear_indicators = function(unit_data)
+  if not unit_data.indicators then return end
+  for k, indicator in pairs (unit_data.indicators) do
+    if indicator and indicator.valid then
+      indicator.destroy()
   end
-  param.sticker = nil
 end
+  unit_data.indicators = nil
+end
+
+local deselect_units = function(unit_data)
+  clear_indicators(unit_data)
+  unit_data.player = nil
+end
+
+
+local shift_box = function(box, shift)
+  local x = shift[1] or shift.x
+  local y = shift[2] or shift.y
+  local new =
+  {
+    left_top = {},
+    right_bottom = {}
+  }
+  new.left_top.x = box.left_top.x + x
+  new.left_top.y = box.left_top.y + y
+  new.right_bottom.x = box.right_bottom.x + x
+  new.right_bottom.y = box.right_bottom.y + y
+  return new
+end
+
+local add_unit_indicators = function(unit_data)
+  clear_indicators(unit_data)
+  local player
+  if unit_data.player then
+    player = game.players[unit_data.player]
+  end
+  if not (player and player.valid) then return end
+  local indicators = {}
+  local unit = unit_data.entity
+  local surface = unit.surface
+  local render_index = player.index
+  table.insert(indicators,
+  surface.create_entity
+  {
+    name = "highlight-box", box_type = "entity",
+    target = unit, render_player_index = render_index,
+    position = unit.position,
+    blink_interval = 0
+  })
+
+  local box = unit.prototype.collision_box
+
+  if unit_data.destination then
+    table.insert(indicators,
+    surface.create_entity
+    {
+      name = "highlight-box", box_type = "copy",
+      render_player_index = render_index,
+      position = unit_data.destination,
+      bounding_box = shift_box(box, unit_data.destination),
+      blink_interval = 0
+    })  
+  end
+
+  if unit_data.target and unit_data.target.valid then
+    table.insert(indicators,
+    surface.create_entity
+    {
+      name = "highlight-box", box_type = "not-allowed",
+      render_player_index = render_index,
+      target = unit_data.target,
+      position = unit_data.target.position,
+      blink_interval = 20
+    })  
+  end
+  
+  for k, command in pairs (unit_data.command_queue) do
+    if command.command_type == next_command_type.move then    
+      table.insert(indicators,
+      surface.create_entity
+      {
+        name = "highlight-box", box_type = "copy",
+        render_player_index = render_index,
+        position = unit.position,
+        bounding_box = shift_box(box, command.destination),
+        blink_interval = 0
+      })  
+    end
+    if command.command_type == next_command_type.patrol then
+      for k, destination in pairs (command.destinations) do
+        if k ~= 1 or command.destination_index ~= "initial" then
+          table.insert(indicators,
+          surface.create_entity
+          {
+            name = "highlight-box", box_type = "electricity",
+            render_player_index = render_index,
+            position = unit.position,
+            bounding_box = shift_box(box, destination),
+            blink_interval = 0
+          })
+        end
+      end
+    end
+  end
+
+  unit_data.indicators = indicators
+end
+
 
 local gui_actions =
 {
@@ -170,8 +274,12 @@ local gui_actions =
       if unit.type == "unit" then
         unit.set_command{type = defines.command.wander, radius = 0.1}
       end
-      data.units[unit_number].command_queue = {}
-      data.units[unit_number].idle = true
+      local unit_data = data.units[unit_number]
+      unit_data.command_queue = {}
+      unit_data.idle = true
+      unit_data.destination = nil
+      unit_data.target = nil
+      add_unit_indicators(unit_data)
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
@@ -186,9 +294,10 @@ local gui_actions =
       if append and not data.idle then
         table.insert(data.command_queue, {command_type = next_command_type.scout})
       else
-        set_scout_command(unit)
+        set_scout_command(data)
         data.command_queue = {{command_type = next_command_type.scout}}
         data.idle = false
+        add_unit_indicators(data)
       end
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
@@ -202,7 +311,7 @@ local gui_actions =
     if event.control or right then
       for unit_number, entity in pairs (group) do
         if entity.name == unit_name then
-          deselect_unit(units[unit_number])
+          deselect_units(units[unit_number])
           group[unit_number] = nil
           if right then break end
         end
@@ -210,7 +319,7 @@ local gui_actions =
     else
       for unit_number, entity in pairs (group) do
         if entity.name ~= unit_name then
-          deselect_unit(units[unit_number])
+          deselect_units(units[unit_number])
           group[unit_number] = nil
         end
       end
@@ -274,11 +383,7 @@ deregister_unit = function(entity)
   if not unit then return end
   data.units[unit_number] = nil
 
-  local sticker = unit.sticker
-  if sticker and sticker.valid then
-    sticker.destroy()
-  end
-  unit.sticker = nil
+  clear_indicators(unit)
 
   local group = unit.group
   if group then
@@ -317,7 +422,7 @@ local unit_selection = function(event)
   local group = get_selected_units(index)
   if not append then
     for unit_number, ent in pairs (group) do
-      deselect_unit(units[unit_number])
+      deselect_units(units[unit_number])
     end
     group = {}
   end
@@ -334,20 +439,7 @@ local unit_selection = function(event)
     }
     units[unit_index].group = group
     units[unit_index].player = index
-    units[unit_index].sticker = surface.create_entity
-    {
-      name = "highlight-box",
-      position = ent.position,
-      source = ent,
-      render_player_index = index, --Not merged
-      box_type = "entity"
-    }
-    --[[
-    if ent.type == "unit" then
-      units[unit_index].sticker = surface.create_entity{name = tool_names.unit_selection_sticker, position = ent.position, force = force, target = ent}
-    else
-      units[unit_index].sticker = surface.create_entity{name = tool_names.deployer_selection_sticker, position = ent.position, force = force}
-    end]]
+    add_unit_indicators(units[unit_index])
   end
   data.selected_units[index] = group
   local gui = player.gui.left
@@ -373,41 +465,38 @@ local get_offset = function(entities)
   local rad = util.radius
   local max = math.max
   for name, prototype in pairs (map) do
-    small = max(small, rad(prototype.selection_box) * 2)
+    small = max(small, rad(prototype.collision_box) * 2)
   end
-  return small
+  return small, math.ceil((small * (table_size(entities) -1) ^ 0.5))
 end
 
 local make_move_command = function(param)
   local position = param.position
   local distraction = param.distraction or defines.distraction.by_enemy
-  local offset = param.spacing or 1
   local group = param.group
-  offset = get_offset(group)
-  local surface = param.surface
+  local player = param.player
+  local surface = player.surface
+  local force = player.force
   local append = param.append
-  local indicator = surface.create_entity{name = param.indicator or tool_names.move_indicator, position = position, force = param.force}
-  local tick_to_die = game.tick + SU(300)
-  data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
-  table.insert(data.indicators[tick_to_die], indicator)
   local type = defines.command.go_to_location
-  local radius = math.ceil((offset * table_size(group) ^ 0.5)/2)
   local find = surface.find_non_colliding_position
   local index
+  local offset, radius = get_offset(group)
   local insert = table.insert
-  for x = -radius, radius, offset do
-    for y = -radius, radius, offset do
+  for x = -radius / 2, radius / 2, offset do
+    for y = -radius / 2, radius / 2, offset do
       local entity
       index, entity = next(group, index)
       if entity then
         local destination = {position.x + x, position.y + y}
         --log(entity.unit_number.." = "..serpent.line(destination))
         local unit = (entity.type == "unit")
+        local destination = find(entity.name, destination, 16, 1) or entity.position
         local command = {
           command_type = next_command_type.move,
           type = type, distraction = distraction,
           radius = 0.2,
-          destination = find(entity.name, destination, 16, 1) or entity.position,
+          destination = destination,
           pathfind_flags =
           {
             allow_destroy_friendly_entities = true,
@@ -418,17 +507,21 @@ local make_move_command = function(param)
         if append then
           if unit_data.idle and unit then
             entity.set_command(command)
+            unit_data.destination = destination
           end
           insert(unit_data.command_queue, command)
         else
+          unit_data.command_queue = {command}
           if unit then
             entity.set_command(command)
             unit_data.command_queue = {}
+            unit_data.destination = destination
           else
             unit_data.command_queue = {command}
           end
         end
         unit_data.idle = false
+        add_unit_indicators(unit_data)
       else
         return
       end
@@ -449,13 +542,10 @@ local move_units = function(event)
     position = util.center(event.area),
     distraction = defines.distraction.none,
     group = group,
-    surface = player.surface,
-    force = player.force,
-    spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = tool_names.move_indicator
+    player = player
   }
-  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+  player.play_sound({path = tool_names.unit_move_sound})
 end
 
 local attack_move_units = function(event)
@@ -469,13 +559,10 @@ local attack_move_units = function(event)
     position = util.center(event.area),
     distraction = defines.distraction.by_enemy,
     group = group,
-    surface = player.surface,
-    force = player.force,
-    spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = tool_names.attack_move_indicator
+    player = player
   }
-  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+  player.play_sound({path = tool_names.unit_move_sound})
 end
 
 local find_patrol_comand = function(queue)
@@ -493,21 +580,18 @@ local process_command_queue
 local make_patrol_command = function(param)
   local position = param.position
   local distraction = param.distraction or defines.distraction.by_enemy
-  local offset = param.spacing or 1
   local group = param.group
-  local surface = param.surface
+  local player = param.player
+  local surface = player.surface
+  local force = player.force
   local append = param.append
-  local indicator = surface.create_entity{name = param.indicator or tool_names.move_indicator, position = position, force = param.force}
-  local tick_to_die = game.tick + 300
-  data.indicators[tick_to_die] = data.indicators[tick_to_die] or {}
-  table.insert(data.indicators[tick_to_die], indicator)
   local type = defines.command.go_to_location
-  local radius = math.ceil((offset * table_size(group) ^ 0.5)/2)
   local find = surface.find_non_colliding_position
   local index
+  local offset, radius = get_offset(group)
   local insert = table.insert
-  for x = -radius, radius, offset do
-    for y = -radius, radius, offset do
+  for x = -radius / 2, radius / 2, offset do
+    for y = -radius / 2, radius / 2, offset do
       index, entity = next(group, index)
       if entity then
         local unit = (entity.type == "unit")
@@ -537,6 +621,7 @@ local make_patrol_command = function(param)
             process_command_queue(unit_data)
           end
         end
+        add_unit_indicators(unit_data)
       else
         return
       end
@@ -555,21 +640,19 @@ local patrol_units = function(event)
     position = util.center(event.area),
     distraction = defines.distraction.by_enemy,
     group = group,
-    surface = player.surface,
-    force = player.force,
-    spacing = 1.5,
     append = event.name == defines.events.on_player_alt_selected_area,
-    indicator = tool_names.move_indicator
+    player = player
   }
-  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+  player.play_sound({path = tool_names.unit_move_sound})
 end
 
 local quick_dist = function(p1, p2)
   return (((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) * (p1.y - p2.y)))
 end
 
-local attack_closest = function(unit, entities)
+local attack_closest = function(unit_data, entities)
   --local min = 5000000000000000000000000
+  local unit = unit_data.entity
   local position = unit.position
   local entities = entities
   local force = unit.force
@@ -607,6 +690,7 @@ local attack_closest = function(unit, entities)
     }
     --surface.create_entity{name = "highlight-box", position = closest.position, source = closest, box_type = "not-allowed"}
     --Still a 'maybe'
+    unit_data.target = closest
     return true
   else
     return false
@@ -627,15 +711,16 @@ local make_attack_command = function(group, entities, append)
     local unit_data = data[unit_number]
     if append then
       if unit_data.idle and commandable then
-        attack_closest(unit, entities)
+        attack_closest(unit_data, entities)
       end
       table.insert(unit_data.command_queue, next_command)
     else
       if commandable then
-        attack_closest(unit, entities)
+        attack_closest(unit_data, entities)
       end
       unit_data.command_queue = {next_command}
     end
+    add_unit_indicators(unit_data)
     unit_data.idle = false
   end
 end
@@ -719,6 +804,8 @@ process_command_queue = function(unit_data, result)
   end
   local command_queue = unit_data.command_queue
   local next_command = command_queue[1]
+  unit_data.destination = nil
+  unit_data.target = nil
 
   if not (next_command) then
     entity.set_command(idle_command)
@@ -731,6 +818,7 @@ process_command_queue = function(unit_data, result)
 
   if type == next_command_type.move then
     entity.set_command(next_command)
+    unit_data.destination = next_command.destination
     table.remove(command_queue, 1)
     return
   end
@@ -758,7 +846,7 @@ process_command_queue = function(unit_data, result)
 
   if type == next_command_type.attack then
     --game.print"Issuing attack command"
-    if not attack_closest(entity, next_command.targets) then
+    if not attack_closest(unit_data, next_command.targets) then
       table.remove(command_queue, 1)
       process_command_queue(unit_data)
       --game.print"No targets found, removing attack command"
@@ -769,11 +857,12 @@ process_command_queue = function(unit_data, result)
   if type == next_command_type.idle then
     entity.set_command(idle_command)
     unit_data.idle = true
+    unit_data.destination = nil
     return
   end
 
   if type == next_command_type.scout then
-    set_scout_command(entity, result == defines.behavior_result.fail)
+    set_scout_command(unit_data, result == defines.behavior_result.fail)
     return
   end
 
@@ -783,6 +872,7 @@ local on_ai_command_completed = function(event)
   local unit = data.units[event.unit_number]
   if unit then
     process_command_queue(unit, event.result)
+    add_unit_indicators(unit)
   end
 end
 
@@ -815,6 +905,16 @@ local on_unit_deployed = function(event)
     command_queue = util.copy(queue),
     idle = true
   }
+  for k, command in pairs (data.units[unit.unit_number].command_queue) do
+    if command.command_type == next_command_type.move then
+      command.destination = {x = command.destination.x + math.random(-6, 6), y = command.destination.y + math.random(-6, 6)}
+    end
+    if command.command_type == next_command_type.patrol then
+      for k, destination in pairs (command.destinations) do
+        destination = {x = destination.x + math.random(-6, 6), y = destination.y + math.random(-6, 6)}
+      end
+    end
+  end
   process_command_queue(data.units[unit.unit_number])
 end
 
@@ -857,7 +957,7 @@ local events =
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
-  [defines.events[names.hotkeys.unit_move]] = gui_actions.move_button,
+  --[defines.events[names.hotkeys.unit_move]] = gui_actions.move_button,
   [defines.events.on_unit_deployed] = on_unit_deployed,
   [defines.events[hotkeys.suicide]] = suicide,
   [defines.events.on_player_died] = on_player_removed,

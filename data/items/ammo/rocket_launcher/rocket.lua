@@ -34,7 +34,7 @@ projectile.acceleration = SA(0.01)
 projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
 projectile.force_condition = "not-same"
 projectile.direction_only = true
-projectile.max_speed = 0.2 --Not merged
+projectile.max_speed = 0.4
 projectile.action =
 {
   type = "direct",
