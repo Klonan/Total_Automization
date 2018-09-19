@@ -93,7 +93,7 @@ local set_scout_command = function(unit_data, failure)
     type = defines.command.go_to_location,
     distraction = defines.distraction.by_enemy,
     destination = tile_destination,
-    radius = 8,
+    radius = 1,
     pathfind_flags =
     {
       allow_destroy_friendly_entities = true,
@@ -465,7 +465,7 @@ local get_offset = function(entities)
   local rad = util.radius
   local max = math.max
   for name, prototype in pairs (map) do
-    small = max(small, rad(prototype.collision_box) * 2)
+    small = max(small, rad(prototype.selection_box) * 2)
   end
   return small, math.ceil((small * (table_size(entities) -1) ^ 0.5))
 end

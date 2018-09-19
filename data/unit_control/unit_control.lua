@@ -141,36 +141,6 @@ local unit_force_attack_tool =
   alt_selection_color = {r = 1},
 }
 
-local move_indicator = util.copy(data.raw["simple-entity-with-owner"]["simple-entity-with-owner"])
-move_indicator.flags = {"placeable-off-grid"}
-move_indicator.name = tools.move_indicator
-move_indicator.localised_name = tools.move_indicator
-move_indicator.force_visibility = "same"
-move_indicator.pictures = nil
-move_indicator.picture = nil
-move_indicator.selectable_in_game = false
-move_indicator.collision_box = nil
-move_indicator.collision_mask = {}
-move_indicator.render_layer = "lower-object"
-move_indicator.animations = {
-{
-  width = 624,
-  height = 440,
-  line_length = 3,
-  frame_count = 12,
-  axially_symmetrical = false,
-  direction_count = 1,
-  priority = "high",
-  animation_speed = SD(0.25),
-  scale = 0.5,
-  filename = path.."move_indicator.png",
-}}
-
-local attack_move_indicator = util.copy(move_indicator)
-attack_move_indicator.name = tools.attack_move_indicator
-attack_move_indicator.localised_name = tools.attack_move_indicator
-attack_move_indicator.animations[1].filename = path.."attack_move_indicator.png"
-
 data:extend{
   unit_selection_tool,
   deployer_selection_tool,
@@ -179,8 +149,6 @@ data:extend{
   unit_patrol_tool,
   unit_attack_move_tool,
   unit_force_attack_tool,
-  unit_attack_tool,
-  move_indicator,
-  attack_move_indicator
+  unit_attack_tool
 }
 
