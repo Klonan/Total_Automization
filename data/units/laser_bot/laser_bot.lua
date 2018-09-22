@@ -53,8 +53,8 @@ local bot =
   {
     type = "beam",
     ammo_category = "electric",
-    cooldown = SU(1),
-    --cooldown_deviation = 0.15,
+    cooldown = SU(100),
+    cooldown_deviation = 0.15,
     range = 32,
     min_attack_distance = 28,
     --projectile_center = {-0.09375, -0.2},
@@ -73,7 +73,7 @@ local bot =
           type = "beam",
           beam = name.." Beam",
           max_length = 40,
-          duration = SU(1),
+          duration = SU(40),
           --source_offset = {0.15, -0.5},
         }
       }
@@ -112,7 +112,7 @@ local bot =
 
 local beam = util.copy(data.raw.beam["laser-beam"])
 beam.name = name.." Beam"
-beam.damage_interval = SU(1)
+beam.damage_interval = SU(20)
 beam.action =
 {
   type = "direct",
@@ -123,7 +123,7 @@ beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 0.3, type = "electric"}
+        damage = { amount = 12.5, type = util.damage_type("laser_bot")}
       }
     }
   }

@@ -6,3 +6,5 @@ remove(data.raw["assembling-machine"]["centrifuge"])
 remove(data.raw.resource["uranium-ore"])
 data.raw.resource["uranium-ore"] = nil
 --data.raw["autoplace-control"]["uranium-ore"] = nil
+
+--util.prototype.remove_recipe(data.raw.recipe["uranium-processing"])

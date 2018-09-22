@@ -17,7 +17,7 @@ ammo.ammo_type =
     {
       type = "projectile",
       projectile = name,
-      starting_speed = SD(0.1),
+      starting_speed = SD(0.2),
       max_range = 45,
       source_effects =
       {
@@ -34,7 +34,7 @@ projectile.acceleration = SA(0.01)
 projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
 projectile.force_condition = "not-same"
 projectile.direction_only = true
-projectile.max_speed = 0.4
+projectile.max_speed = SD(0.5)
 projectile.action =
 {
   type = "direct",
@@ -52,7 +52,7 @@ projectile.action =
         action =
         {
           type = "area",
-          radius = 3,
+          radius = 1.5,
           force = "not-same",
           action_delivery =
           {
@@ -61,7 +61,27 @@ projectile.action =
             {
               {
                 type = "damage",
-                damage = {amount = 45, type = util.damage_type("rocket")}
+                damage = {amount = 25, type = util.damage_type("rocket")}
+              },
+            }
+          }
+        }
+      },
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 4,
+          force = "not-same",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "damage",
+                damage = {amount = 10, type = util.damage_type("rocket")}
               },
               {
                 type = "create-entity",
@@ -70,6 +90,10 @@ projectile.action =
             }
           }
         }
+      },
+      {
+        type = "damage",
+        damage = {amount = 30, type = util.damage_type("rocket")}
       }
     }
   }

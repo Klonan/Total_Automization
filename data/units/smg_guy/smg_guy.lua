@@ -120,10 +120,9 @@ local bot =
   run_animation = base.animations[1].running
 }
 
-local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+local projectile = util.copy(data.raw.projectile["cannon-projectile"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
-projectile.animation.blend_mode = "additive"
 projectile.action =
 {
   type = "direct",

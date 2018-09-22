@@ -13,13 +13,13 @@ ammo.ammo_type =
   action =
   {
     type = "direct",
-    repeat_count = 6,
+    repeat_count = 10,
     action_delivery =
     {
       type = "projectile",
       projectile = name,
-      starting_speed = SD(0.1),
-      starting_speed_deviation = 0.1,
+      starting_speed = SD(0.2),
+      starting_speed_deviation = 0.25,
       direction_deviation = 0.3,
       range_deviation = 0.3,
       max_range = 45,
@@ -35,6 +35,7 @@ ammo.ammo_type =
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name
 projectile.acceleration = SA(0.01)
+projectile.max_speed = SD(0.5)
 projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
 projectile.force_condition = "not-same"
 projectile.direction_only = true
@@ -47,12 +48,15 @@ projectile.action =
     target_effects =
     {
       {
+        type = "create-entity",
+        entity_name = "big-explosion"
+      },
+      {
         type = "nested-result",
         action =
         {
           type = "area",
-          radius = 1.5,
-          collision_mode = "distance-from-center",
+          radius = 2,
           force = "not-same",
           action_delivery =
           {
@@ -70,9 +74,14 @@ projectile.action =
             }
           }
         }
+      },
+      {
+        type = "damage",
+        damage = {amount = 15, type = util.damage_type("rocket")}
       }
     }
   }
 }
+util.recursive_hack_scale(projectile, 2/3)
 
 data:extend{ammo, projectile}

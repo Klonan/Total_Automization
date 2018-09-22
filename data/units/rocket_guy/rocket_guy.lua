@@ -65,7 +65,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(0.35),
+          starting_speed = SD(0.1),
           starting_speed_deviation = SD(0.05),
           --direction_deviation = 0.1,
           range_deviation = 0.1,
@@ -122,7 +122,8 @@ util.recursive_hack_scale(bot, 1.5)
 
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
-projectile.acceleration = SD(0)
+projectile.acceleration = SD(0.01)
+projectile.max_speed = 0.5
 projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
 projectile.force_condition = "not-same"
 projectile.direction_only = true
