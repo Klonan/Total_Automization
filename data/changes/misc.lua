@@ -24,3 +24,7 @@ for k, type in pairs (data.raw) do
     entity.next_upgrade = nil
   end
 end
+
+for k, spawner in pairs (data.raw["unit-spawner"]) do
+  table.insert(spawner.flags or {}, "placeable-off-grid")
+end

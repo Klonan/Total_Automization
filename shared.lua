@@ -175,7 +175,13 @@ data.deployers =
 
 data.items =
 {
-  biological_structure = "Biological Structure"
+  biological_structure = "Biological Structure",
+  ammo_pack = "Ammo pack"
+}
+
+data.sounds =
+{
+  ammo_pack_sound = "Ammo Pack Sound"
 }
 
 return data
