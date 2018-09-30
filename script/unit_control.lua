@@ -4,12 +4,11 @@ local unit_control = {}
 
 local data =
 {
-  button_action_index = {},
+  button_actions = {},
   groups = {},
   selected_units = {},
   open_frames = {},
   units = {},
-  stack_event_check = {},
   indicators = {},
 }
 
@@ -348,7 +347,7 @@ make_unit_gui = function(frame)
   local index = frame.player_index
   local group = get_selected_units(index)
   if not group then return end
-  util.deregister_gui(frame, data.button_action_index)
+  util.deregister_gui(frame, data.button_actions)
   if table_size(group) == 0 then
     frame.destroy()
     return
@@ -363,12 +362,12 @@ make_unit_gui = function(frame)
   for name, count in pairs (map) do
     local ent = pro[name]
     local unit_button = tab.add{type = "sprite-button", sprite = "entity/"..name, tooltip = ent.localised_name, number = count, style = "slot_button"}
-    data.button_action_index[unit_button.index] = {name = "selected_units_button", unit = name}
+    util.register_gui(data.button_actions, unit_button, {type = "selected_units_button", unit = name})
   end
   local butts = frame.add{type = "table", column_count = 1}
   for name, action in pairs (button_map) do
     local button = butts.add{type = "button", caption = name}
-    data.button_action_index[button.index] = {name = action}
+    util.register_gui(data.button_actions, button, {type = action})
     button.style.font = "default"
     button.style.horizontally_stretchable = true
   end
@@ -445,7 +444,7 @@ local unit_selection = function(event)
   local gui = player.gui.left
   local old_frame = data.open_frames[player.index]
   if (old_frame and old_frame.valid) then
-    util.deregister_gui(old_frame, data.button_action_index)
+    util.deregister_gui(old_frame, data.button_actions)
     old_frame.destroy()
   end
   local frame = gui.add{type = "frame", caption = "Unit control", direction = "vertical"}
@@ -775,19 +774,13 @@ local on_gui_closed = function(event)
   if not (gui and gui.valid) then return end
   local frame = data.open_frames[event.player_index]
   if frame then
-    util.deregister_gui(frame, data.button_action_index)
+    util.deregister_gui(frame, data.button_actions)
     frame.destroy()
     data.open_frames[event.player_index] = nil
   end
 end
 
-local on_gui_click = function(event)
-  local gui = event.element
-  if not (gui and gui.valid) then return end
-  local action = data.button_action_index[gui.index]
-  if not action then return end
-  return gui_actions[action.name](event, action)
-end
+local on_gui_click = util.gui_action_handler(data.button_actions, gui_actions)
 
 local on_entity_removed = function(event)
   deregister_unit(event.entity)
@@ -938,7 +931,7 @@ end
 local on_player_removed = function(event)
   local frame = data.open_frames[event.player_index]
   if frame then
-    util.deregister_gui(frame, data.button_action_index)
+    util.deregister_gui(frame, data.button_actions)
     frame.destroy()
     data.open_frames[event.player_index] = nil
   end

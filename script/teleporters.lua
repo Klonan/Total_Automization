@@ -19,12 +19,43 @@ end
 
 local close_frame = function(frame)
   if not (frame and frame.valid) then return end
-  data.frames[frame.index] = nil
+  util.deregister_gui(frame, data.frames)
   util.deregister_gui(frame, data.button_actions)
   frame.destroy()
 end
 
-local gui_click_actions =
+local open_frame = function(frame)
+  local player_frames = data.frames[frame.player_index]
+  if not player_frames then
+    data.frames[frame.player_index] = {}
+    player_frames = data.frames[frame.player_index]
+  end
+  player_frames[frame.index] = frame
+  return frame
+end
+
+local open_teleporter_frame = function(frame, param)
+  local player_frames = data.teleporter_frames[frame.player_index]
+  if not player_frames then
+    data.teleporter_frames[frame.player_index] = {}
+    player_frames = data.teleporter_frames[frame.player_index]
+  end
+  player_frames[frame.index] = param
+end
+
+local get_frame = function(frame)
+  local player_frames = data.frames[frame.player_index]
+  if not player_frames then return end
+  return player_frames[frame.index]
+end
+
+local get_teleporter_frame = function(frame)
+  local player_frames = data.teleporter_frames[frame.player_index]
+  if not player_frames then return end
+  return player_frames[frame.index]
+end
+
+local gui_actions =
 {
   cancel_button = function(event, param)
     close_frame(param.frame)
@@ -89,7 +120,7 @@ local make_teleporter_gui = function(param)
     if teleporter.teleporter ~= source then
       local button = table.add{type = "button", caption = name}
       button.style.horizontally_stretchable = true
-      data.button_actions[button.index] = {name = "teleport_button", param = teleporter, frame = frame, source = param.source}
+      util.register_gui(data.button_actions, button, {type = "teleport_button", param = teleporter, frame = frame, source = param.source})
     end
   end
 end
@@ -106,6 +137,7 @@ local close_teleporter_frame = function(param)
   if (source and source.valid) then
     source.active = true
   end
+  util.deregister_gui(frame, data.teleporter_frames)
   util.deregister_gui(frame, data.button_actions)
   frame.destroy()
   return
@@ -114,9 +146,8 @@ end
 local deregister_teleporter_frame = function(gui)
   for k, child in pairs (gui.children) do
     if child.valid then
-      local param = data.teleporter_frames[child.index]
+      local param = get_teleporter_frame(child)
       if param then
-        data.teleporter_frames[child.index] = nil
         close_teleporter_frame(param)
       end
     end
@@ -143,17 +174,16 @@ local on_built_entity = function(event)
   util.deregister_gui(gui, data.frames)
   util.deregister_gui(gui, data.button_actions)
   gui.clear()
-  local frame = gui.add{type = "frame", caption = "Name teleporter", direction = "horizontal"}
+  local frame = open_frame(gui.add{type = "frame", caption = "Name teleporter", direction = "horizontal"})
   player.opened = frame
-  data.frames[frame.index] = frame
 
   local textfield = frame.add{type = "textfield", text = caption}
   textfield.style.horizontally_stretchable = true
   local confirm = frame.add{type = "sprite-button", sprite = "utility/confirm_slot", style = "slot_button"}
-  data.button_actions[confirm.index] = {name = "confirm_rename_button", frame = frame, textfield = textfield, flying_text = text}
+  util.register_gui(data.button_actions, confirm, {type = "confirm_rename_button", frame = frame, textfield = textfield, flying_text = text})
 
   local cancel = frame.add{type = "sprite-button", sprite = "utility/set_bar_slot", style = "slot_button"}
-  data.button_actions[cancel.index] = {name = "cancel_button", frame = frame}
+  util.register_gui(data.button_actions, cancel, {type = "cancel_button", frame = frame})
 
   for k, param in pairs (data.teleporter_frames) do
     make_teleporter_gui(param)
@@ -201,7 +231,7 @@ local teleporter_triggered = function(entity)
   frame.style.maximal_width = player.display_resolution.width * 0.9
   player.opened = frame
   local gui_param = {frame = frame, source = new_teleporter, force = force}
-  data.teleporter_frames[frame.index] = gui_param
+  open_teleporter_frame(frame, gui_param)
   make_teleporter_gui(gui_param)
 end
 
@@ -224,23 +254,15 @@ local on_robot_mined_entity = function(event)
   on_teleporter_removed(event.entity)
 end
 
-local on_gui_click = function(event)
-  local element = event.element
-  if not (element and element.valid) then return end
-  local action = data.button_actions[element.index]
-  if not action then return end
-  gui_click_actions[action.name](event, action)
-end
+local on_gui_click = util.gui_action_handler(data.button_actions, gui_actions)
 
 local on_gui_closed = function(event)
   local element = event.element
   if not (element and element.valid) then return end
 
-  local frame = data.frames[element.index]
+  local frame = get_frame(element)
   if frame and frame.valid then 
-    util.deregister_gui(frame, data.button_actions)
-    data.frames[element.index] = nil
-    frame.destroy()
+    close_frame(frame)
     return
   end
 
@@ -260,14 +282,12 @@ local on_player_removed = function(event)
   --So, fuck knows anyway to check this is a proper gui element, just pcall some shit
   if not pcall(function() local check = frame.index end) then return end
   
-  if data.frames[frame.index] then 
-    util.deregister_gui(frame, data.button_actions)
-    data.frames[element.index] = nil
-    frame.destroy()
+  if get_frame(frame) then 
+    close_frame(frame)
     return
   end
 
-  local param = data.teleporter_frames[frame.index]
+  local param = get_teleporter_frame(element)
   if param then
     close_teleporter_frame(param)
     return

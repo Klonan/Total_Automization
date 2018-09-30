@@ -268,7 +268,7 @@ choose_class_gui_init = function(player)
   loadout_frame.style.horizontally_stretchable = true
   local loadout_listbox = loadout_frame.add{type = "list-box"}
   loadout_listbox.style.horizontally_stretchable = true
-  data.elements[loadout_listbox.index] = {name = "change_selected_class"}
+  util.register_gui(data.elements, loadout_listbox, {type = "change_selected_class"})
   local items = game.item_prototypes
 
   local selected_loadout = data.selected_loadouts[player.name]
@@ -302,7 +302,7 @@ choose_class_gui_init = function(player)
   local primary_gun_frame = align_table.add{type = "frame", caption = "Choose your Primary weapon", direction = "vertical"}
   primary_gun_frame.style.vertically_stretchable = true
   local primary_gun_list = primary_gun_frame.add{type = "list-box"}
-  data.elements[primary_gun_list.index] = {name = "change_selected_primary_weapon"}
+  util.register_gui(data.elements, primary_gun_list, {type = "change_selected_primary_weapon"})
   local count = 1
   local index = 1
   local selected_primary = util.first_key(selected_specification.primary_weapons)
@@ -324,7 +324,7 @@ choose_class_gui_init = function(player)
   local secondary_gun_frame = align_table.add{type = "frame", caption = "Choose your secondary weapon", direction = "vertical"}
   secondary_gun_frame.style.vertically_stretchable = true
   local secondary_gun_list = secondary_gun_frame.add{type = "list-box"}
-  data.elements[secondary_gun_list.index] = {name = "change_selected_secondary_weapon"}
+  util.register_gui(data.elements, secondary_gun_list, {type = "change_selected_secondary_weapon"})
   local count = 1
   local index = 1
   local selected_secondary = util.first_key(selected_specification.secondary_weapons)
@@ -345,7 +345,7 @@ choose_class_gui_init = function(player)
   local pistol_gun_frame = align_table.add{type = "frame", caption = "Choose your pistol weapon", direction = "vertical"}
   pistol_gun_frame.style.vertically_stretchable = true
   local pistol_gun_list = pistol_gun_frame.add{type = "list-box"}
-  data.elements[pistol_gun_list.index] = {name = "change_selected_pistol_weapon"}
+  util.register_gui(data.elements, pistol_gun_list, {type = "change_selected_pistol_weapon"})
   local count = 1
   local index = 1
   local selected_pistol = util.first_key(selected_specification.pistol_weapons)
@@ -370,7 +370,7 @@ choose_class_gui_init = function(player)
   primary_ammo_frame.style.vertically_stretchable = true
   primary_ammo_frame.style.vertically_squashable = true
   local primary_ammo_list = primary_ammo_frame.add{type = "list-box"}
-  data.elements[primary_ammo_list.index] = {name = "change_selected_primary_ammo"}
+  util.register_gui(data.elements, primary_ammo_list, {type = "change_selected_primary_ammo"})
   primary_ammo_list.style.horizontally_stretchable = true
   local index = 1
   local selected_ammo = util.first_value(selected_specification.primary_weapons[selected_primary])
@@ -393,7 +393,7 @@ choose_class_gui_init = function(player)
   secondary_ammo_frame.style.vertically_stretchable = true
   secondary_ammo_frame.style.vertically_squashable = true
   local secondary_ammo_list = secondary_ammo_frame.add{type = "list-box"}
-  data.elements[secondary_ammo_list.index] = {name = "change_selected_secondary_ammo"}
+  util.register_gui(data.elements, secondary_ammo_list, {type = "change_selected_secondary_ammo"})
   secondary_ammo_list.style.horizontally_stretchable = true
   local index = 1
   local selected_ammo = util.first_value(selected_specification.secondary_weapons[selected_secondary])
@@ -415,7 +415,7 @@ choose_class_gui_init = function(player)
   pistol_ammo_frame.style.vertically_stretchable = true
   pistol_ammo_frame.style.vertically_squashable = true
   local pistol_ammo_list = pistol_ammo_frame.add{type = "list-box"}
-  data.elements[pistol_ammo_list.index] = {name = "change_selected_pistol_ammo"}
+  util.register_gui(data.elements, pistol_ammo_list, {type = "change_selected_pistol_ammo"})
   pistol_ammo_list.style.horizontally_stretchable = true
   local index = 1
   local selected_ammo = util.first_value(selected_specification.pistol_weapons[selected_pistol])
@@ -439,15 +439,15 @@ choose_class_gui_init = function(player)
 
   if player.character then
     player.opened = frame
-    data.elements[frame.index] = {name = "close_gui", gui = frame}
+    util.register_gui(data.elements, frame, {type = "close_gui", gui = frame})
     local back_button = final_button_flow.add{type = "button", style = "back_button", caption = "Cancel"}
-    data.elements[back_button.index] = {name = "close_gui", gui = frame}
+    util.register_gui(data.elements, back_button, {type = "close_gui", gui = frame})
   end
 
   local push = final_button_flow.add{type = "flow"}
   push.style.horizontally_stretchable = true
   local go_button = final_button_flow.add{type = "button", style = "confirm_button", caption = "Confirm loadout selection"}
-  data.elements[go_button.index] = {name = "confirm_loadout", gui = frame}
+  util.register_gui(data.elements, go_button, {type = "confirm_loadout", gui = frame})
 
 end
 
@@ -465,15 +465,7 @@ local change_class_hotkey_pressed = function(event)
   choose_class_gui_init(player)
 end
 
-local on_gui_interaction = function(event)
-  local element = event.element
-  if not (element and element.valid) then return end
-
-  local action = data.elements[element.index]
-  if action then
-    gui_functions[action.name](event, action)
-  end
-end
+local on_gui_interaction = util.gui_action_handler(data.elements, gui_functions)
 
 local default_loadout = function()
   local loadout_name, loadout = next(loadouts)

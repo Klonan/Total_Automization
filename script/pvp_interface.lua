@@ -40,17 +40,14 @@ end
 
 local on_init = function()
   register_events()
-  local config = remote.call("pvp", "get_config")
-  config.prototypes.turret = names.entities.small_gun_turret
-  config.prototypes.wall = names.entities.stone_wall
-  config.prototypes.gate = names.entities.stone_gate
-  config.prototypes.silo = names.entities.command_center
-  config.prototypes.artillery = names.entities.tesla_turret
-  config.prototypes.chest = "logistic-chest-storage"
-  config.silo_offset = {0,0}
-  config.inventory_list.medium[names.entities.small_miner] = 50
-  config.inventory_list.medium[names.entities.big_miner] = 25
-  remote.call("pvp", "set_config", config)
+  local prototypes = remote.call("pvp", "get_config").prototypes
+  prototypes.turret = names.entities.small_gun_turret
+  prototypes.wall = names.entities.stone_wall
+  prototypes.gate = names.entities.stone_gate
+  prototypes.silo = names.entities.command_center
+  prototypes.artillery = names.entities.tesla_turret
+  prototypes.chest = "logistic-chest-storage"
+  remote.call("pvp", "set_config_prototypes", prototypes)
 end
 
 local on_load = function()

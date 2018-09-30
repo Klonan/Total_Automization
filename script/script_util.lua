@@ -1,13 +1,44 @@
 local util = require("util")
 
-local deregister_gui
-deregister_gui = function(gui_element, data)
+local deregister_gui_internal
+deregister_gui_internal = function(gui_element, data)
   data[gui_element.index] = nil
   for k, child in pairs (gui_element.children) do
-    deregister_gui(child, data)
+    deregister_gui_internal(child, data)
   end
 end
-util.deregister_gui = deregister_gui
+
+util.deregister_gui = function(gui_element, data)
+  local player_data = data[gui_element.player_index]
+  if not player_data then return end
+  deregister_gui_internal(gui_element, player_data)
+end
+
+util.register_gui = function(data, gui_element, param)
+  local player_data = data[gui_element.player_index]
+  if not player_data then
+    data[gui_element.player_index] = {}
+    player_data = data[gui_element.player_index]
+  end
+  player_data[gui_element.index] = param
+end
+
+util.gui_action_handler = function(data, functions)
+  if not data then error("Gui action handler data is nil") end
+  if not functions then error("Gui action handler functions is nil") end
+  return 
+  function(event)
+    local element = event.element
+    if not (element and element.valid) then return end
+    local player_data = data[event.player_index]
+    if not player_data then return end
+    local action = player_data[element.index]
+    if action then
+      functions[action.type](event, action)
+      return true
+    end
+  end
+end
 
 util.center = function(area)
   return {x = (area.left_top.x + area.right_bottom.x) / 2, y = (area.left_top.y + area.right_bottom.y) / 2}
