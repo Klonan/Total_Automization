@@ -3221,23 +3221,7 @@ function update_timers()
   end
 end
 
-local pvp = {}
-
-pvp.on_init = function()
-  script_data.config = config.get_config()
-  global.pvp = script_data
-  balance.script_data = script_data
-  config.script_data = script_data
-  balance.init()
-  local surface = game.create_surface("Lobby",{width = 1, height = 1})
-  surface.set_tiles({{name = "out-of-map",position = {1,1}}})
-  for k, force in pairs (game.forces) do
-    force.disable_all_prototypes()
-    force.disable_research()
-  end
-end
-
-pvp.on_rocket_launched = function(event)
+local on_rocket_launched = function(event)
   production_score.on_rocket_launched(event)
 
   if not script_data.config.victory.space_race then return end
@@ -3256,7 +3240,7 @@ pvp.on_rocket_launched = function(event)
   end
 end
 
-pvp.on_entity_died = function(event)
+local on_entity_died = function(event)
   if not script_data.config.victory.last_silo_standing then return end
   local silo = event.entity
   if not (silo and silo.valid and silo.name == (script_data.config.prototypes.silo or "") ) then
@@ -3292,7 +3276,7 @@ pvp.on_entity_died = function(event)
   end
 end
 
-pvp.on_player_joined_game = function(event)
+local on_player_joined_game = function(event)
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
   init_player_gui(player)
@@ -3311,23 +3295,23 @@ pvp.on_player_joined_game = function(event)
   player.teleport({0, 1000}, game.surfaces.Lobby)
 end
 
-pvp.on_gui_selection_state_changed = function(event)
+local on_gui_selection_state_changed = function(event)
   local gui = event.element
   local player = game.players[event.player_index]
   if generic_gui_event(event) then return end
 end
 
-pvp.on_gui_text_changed = function(event)
+local on_gui_text_changed = function(event)
   if generic_gui_event(event) then return end
 end
 
-pvp.on_gui_checked_state_changed = function(event)
+local on_gui_checked_state_changed = function(event)
   if generic_gui_event(event) then return end
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
 end
 
-pvp.on_player_left_game = function(event)
+local on_player_left_game = function(event)
   for k, player in pairs (game.players) do
     local gui = player.gui.center
     if gui.pick_join_frame then
@@ -3345,11 +3329,11 @@ pvp.on_player_left_game = function(event)
   end
 end
 
-pvp.on_gui_elem_changed = function(event)
+local on_gui_elem_changed = function(event)
   if generic_gui_event(event) then return end
 end
 
-pvp.on_gui_click = function(event)
+local on_gui_click = function(event)
   local gui = event.element
   local player = game.players[event.player_index]
 
@@ -3366,41 +3350,17 @@ pvp.on_gui_click = function(event)
   admin_frame_button_press(event)
 end
 
-pvp.on_gui_closed = function(event)
+local on_gui_closed = function(event)
 end
 
-pvp.on_tick = function(event)
+local on_tick = function(event)
   if script_data.setup_finished == false then
     check_starting_area_chunks_are_generated()
     finish_setup()
   end
 end
 
-pvp.on_nth_tick = {
-  [60] = function(event)
-    if script_data.setup_finished == true then
-      check_no_rush()
-      check_update_production_score()
-      check_update_oil_harvest_score()
-      check_update_space_race_score()
-      check_restart_round()
-      check_base_exclusion()
-      check_defcon()
-      update_timers()
-    end
-  end,
-  [300] = function(event)
-    if script_data.setup_finished == true then
-      check_player_color()
-      check_spectator_chart()
-    end
-  end
-}
-
-pvp.on_chunk_generated = function(event)
-end
-
-pvp.on_player_respawned = function(event)
+local on_player_respawned = function(event)
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
   if script_data.setup_finished == true then
@@ -3414,33 +3374,29 @@ pvp.on_player_respawned = function(event)
   end
 end
 
-pvp.on_configuration_changed = function(event)
-  recursive_data_check(config.get_config(), script_data.config)
-end
-
-pvp.on_player_display_resolution_changed = function(event)
+local on_player_display_resolution_changed = function(event)
   local player = game.players[event.player_index]
   init_player_gui(player)
 end
 
-pvp.on_research_finished = function(event)
+local on_research_finished = function(event)
   check_technology_for_disabled_items(event)
 end
 
-pvp.on_player_cursor_stack_changed = function(event)
+local on_player_cursor_stack_changed = function(event)
   check_cursor_for_disabled_items(event)
 end
 
-pvp.on_built_entity = function(event)
+local on_built_entity = function(event)
   check_on_built_protection(event)
   check_neutral_chests(event)
 end
 
-pvp.on_robot_built_entity = function(event)
+local on_robot_built_entity = function(event)
   check_neutral_chests(event)
 end
 
-pvp.on_research_started = function(event)
+local on_research_started = function(event)
   if script_data.config.team_config.defcon_mode then
     local tech = script_data.next_defcon_tech
     if tech and tech.valid and event.research.name ~= tech.name then
@@ -3449,20 +3405,23 @@ pvp.on_research_started = function(event)
   end
 end
 
-pvp.on_player_promoted = function(event)
+local on_player_promoted = function(event)
   local player = game.players[event.player_index]
   init_player_gui(player)
 end
 
-pvp.on_forces_merged = function (event)
+local on_forces_merged = function (event)
   create_exclusion_map()
 end
 
-pvp.on_player_changed_position = function(event)
+local on_player_changed_position = function(event)
   local player = game.players[event.player_index]
   check_player_base_exclusion(player)
   check_player_no_rush(player)
 end
+
+
+local pvp = {}
 
 pvp.add_remote_interface = function()
   remote.add_interface("pvp",
@@ -3488,37 +3447,76 @@ pvp.add_remote_interface = function()
   })
 end
 
+pvp.on_nth_tick = {
+  [60] = function(event)
+    if script_data.setup_finished == true then
+      check_no_rush()
+      check_update_production_score()
+      check_update_oil_harvest_score()
+      check_update_space_race_score()
+      check_restart_round()
+      check_base_exclusion()
+      check_defcon()
+      update_timers()
+    end
+  end,
+  [300] = function(event)
+    if script_data.setup_finished == true then
+      check_player_color()
+      check_spectator_chart()
+    end
+  end
+}
+
+pvp.on_init = function()
+  script_data.config = config.get_config()
+  global.pvp = script_data
+  balance.script_data = script_data
+  config.script_data = script_data
+  balance.init()
+  local surface = game.create_surface("Lobby",{width = 1, height = 1})
+  surface.set_tiles({{name = "out-of-map",position = {1,1}}})
+  for k, force in pairs (game.forces) do
+    force.disable_all_prototypes()
+    force.disable_research()
+  end
+end
+
 pvp.on_load = function()
   script_data = global.pvp or script_data
   balance.script_data = script_data
   config.script_data = script_data
 end
 
+pvp.on_configuration_changed = function(event)
+  recursive_data_check(config.get_config(), script_data.config)
+end
+
+
 local script_events =
 {
-  [defines.events.on_built_entity] = pvp.on_built_entity,
-  [defines.events.on_chunk_generated] = pvp.on_chunk_generated,
-  [defines.events.on_entity_died] = pvp.on_entity_died,
-  [defines.events.on_forces_merged] = pvp.on_forces_merged,
-  [defines.events.on_gui_checked_state_changed] = pvp.on_gui_checked_state_changed,
-  [defines.events.on_gui_click] = pvp.on_gui_click,
-  [defines.events.on_gui_closed] = pvp.on_gui_closed,
-  [defines.events.on_gui_elem_changed] = pvp.on_gui_elem_changed,
-  [defines.events.on_gui_selection_state_changed] = pvp.on_gui_selection_state_changed,
-  [defines.events.on_player_changed_position] = pvp.on_player_changed_position,
-  [defines.events.on_player_cursor_stack_changed] = pvp.on_player_cursor_stack_changed,
-  [defines.events.on_player_display_resolution_changed] = pvp.on_player_display_resolution_changed,
-  [defines.events.on_player_joined_game] = pvp.on_player_joined_game,
-  [defines.events.on_player_left_game] = pvp.on_player_left_game,
-  [defines.events.on_player_promoted] = pvp.on_player_promoted,
-  [defines.events.on_player_respawned] = pvp.on_player_respawned,
-  [defines.events.on_research_finished] = pvp.on_research_finished,
-  [defines.events.on_research_started] = pvp.on_research_started,
-  [defines.events.on_robot_built_entity] = pvp.on_robot_built_entity,
-  [defines.events.on_rocket_launched] = pvp.on_rocket_launched,
-  [defines.events.on_tick] = pvp.on_tick,
-  [defines.events.on_gui_text_changed] = pvp.on_gui_text_changed,
-
+  [defines.events.on_built_entity] = on_built_entity,
+  [defines.events.on_chunk_generated] = on_chunk_generated,
+  [defines.events.on_entity_died] = on_entity_died,
+  [defines.events.on_forces_merged] = on_forces_merged,
+  [defines.events.on_gui_checked_state_changed] = on_gui_checked_state_changed,
+  [defines.events.on_gui_click] = on_gui_click,
+  [defines.events.on_gui_closed] = on_gui_closed,
+  [defines.events.on_gui_elem_changed] = on_gui_elem_changed,
+  [defines.events.on_gui_selection_state_changed] = on_gui_selection_state_changed,
+  [defines.events.on_player_changed_position] = on_player_changed_position,
+  [defines.events.on_player_cursor_stack_changed] = on_player_cursor_stack_changed,
+  [defines.events.on_player_display_resolution_changed] = on_player_display_resolution_changed,
+  [defines.events.on_player_joined_game] = on_player_joined_game,
+  [defines.events.on_player_left_game] = on_player_left_game,
+  [defines.events.on_player_promoted] = on_player_promoted,
+  [defines.events.on_player_respawned] = on_player_respawned,
+  [defines.events.on_research_finished] = on_research_finished,
+  [defines.events.on_research_started] = on_research_started,
+  [defines.events.on_robot_built_entity] = on_robot_built_entity,
+  [defines.events.on_rocket_launched] = on_rocket_launched,
+  [defines.events.on_tick] = on_tick,
+  [defines.events.on_gui_text_changed] = on_gui_text_changed,
 }
 
 pvp.on_event = function(event)
