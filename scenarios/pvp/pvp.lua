@@ -343,6 +343,24 @@ local is_text_valid = function(text)
   return true
 end
 
+local check_all_ready = function()
+  local all_ready = true
+  for k, player in pairs (game.players) do
+    if player.connected then
+      if not script_data.ready_players[k] then
+        all_ready = false
+        break
+      end
+    end
+  end
+  if all_ready then
+    start_all_ready_preparations()
+  elseif script_data.ready_start_tick then
+    script_data.ready_start_tick = nil
+    game.print({"ready-cancelled"})
+  end
+end
+
 local gui_functions =
 {
   new_team = function(event, param)
@@ -485,21 +503,12 @@ local gui_functions =
     if checkbox.state then
       script_data.ready_players[event.player_index] = true
       game.print({"player-is-ready", player.name})
-      local all_ready = true
-      for k, player in pairs (game.players) do
-        if player.connected then
-          if not script_data.ready_players[k] then
-            all_ready = false
-            break
-          end
-        end
-      end
-      start_all_ready_preparations()
     else
       script_data.ready_players[event.player_index] = nil
       game.print({"player-is-not-ready", player.name})
     end
     refresh_config()
+    check_all_ready()
   end,
   toggle_balance_options = function(event, param)
     toggle_balance_options_gui(game.players[event.player_index])
@@ -788,7 +797,9 @@ local gui_functions =
 }
 
 function start_all_ready_preparations()
-  game.print("Well, I suppose if everyone if ready we will start something...")
+  local seconds = 2
+  game.print({"everybody-ready", seconds})
+  script_data.ready_start_tick = game.tick + (seconds * 60)
 end
 
 function add_new_config_gui(config_data, flow, admin)
@@ -977,7 +988,7 @@ function end_round(admin)
       create_config_gui(player)
     end
   end
-  if script_data.surface ~= nil then
+  if script_data.surface and script_data.surface.valid then
     game.delete_surface(script_data.surface)
   end
   if admin then
@@ -1340,7 +1351,7 @@ function destroy_config_for_all()
     end
     script_data.elements[name] = {}
   end
-
+  script_data.ready_players = {}
 end
 
 function set_evolution_factor()
@@ -2858,11 +2869,21 @@ function set_button_style(button)
   button.style.bottom_padding = 0
 end
 
-function check_restart_round()
-  if not script_data.team_won then return end
+local should_start = function()
+  if script_data.ready_start_tick and script_data.ready_start_tick <= game.tick then
+    script_data.ready_start_tick = nil
+    return true
+  end
+
+  if not script_data.team_won then return false end
   local time = script_data.config.game_config.auto_new_round_time
-  if not (time > 0) then return end
-  if game.tick < (script_data.config.game_config.auto_new_round_time * 60 * 60) + script_data.team_won then return end
+  if not (time > 0) then return false end
+  if game.tick < (script_data.config.game_config.auto_new_round_time * 60 * 60) + script_data.team_won then return false end
+  return true
+end
+
+function check_restart_round()
+  if not should_start() then return end
   end_round()
   destroy_config_for_all()
   prepare_next_round()
@@ -3457,11 +3478,11 @@ pvp.on_nth_tick = {
       check_update_production_score()
       check_update_oil_harvest_score()
       check_update_space_race_score()
-      check_restart_round()
       check_base_exclusion()
       check_defcon()
       update_timers()
     end
+    check_restart_round()
   end,
   [300] = function(event)
     if script_data.setup_finished == true then
