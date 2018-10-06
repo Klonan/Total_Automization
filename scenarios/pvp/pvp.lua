@@ -260,7 +260,7 @@ function add_team_to_new_flow(team, flow, current_team, admin)
     register_gui_action(textfield_confirm, {type = "confirm_rename", textfield = textfield, team = team, dropdown = color_drop})
   end
   local team_number = frame.add{type = "flow", direction = "horizontal"}
-  team_number.add{type = "label", caption = {"", {"team"}, {"colon"}}}
+  team_number.add{type = "label", caption = {"", {"team"}, {"colon"}}, style = "description_label"}
   if admin then
     local button = team_number.add{type = "button", caption = team.team, style = "small_slot_button"}
     register_gui_action(button, {type = "team_button_press", team = team})
@@ -268,37 +268,30 @@ function add_team_to_new_flow(team, flow, current_team, admin)
     team_number.add{type = "label", caption = team.team}
   end
   local ready = ""
-  local not_ready = ""
   local first_ready = true
-  local first_not_ready = true
   local ready_data = script_data.ready_players
+  local red = function(str)
+    return "[color=1,0.2,0.2]"..str.."[/color]"
+  end
+  local green = function(str)
+    return "[color=0.2,1,0.2]"..str.."[/color]"
+  end
   for k, member in pairs (team.members or {}) do
-    if ready_data[k] then
-      if first_ready then
-        first_ready = false
-      else
-        ready = ready.. ", "
-      end
-      ready = ready .. member.name
+    if first_ready then
+      first_ready = false
     else
-      if first_not_ready then
-        first_not_ready = false
-      else
-        not_ready = not_ready.. ", "
-      end
-      not_ready = not_ready .. member.name
+      ready = ready..", "
+    end
+    if ready_data[k] then
+      ready = ready .. green(member.name)
+    else
+      ready = ready .. red(member.name)
     end
   end
   if first_ready then
     ready = {"none"}
   end
-  if first_not_ready then
-    not_ready = {"none"}
-  end
-  local label = frame.add{type = "label", caption = {"ready-members", ready}}
-  label.style.single_line = false
-  label.style.maximal_width = 400
-  local label = frame.add{type = "label", caption = {"not-ready-members", not_ready}}
+  local label = frame.add{type = "label", caption = {"members", ready}, style = "description_label"}
   label.style.single_line = false
   label.style.maximal_width = 400
   if not current_team or current_team ~= team then
@@ -834,7 +827,7 @@ function add_new_config_gui(config_data, flow, admin)
         end
         menu.selected_index = index or 1
       else
-        other_flow.add{type = "label", caption = {(items[value.selected] and items[value.selected].localised_name) or {value.selected}}}
+        other_flow.add{type = "label", caption = (items[value.selected] and items[value.selected].localised_name) or {value.selected}}
       end
     end
   end
@@ -1121,7 +1114,7 @@ function add_player_list_gui(force, gui)
   end
 end
 
-function set_player(player, team)
+function set_player(player, team, mute)
   local force = game.forces[team.name]
   local surface = script_data.surface
   if not surface.valid then return end
@@ -1158,7 +1151,9 @@ function set_player(player, team)
 
   balance.apply_character_modifiers(player)
   check_force_protection(force)
-  game.print({"joined", player.name, player.force.name})
+  if not mute then
+    game.print({"joined", player.name, player.force.name})
+  end
 end
 
 function choose_joining_gui(player)
@@ -2096,7 +2091,7 @@ function final_setup_step()
     player.teleport({0, 1000}, "Lobby")
     local team = script_data.team_players[player.index]
     if team then
-      set_player(player, team)
+      set_player(player, team, true)
     else
       choose_joining_gui(player)
     end
@@ -3410,6 +3405,11 @@ local on_player_promoted = function(event)
   init_player_gui(player)
 end
 
+local on_player_demoted = function(event)
+  local player = game.players[event.player_index]
+  init_player_gui(player)
+end
+
 local on_forces_merged = function (event)
   create_exclusion_map()
 end
@@ -3419,7 +3419,6 @@ local on_player_changed_position = function(event)
   check_player_base_exclusion(player)
   check_player_no_rush(player)
 end
-
 
 local pvp = {}
 
@@ -3510,6 +3509,7 @@ local script_events =
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_player_left_game] = on_player_left_game,
   [defines.events.on_player_promoted] = on_player_promoted,
+  [defines.events.on_player_demoted] = on_player_demoted,
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_research_finished] = on_research_finished,
   [defines.events.on_research_started] = on_research_started,
