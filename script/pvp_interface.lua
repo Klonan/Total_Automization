@@ -40,14 +40,15 @@ end
 
 local on_init = function()
   register_events()
-  local prototypes = remote.call("pvp", "get_config").prototypes
+  local config = remote.call("pvp", "get_config")
+  local prototypes = config.prototypes
   prototypes.turret = names.entities.small_gun_turret
   prototypes.wall = names.entities.stone_wall
   prototypes.gate = names.entities.stone_gate
   prototypes.silo = names.entities.command_center
   prototypes.artillery = names.entities.tesla_turret
   prototypes.chest = "logistic-chest-storage"
-  remote.call("pvp", "set_config_prototypes", prototypes)
+  remote.call("pvp", "set_config", config)
 end
 
 local on_load = function()
