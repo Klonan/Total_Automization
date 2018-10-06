@@ -888,10 +888,14 @@ function create_config_gui(player)
   local gui = player.gui.center
   local flow = gui.add{type = "flow", direction = "horizontal", visible = visible}
   script_data.elements.config[player.index] = flow
-  flow.style.width = player.display_resolution.width * 0.9
-  flow.style.height = player.display_resolution.height * 0.9
+  flow.style.vertical_align = "top"
+  flow.style.minimal_width = player.display_resolution.width * 0.8
+  flow.style.minimal_height = player.display_resolution.height * 0.8
+  flow.style.maximal_width = player.display_resolution.width
+  flow.style.maximal_height = player.display_resolution.height
   local upper_frame = flow.add{type = "frame", caption = "PvP configuration", direction = "vertical"}
-  upper_frame.style.height = player.display_resolution.height * 0.7
+  upper_frame.style.vertically_stretchable = false
+  upper_frame.style.maximal_height = player.display_resolution.height
   local holding_table = upper_frame.add{type = "flow", direction = "horizontal"}
   local team_lobby = holding_table.add{type = "frame", caption = "Teams", direction = "vertical", style = "inside_deep_frame"}
   if admin then

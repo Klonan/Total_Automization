@@ -11,7 +11,7 @@ local on_round_start = function()
     force.worker_robots_speed_modifier = 3
     force.character_logistic_slot_count = 18
     force.character_trash_slot_count = 12
-    force.quickbar_count = 3
+    force.quickbar_count = 2
     force.ghost_time_to_live = 999999999
     force.character_build_distance_bonus = 2
     force.character_item_drop_distance_bonus = 2
@@ -48,6 +48,7 @@ local on_init = function()
   prototypes.silo = names.entities.command_center
   prototypes.artillery = names.entities.tesla_turret
   prototypes.chest = "logistic-chest-storage"
+  config.silo_offset = {0, 0}
   remote.call("pvp", "set_config", config)
 end
 
