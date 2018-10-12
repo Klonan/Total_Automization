@@ -780,8 +780,17 @@ local on_gui_closed = function(event)
   end
 end
 
-local on_gui_click = util.gui_action_handler(data.button_actions, gui_actions)
-
+local on_gui_click = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local player_data = data.button_actions[event.player_index]
+  if not player_data then return end
+  local action = player_data[element.index]
+  if action then
+    gui_actions[action.type](event, action)
+    return true
+  end
+end
 local on_entity_removed = function(event)
   deregister_unit(event.entity)
   checked_tables = {}

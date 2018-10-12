@@ -9,7 +9,6 @@ config.get_config = function()
   {
     time_limit = 0,
     allow_spectators = false,
-    spectator_fog_of_war = true,
     no_rush_time = 0,
     base_exclusion_time = 0,
     reveal_team_positions = true,
@@ -342,6 +341,7 @@ end
 
 config.give_equipment = function(player)
   if not config.script_data.config.equipment_list then return end
+  if not config.script_data.config.team_config.starting_equipment then return end
   local setting = config.script_data.config.team_config.starting_equipment.selected
   if not setting then return end
   local equipment = config.script_data.config.equipment_list[setting]

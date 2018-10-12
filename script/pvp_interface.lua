@@ -49,6 +49,25 @@ local on_init = function()
   prototypes.artillery = names.entities.tesla_turret
   prototypes.chest = "logistic-chest-storage"
   config.silo_offset = {0, 0}
+  config.team_config.defcon_mode = nil
+  config.team_config.defcon_timer = nil
+  config.team_config.unlock_combat_research = nil
+  config.team_config.friendly_fire = nil
+  config.team_config.starting_equipment = nil
+  config.team_config.research_level = nil
+  config.team_config.technology_price_multiplier = nil
+  config.game_config.protect_empty_teams = nil
+  config.game_config.enemy_building_restriction = nil
+  config.game_config.neutral_chests = nil
+  config.game_config.turret_ammunition = nil
+  config.game_config.no_rush_time = nil
+  config.game_config.base_exclusion_time = nil
+  config.victory.space_race = nil
+  config.victory.required_satellites_sent = nil
+
+
+
+
   remote.call("pvp", "set_config", config)
 end
 

@@ -793,11 +793,14 @@ local gui_functions =
   end,
   calculator_button_press = function(event, param)
     on_calculator_button_press(event, param)
+  end,
+  space_race_button = function(event, param)
+    space_race_button_press(event)
   end
 }
 
 function start_all_ready_preparations()
-  local seconds = 2
+  local seconds = 10
   game.print({"everybody-ready", seconds})
   script_data.ready_start_tick = game.tick + (seconds * 60)
 end
@@ -1369,7 +1372,7 @@ function set_evolution_factor()
 end
 
 function set_difficulty()
-  game.difficulty_settings.technology_price_multiplier = script_data.config.team_config.technology_price_multiplier
+  game.difficulty_settings.technology_price_multiplier = script_data.config.team_config.technology_price_multiplier or 1
 end
 
 function spectator_join(player)
@@ -1572,7 +1575,6 @@ end
 function space_race_button_press(event)
   local gui = event.element
   if not gui.valid then return end
-  if gui.name ~= "space_race_button" then return end
   local player = game.players[event.player_index]
   local flow = mod_gui.get_frame_flow(player)
   local frame = flow.space_race_frame
@@ -1690,9 +1692,6 @@ function setup_teams()
     balance.disable_combat_technologies(force)
     force.reset_technology_effects()
     balance.apply_combat_modifiers(force)
-    if script_data.config.team_config.starting_equipment.selected == "large" then
-      force.worker_robots_speed_modifier = 2.5
-    end
   end
   disable_items_for_all()
 end
@@ -2111,18 +2110,22 @@ function final_setup_step()
       choose_joining_gui(player)
     end
   end
-  script_data.end_no_rush = game.tick + (script_data.config.game_config.no_rush_time * 60 * 60)
-  if script_data.config.game_config.no_rush_time > 0 then
-    script_data.peaceful_mode = script_data.surface.peaceful_mode
-    script_data.surface.peaceful_mode = true
-    game.forces.enemy.kill_all_units()
-    game.print({"no-rush-begins", script_data.config.game_config.no_rush_time})
+  if script_data.config.game_config.no_rush_time then
+    script_data.end_no_rush = game.tick + (script_data.config.game_config.no_rush_time * 60 * 60)
+    if script_data.config.game_config.no_rush_time > 0 then
+      script_data.peaceful_mode = script_data.surface.peaceful_mode
+      script_data.surface.peaceful_mode = true
+      game.forces.enemy.kill_all_units()
+      game.print({"no-rush-begins", script_data.config.game_config.no_rush_time})
+    end
+  end
+  if script_data.config.game_config.base_exclusion_time then
+    if script_data.config.game_config.base_exclusion_time > 0 then
+      script_data.check_base_exclusion = true
+      game.print({"base-exclusion-begins", script_data.config.game_config.base_exclusion_time})
+    end
   end
   create_exclusion_map()
-  if script_data.config.game_config.base_exclusion_time > 0 then
-    script_data.check_base_exclusion = true
-    game.print({"base-exclusion-begins", script_data.config.game_config.base_exclusion_time})
-  end
   if script_data.config.game_config.reveal_map_center then
     local radius = script_data.config.team_config.average_team_displacement / 2
     local origin = script_data.spawn_offset
@@ -2233,8 +2236,7 @@ end
 
 function create_silo_for_force(force)
   if not script_data.config.victory.last_silo_standing then return end
-  if not force then return end
-  if not force.valid then return end
+  if not (force and force.valid) then return end
   local surface = script_data.surface
   local origin = force.get_spawn_position(surface)
   local offset = script_data.config.silo_offset
@@ -2248,7 +2250,7 @@ function create_silo_for_force(force)
 
   silo.minable = false
   if silo.supports_backer_name() then
-    silo.backer_name = tostring(force.name)
+    silo.backer_name = force.name
   end
   if not script_data.silos then script_data.silos = {} end
   script_data.silos[force.name] = silo
@@ -2277,8 +2279,8 @@ function create_silo_for_force(force)
 end
 
 function setup_research(force)
-  if not force then return end
-  if not force.valid then return end
+  if not script_data.config.team_config.research_level then return end
+  if not (force and force.valid) then return end
   local tier = script_data.config.team_config.research_level.selected
   local index
   local set = (tier ~= "none")
@@ -2305,8 +2307,12 @@ function create_starting_turrets(force)
   if not (force and force.valid) then return end
   local turret_name = script_data.config.prototypes.turret
   if not game.entity_prototypes[turret_name] then return end
-  local ammo_name = script_data.config.game_config.turret_ammunition.selected or "firearm-magazine"
-  if not game.item_prototypes[ammo_name] then return end
+
+  local ammo_name
+  if script_data.config.game_config.turret_ammunition then
+    ammo_name = script_data.config.game_config.turret_ammunition.selected
+  end
+  
   local surface = script_data.surface
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
@@ -2335,7 +2341,10 @@ function create_starting_turrets(force)
   local tiles = {}
   local tile_name = script_data.config.prototypes.tile_2
   if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
-  local stack = {name = ammo_name, count = 20}
+  local stack
+  if ammo_name and game.item_prototypes[ammo_name] then
+    stack = {name = ammo_name, count = 20}
+  end
   local floor = math.floor
   for k, position in pairs (positions) do
     local turret = surface.create_entity{name = turret_name, position = position, force = force, direction = position.direction}
@@ -2343,7 +2352,9 @@ function create_starting_turrets(force)
     for k, entity in pairs (surface.find_entities_filtered{area = turret.bounding_box, force = "neutral"}) do
       entity.destroy({do_cliff_correction = true})
     end
-    turret.insert(stack)
+    if stack then
+      turret.insert(stack)
+    end
     for x = floor(box.left_top.x), floor(box.right_bottom.x) do
       for y = floor(box.left_top.y), floor(box.right_bottom.y) do
         table.insert(tiles, {name = tile_name, position = {x, y}})
@@ -2632,15 +2643,6 @@ function duplicate_starting_area_entities()
         end
       end
     end
-  end
-end
-
-function check_spectator_chart()
-  if script_data.config.game_config.spectator_fog_of_war then return end
-  local force = game.forces.spectator
-  if not (force and force.valid) then return end
-  if #force.connected_players > 0 then
-    force.chart_all(script_data.surface)
   end
 end
 
@@ -3443,6 +3445,14 @@ local on_player_changed_position = function(event)
   local player = game.players[event.player_index]
   check_player_base_exclusion(player)
   check_player_no_rush(player)
+end
+
+local check_spectator_chart = function()
+  local force = game.forces.spectator
+  if not (force and force.valid) then return end
+  local surface = script_data.surface
+  if not (surface and surface.valid) then return end
+  force.chart_all(script_data.surface)
 end
 
 local pvp = {}
