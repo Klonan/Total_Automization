@@ -122,6 +122,7 @@ projectile.force_condition = "not-same"
 projectile.collision_box = {{-0.25, -0.25}, {0.25, 0.25}}
 projectile.direction_only = true
 projectile.height = 0.5
+projectile.max_speed = SD(0.75)
 projectile.action =
 {
   type = "direct",
@@ -133,12 +134,29 @@ projectile.action =
       {
         type = "create-entity",
         entity_name = name.." Splash"
+      },
+      {
+        type = "damage",  
+        damage = {amount = 20 , type = util.damage_type("plasma_bot")}
       }
     }
   }
 }
 projectile.final_action = 
 {
+  type = "area",
+  target_entities = false,
+  repeat_count = 100,
+  radius = 1,
+  action_delivery =
+  {
+    type = "projectile",
+    projectile = name.." Small Projectile",
+    starting_speed = SD(0.35),
+    starting_speed_deviation = SD(0.35),
+  }
+}
+--[[{
   type = "area",
   radius = 2.5,
   force = "not-same",
@@ -180,12 +198,43 @@ projectile.final_action =
       },
     }
   }
-}
+}]]
 projectile.animation.filename = path.."plasma_bot_projectile.png"
 projectile.animation.blend_mode = "additive-soft"
 projectile.animation.animation_speed = SD(3)
 projectile.acceleration = SA(0.02)
 util.recursive_hack_scale(projectile, 2)
+
+
+local small_projectile = util.copy(projectile)
+small_projectile.name = name.." Small Projectile"
+small_projectile.force_condition = "not-same"
+small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
+small_projectile.direction_only = true
+small_projectile.height = 0
+small_projectile.max_speed = SD(1)
+small_projectile.acceleration = SA(-0.02)
+small_projectile.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "damage",  
+        damage = {amount = 2.5 , type = util.damage_type("plasma_bot")}
+      },
+      {
+        type = "create-entity",
+        entity_name = name.." Small Splash"
+      }
+    }
+  }
+}
+small_projectile.final_action = nil
+util.recursive_hack_scale(small_projectile, 0.5)
 
 local splash = 
 {
@@ -207,6 +256,56 @@ local splash =
       blend_mode = "additive-soft",
       run_mode = "backward",
       scale = 1.5
+    }
+  }
+}
+
+local small_splash = 
+{
+  type = "explosion",
+  name = name.." Small Splash",
+  height = 1,
+  flags = {"not-on-map"},
+  animations =
+  {
+    {
+      filename = path.."plasma_bot_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 10,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.35),
+      blend_mode = "additive-soft",
+      run_mode = "backward",
+      scale = 0.75
+    },
+    {
+      filename = path.."plasma_bot_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 8,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.25),
+      blend_mode = "additive-soft",
+      run_mode = "backward",
+      scale = 0.8
+    },
+    {
+      filename = path.."plasma_bot_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.40),
+      blend_mode = "additive-soft",
+      run_mode = "backward",
+      scale = 0.7
     }
   }
 }
@@ -241,4 +340,4 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, splash, item, recipe}
+data:extend{bot, projectile, splash, item, recipe, small_projectile, small_splash}

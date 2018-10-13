@@ -465,7 +465,17 @@ local change_class_hotkey_pressed = function(event)
   choose_class_gui_init(player)
 end
 
-local on_gui_interaction = util.gui_action_handler(data.elements, gui_functions)
+local on_gui_interaction = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local player_data = data.elements[event.player_index]
+  if not player_data then return end
+  local action = player_data[element.index]
+  if action then
+    gui_functions[action.type](event, action)
+    return true
+  end
+end
 
 local default_loadout = function()
   local loadout_name, loadout = next(loadouts)

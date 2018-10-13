@@ -24,10 +24,10 @@ local on_player_created = function(event)
 
   --if true then return end
 
-  if true then return {} end
+  --if true then return {} end
   local team1 = {
     --beetle = 80,
-    blaster_bot = 20,
+    plasma_bot = 20,
     --laser_bot = 20,
     --tazer_bot = 30,
     --plasma_bot = 20,
@@ -52,10 +52,10 @@ local on_player_created = function(event)
     --beetle = 85,
     --plasma_bot = 5,
     --rocket_guy = 50,
-    smg_guy = 20,
+    --smg_guy = 100,
     --flame_car = 20,
     --rocket_guy = 20,
-    --shell_tank = 20,
+    shell_tank = 20,
     --shell_tank = 80
     --scatter_spitter = 30,
     --piercing_biter = 30,
