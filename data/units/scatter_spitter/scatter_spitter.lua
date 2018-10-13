@@ -27,22 +27,6 @@ for k, layer in pairs (animation.layers) do
   layer.animation_speed = SD(layer.animation_speed or 1)
 end
 local sound = util.copy(unit.attack_parameters.sound)
-local make_spitter_blast = function(speed, direction, range, count)
-  return
-  {
-    type = "direct",
-    repeat_count = count or 1,
-    action_delivery =
-    {
-      type = "projectile",
-      projectile = name.." Projectile",
-      starting_speed = SD(speed),
-      direction_deviation = direction,
-      range_deviation = range,
-      max_range = 20
-    }
-  }
-end
 animation.layers[2].apply_runtime_tint = true
 unit.run_animation.layers[2].apply_runtime_tint = true
 unit.attack_parameters = 
@@ -60,15 +44,35 @@ unit.attack_parameters =
   ammo_type =
   {
     category = "biological",
-    target_type = "position",
-    clamp_position = true,
-    action =
+    target_type = "entity",
+    action = 
     {
-      make_spitter_blast(0.80, 0.40, 0.10, 1),
-      make_spitter_blast(0.85, 0.35, 0.15, 1),
-      make_spitter_blast(0.90, 0.30, 0.20, 1),
-      make_spitter_blast(0.95, 0.25, 0.25, 1),
-      make_spitter_blast(1.00, 0.20, 0.30, 2),
+      type = "direct",
+      action_delivery =
+      {
+        type = "instant",
+        target_effects =
+        {
+          {
+            type = "nested-result",
+            action =
+            {
+              type = "area",
+              target_entities = false,
+              trigger_from_target = false,
+              repeat_count = 15,
+              radius = 3,
+              action_delivery =
+              {
+                type = "projectile",
+                projectile = name.." Projectile",
+                starting_speed = 1,
+                starting_speed_deviation = 0.2,
+              }
+            }
+          }
+        }
+      }
     }
   },
 }
@@ -77,8 +81,9 @@ local projectile = util.copy(data.raw.projectile["acid-projectile-purple"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.direction_only = true
-projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
-projectile.acceleration = SA(-0.0025)
+projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
+projectile.acceleration = SA(-0.02)
+projectile.rotatable = true
 projectile.action =
 {
   type = "direct",
@@ -87,6 +92,10 @@ projectile.action =
     type = "instant",
     target_effects =
     {
+      {
+        type = "create-entity",
+        entity_name = name.." Splash"
+      },
       {
         type = "play-sound",
         sound =
@@ -116,13 +125,104 @@ projectile.action =
       {
         type = "create-sticker",
         sticker = name.." Sticker"
-      },
-      {
-        type = "create-entity",
-        entity_name = name.." Splash"
       }
     }
   }
+}
+
+projectile.animation =
+{
+  {
+    filename = path.."scatter_spitter_projectile.png",
+    line_length = 4,
+    width = 46,
+    height = 82,
+    frame_count = 16,
+    priority = "high",
+    scale = 0.25,
+    animation_speed = 0.8
+  },
+  {
+    filename = path.."scatter_spitter_projectile.png",
+    line_length = 4,
+    width = 46,
+    height = 82,
+    frame_count = 16,
+    priority = "high",
+    scale = 0.3,
+    animation_speed = 1
+  },
+  {
+    filename = path.."scatter_spitter_projectile.png",
+    line_length = 4,
+    width = 46,
+    height = 82,
+    frame_count = 16,
+    priority = "high",
+    scale = 0.2,
+    animation_speed = 1.1
+  },
+  {
+    filename = path.."scatter_spitter_projectile.png",
+    line_length = 4,
+    width = 46,
+    height = 82,
+    frame_count = 16,
+    priority = "high",
+    scale = 0.15,
+    animation_speed = 1.2
+  },
+}
+projectile.shadow =
+{
+  {
+    filename = path.."scatter_spitter_projectile_shadow.png",
+    line_length = 4,
+    width = 94,
+    height = 170,
+    frame_count = 16,
+    priority = "high",
+    shift = {-0.09, 0.395},
+    draw_as_shadow = true,
+    scale = 0.25,
+    animation_speed = 0.8
+  },
+  {
+    filename = path.."scatter_spitter_projectile_shadow.png",
+    line_length = 4,
+    width = 94,
+    height = 170,
+    frame_count = 16,
+    priority = "high",
+    shift = {-0.09, 0.395},
+    draw_as_shadow = true,
+    scale = 0.3,
+    animation_speed = 1
+  },
+  {
+    filename = path.."scatter_spitter_projectile_shadow.png",
+    line_length = 4,
+    width = 94,
+    height = 170,
+    frame_count = 16,
+    priority = "high",
+    shift = {-0.09, 0.395},
+    draw_as_shadow = true,
+    scale = 0.2,
+    animation_speed = 1.1
+  },
+  {
+    filename = path.."scatter_spitter_projectile_shadow.png",
+    line_length = 4,
+    width = 94,
+    height = 170,
+    frame_count = 16,
+    priority = "high",
+    shift = {-0.09, 0.395},
+    draw_as_shadow = true,
+    scale = 0.15,
+    animation_speed = 1.2
+  },
 }
 
 local sticker = util.copy(data.raw.sticker["slowdown-sticker"])
@@ -162,9 +262,53 @@ local splash =
       frame_count = 15,
       line_length = 5,
       shift = {-0.437, 0.5},
+      animation_speed = SD(0.2),
+      scale = 1.4
+    },
+    {
+      filename = path.."scatter_spitter_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.3),
+      scale = 1.2
+    },
+    {
+      filename = path.."scatter_spitter_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
       animation_speed = SD(0.35),
       scale = 1
-    }
+    },
+    {
+      filename = path.."scatter_spitter_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.4),
+      scale = 0.8
+    },
+    {
+      filename = path.."scatter_spitter_splash.png",
+      priority = "extra-high",
+      width = 92,
+      height = 66,
+      frame_count = 15,
+      line_length = 5,
+      shift = {-0.437, 0.5},
+      animation_speed = SD(0.5),
+      scale = 0.6
+    },
   }
 }
 
