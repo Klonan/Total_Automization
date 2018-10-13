@@ -130,99 +130,67 @@ projectile.action =
   }
 }
 
+local animation = 
+{
+  filename = path.."scatter_spitter_projectile.png",
+  line_length = 4,
+  width = 46,
+  height = 82,
+  frame_count = 16,
+  priority = "high",
+  scale = 0.3,
+  animation_speed = 1
+}
+local make_animation = function(scale, speed)
+  local data = util.copy(animation)
+  data.scale = (data.scale or 1) * scale
+  data.animation_speed = (data.animation_speed or 1) * speed
+  return data
+end
+
+local shadow =
+{
+  filename = path.."scatter_spitter_projectile_shadow.png",
+  line_length = 4,
+  width = 94,
+  height = 170,
+  frame_count = 16,
+  priority = "high",
+  shift = {-0.09, 0.395},
+  draw_as_shadow = true,
+  scale = 0.3,
+  animation_speed = 1
+}
+local make_shadow = function(scale, speed)
+  local data = util.copy(shadow)
+  data.scale = (data.scale or 1) * scale
+  data.animation_speed = (data.animation_speed or 1) * speed
+  return data
+end
+
 projectile.animation =
 {
-  {
-    filename = path.."scatter_spitter_projectile.png",
-    line_length = 4,
-    width = 46,
-    height = 82,
-    frame_count = 16,
-    priority = "high",
-    scale = 0.25,
-    animation_speed = 0.8
-  },
-  {
-    filename = path.."scatter_spitter_projectile.png",
-    line_length = 4,
-    width = 46,
-    height = 82,
-    frame_count = 16,
-    priority = "high",
-    scale = 0.3,
-    animation_speed = 1
-  },
-  {
-    filename = path.."scatter_spitter_projectile.png",
-    line_length = 4,
-    width = 46,
-    height = 82,
-    frame_count = 16,
-    priority = "high",
-    scale = 0.2,
-    animation_speed = 1.1
-  },
-  {
-    filename = path.."scatter_spitter_projectile.png",
-    line_length = 4,
-    width = 46,
-    height = 82,
-    frame_count = 16,
-    priority = "high",
-    scale = 0.15,
-    animation_speed = 1.2
-  },
+  make_animation(0.6, 1),
+  make_animation(0.65, 0.95),
+  make_animation(0.7, 0.9),
+  make_animation(0.75, 0.85),
+  make_animation(0.8, 0.8),
+  make_animation(0.85, 0.75),
+  make_animation(0.9, 0.7),
+  make_animation(0.95, 0.65),
+  make_animation(1, 0.6),
 }
 projectile.shadow =
 {
-  {
-    filename = path.."scatter_spitter_projectile_shadow.png",
-    line_length = 4,
-    width = 94,
-    height = 170,
-    frame_count = 16,
-    priority = "high",
-    shift = {-0.09, 0.395},
-    draw_as_shadow = true,
-    scale = 0.25,
-    animation_speed = 0.8
-  },
-  {
-    filename = path.."scatter_spitter_projectile_shadow.png",
-    line_length = 4,
-    width = 94,
-    height = 170,
-    frame_count = 16,
-    priority = "high",
-    shift = {-0.09, 0.395},
-    draw_as_shadow = true,
-    scale = 0.3,
-    animation_speed = 1
-  },
-  {
-    filename = path.."scatter_spitter_projectile_shadow.png",
-    line_length = 4,
-    width = 94,
-    height = 170,
-    frame_count = 16,
-    priority = "high",
-    shift = {-0.09, 0.395},
-    draw_as_shadow = true,
-    scale = 0.2,
-    animation_speed = 1.1
-  },
-  {
-    filename = path.."scatter_spitter_projectile_shadow.png",
-    line_length = 4,
-    width = 94,
-    height = 170,
-    frame_count = 16,
-    priority = "high",
-    shift = {-0.09, 0.395},
-    draw_as_shadow = true,
-    scale = 0.15,
-    animation_speed = 1.2
-  },
+  make_shadow(0.6, 1),
+  make_shadow(0.65, 0.95),
+  make_shadow(0.7, 0.9),
+  make_shadow(0.75, 0.85),
+  make_shadow(0.8, 0.8),
+  make_shadow(0.85, 0.75),
+  make_shadow(0.9, 0.7),
+  make_shadow(0.95, 0.65),
+  make_shadow(1, 0.6),
 }
 
 local sticker = util.copy(data.raw.sticker["slowdown-sticker"])
@@ -246,6 +214,26 @@ sticker.animation =
   scale = 1
 }
 
+local animation = 
+{
+  filename = path.."scatter_spitter_splash.png",
+  priority = "extra-high",
+  width = 92,
+  height = 66,
+  frame_count = 15,
+  line_length = 5,
+  shift = {-0.437, 0.5},
+  animation_speed = SD(0.35),
+  scale = 1
+}
+
+local make_animation = function(scale, speed)
+  local data = util.copy(animation)
+  data.scale = (data.scale or 1) * scale
+  data.animation_speed = (data.animation_speed or 1) * speed
+  return data
+end
+
 local splash = 
 {
   type = "explosion",
@@ -254,61 +242,12 @@ local splash =
   flags = {"not-on-map"},
   animations =
   {
-    {
-      filename = path.."scatter_spitter_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.2),
-      scale = 1.4
-    },
-    {
-      filename = path.."scatter_spitter_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.3),
-      scale = 1.2
-    },
-    {
-      filename = path.."scatter_spitter_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.35),
-      scale = 1
-    },
-    {
-      filename = path.."scatter_spitter_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.4),
-      scale = 0.8
-    },
-    {
-      filename = path.."scatter_spitter_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.5),
-      scale = 0.6
-    },
+    make_animation(1.0, 0.75),
+    make_animation(0.9, 0.8),
+    make_animation(0.8, 0.85),
+    make_animation(0.7, 0.9),
+    make_animation(0.6, 0.95),
+    make_animation(0.5, 1.0),
   }
 }
 

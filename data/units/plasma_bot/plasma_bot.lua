@@ -237,6 +237,45 @@ small_projectile.action =
 small_projectile.final_action = nil
 util.recursive_hack_scale(small_projectile, 0.5)
 
+local animation = util.copy(small_projectile.animation)
+local make_animation = function(scale)
+  local data = util.copy(animation)
+  data.scale = (data.scale or 1) * scale
+  return data
+end
+local shadow = util.copy(small_projectile.shadow)
+local make_shadow = function(scale)
+  local data = util.copy(animation)
+  data.scale = (data.scale or 1) * scale
+  return data
+end
+
+small_projectile.animation =
+{
+  make_animation(0.8),
+  make_animation(0.85),
+  make_animation(0.9),
+  make_animation(0.95),
+  make_animation(1.0),
+  make_animation(1.05),
+  make_animation(1.10),
+  make_animation(1.15),
+  make_animation(1.2)
+}
+small_projectile.shadow =
+{
+  make_shadow(0.8),
+  make_shadow(0.85),
+  make_shadow(0.9),
+  make_shadow(0.95),
+  make_shadow(1.0),
+  make_shadow(1.05),
+  make_shadow(1.10),
+  make_shadow(1.15),
+  make_shadow(1.2)
+}
+
+
 local splash = 
 {
   type = "explosion",
@@ -261,6 +300,27 @@ local splash =
   }
 }
 
+local animation =
+{
+  filename = path.."plasma_bot_splash.png",
+  priority = "extra-high",
+  width = 92,
+  height = 66,
+  frame_count = 10,
+  line_length = 5,
+  shift = {-0.437, 0.5},
+  animation_speed = SD(0.25),
+  blend_mode = "additive-soft",
+  run_mode = "backward",
+  scale = 1
+}
+local make_animation = function(scale, speed)
+  local data = util.copy(animation)
+  data.scale = (data.scale or 1) * scale
+  data.animation_speed = (data.animation_speed or 1) * speed
+  return data
+end
+
 local small_splash = 
 {
   type = "explosion",
@@ -269,45 +329,12 @@ local small_splash =
   flags = {"not-on-map"},
   animations =
   {
-    {
-      filename = path.."plasma_bot_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 10,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.35),
-      blend_mode = "additive-soft",
-      run_mode = "backward",
-      scale = 0.75
-    },
-    {
-      filename = path.."plasma_bot_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 8,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.25),
-      blend_mode = "additive-soft",
-      run_mode = "backward",
-      scale = 0.8
-    },
-    {
-      filename = path.."plasma_bot_splash.png",
-      priority = "extra-high",
-      width = 92,
-      height = 66,
-      frame_count = 15,
-      line_length = 5,
-      shift = {-0.437, 0.5},
-      animation_speed = SD(0.40),
-      blend_mode = "additive-soft",
-      run_mode = "backward",
-      scale = 0.7
-    }
+    make_animation(1, 0.75),
+    make_animation(0.9, 0.8),
+    make_animation(0.8, 0.85),
+    make_animation(0.7, 0.9),
+    make_animation(0.6, 0.95),
+    make_animation(0.5, 1),
   }
 }
 
