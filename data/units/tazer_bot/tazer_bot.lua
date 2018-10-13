@@ -96,9 +96,55 @@ local beam = util.copy(data.raw.beam["electric-beam"])
 
 beam.name = name.." Beam"
 beam.localised_name = name.." Beam"
-beam.damage_interval = SU(15)
-beam.random_target_offset = true
+beam.damage_interval = SU(45)
+--beam.random_target_offset = true
 beam.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 3,
+          force = "not-same",
+          trigger_from_target = true, --not merged
+          action_delivery =
+          {
+            type = "beam",
+            beam = name.." Small Beam",
+            add_to_shooter = false,
+            max_length = 30,
+            duration = SU(45),
+            source_offset = {0, 0.5},
+          }
+        }
+      },
+      {
+        type = "damage",
+        damage = { amount = 10, type = "electric"}
+      },
+      {
+        type = "create-sticker",
+        sticker = name.." Sticker"
+      },
+    }
+  }
+}
+
+
+local small_beam = util.copy(beam)
+
+small_beam.name = name.." Small Beam"
+small_beam.localised_name = name.." Small Beam"
+small_beam.damage_interval = SU(45)
+small_beam.random_target_offset = true
+small_beam.action =
 {
   type = "direct",
   action_delivery =
@@ -111,25 +157,8 @@ beam.action =
         damage = { amount = 10, type = "electric"}
       },
       {
-        type = "nested-result",
-        affects_target = true,
-        action =
-        {
-          type = "area",
-          radius = 2,
-          force = "not-same",
-          action_delivery =
-          {
-            type = "instant",
-            target_effects =
-            {
-              {
-                type = "create-sticker",
-                sticker = name.." Sticker"
-              }
-            }
-          }
-        }
+        type = "create-sticker",
+        sticker = name.." Sticker"
       }
     }
   }
@@ -188,5 +217,6 @@ data:extend{
   beam,
   sticker,
   item,
-  recipe
+  recipe,
+  small_beam
 }

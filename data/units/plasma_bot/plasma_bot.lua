@@ -146,6 +146,7 @@ projectile.final_action =
 {
   type = "area",
   target_entities = false,
+  trigger_from_target = true,
   repeat_count = 100,
   radius = 1,
   action_delivery =
