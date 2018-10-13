@@ -23,7 +23,8 @@ local script_data =
     production_score_frame = {},
     production_score_inner_frame = {},
     recipe_frame = {},
-    recipe_button = {}
+    recipe_button = {},
+    inventory = {}
   },
   timers = {},
   setup_finished = false,
@@ -322,6 +323,15 @@ refresh_balance = function(excluded_player_index)
   end
 end
 
+refresh_inventory = function(excluded_player_index)
+  for k, player in pairs (game.players) do
+    if k ~= excluded_player_index then
+      toggle_starting_chest_gui(player)
+      toggle_starting_chest_gui(player)
+    end
+  end
+end
+
 local name_allowed = function(name, team)
   if name == "" then return false end
   for k, other_team in pairs (script_data.config.teams) do
@@ -359,6 +369,93 @@ local check_all_ready = function()
     script_data.ready_start_tick = nil
     game.print({"ready-cancelled"})
   end
+end
+
+toggle_starting_chest_gui = function(player)
+  if not (player and player.valid) then return end
+  local options = script_data.config.team_config.starting_chest
+  if not options then return end
+  local gui = player.gui.center
+  local frame = script_data.elements.inventory[player.index]
+  local config = script_data.elements.config[player.index]
+  if frame then
+    deregister_gui(frame)
+    frame.destroy()
+    script_data.elements.inventory[player.index] = nil
+    if config then
+      config.visible = true
+    end
+    return
+  end
+  if (config and config.valid) then
+    config.visible = false
+  end
+  local frame = gui.add{type = "frame", caption = "Change starting chest items", direction = "vertical"}
+  script_data.elements.inventory[player.index] = frame
+  local admin = player.admin
+  local dropdown = frame.add{type = "drop-down"}
+  dropdown.style.horizontally_stretchable = true
+  register_gui_action(dropdown, {type = "starting_item_dropdown_changed"})
+  local index = 1
+  local selected = options.selected
+  for k, option in pairs (options.options) do
+    if option == selected then index = k end
+    dropdown.add_item({option})
+  end
+  dropdown.selected_index = index
+  local items = script_data.config.inventory_list[selected]
+  if not items then return end
+  local prototypes = game.item_prototypes
+  local table = frame.add{type = "flow", direction = "horizontal"}
+  local table1 = table.add{type = "table", column_count = 3}
+  table1.style.vertically_stretchable = true
+  local spacer = table.add{type = "flow"}
+  spacer.style.width = 16
+
+  local table2 = table.add{type = "table", column_count = 3}
+  table2.style.vertically_stretchable = true
+  local which
+  for name, count in pairs (items) do
+    local prototype = prototypes[name]
+    if prototype then
+      if which == table1 then
+        which = table2
+      else
+        which = table1
+      end
+      if admin then
+        local elem = which.add{type = "choose-elem-button", elem_type = "item"}
+        elem.elem_value = name
+        register_gui_action(elem, {type = "starting_item_elem_changed", items = items, previous = name})
+      else
+        local sprite = which.add{type = "sprite", sprite = "item/"..name}
+        sprite.style.width = 32
+        sprite.style.height = 32
+      end
+      which.add{type = "label", caption = prototype.localised_name}
+      if admin then
+        local text = which.add{type = "textfield", text = count}
+        text.style.minimal_width = 75
+        register_gui_action(text, {type = "starting_item_textfield_changed", items = items, key = name})
+      else
+        which.add{type = "label", caption = count}
+      end
+    end
+  end
+  local elem = table1.add{type = "choose-elem-button", elem_type = "item"}
+
+  local pusher = table.add{type = "flow"}
+  pusher.style.vertically_stretchable = true
+  local pusher = table.add{type = "flow"}
+  pusher.style.vertically_stretchable = true
+
+
+  register_gui_action(elem, {type = "starting_item_elem_changed", items = items})
+  
+  register_gui_action(frame.add{type = "button", caption = "Close", style = "dialog_button"}, {type = "starting_chest"})
+  
+
+
 end
 
 local gui_functions =
@@ -637,6 +734,50 @@ local gui_functions =
     if (config and config.valid) then
       config.visible = true
     end
+  end,
+  starting_chest = function(event, param)
+    toggle_starting_chest_gui(game.players[event.player_index])
+  end,
+  starting_item_textfield_changed = function(event, param)
+    if event.name ~= defines.events.on_gui_text_changed then return end
+    local textfield = event.element
+    if not (textfield and textfield.valid) then return end
+    local text = textfield.text
+    local valid = is_text_valid(text)
+    if not valid then
+      textfield.style = "invalid_value_textfield"
+      return
+    end
+    textfield.style = "textbox"
+    param.items[param.key] = tonumber(text)
+    refresh_config(event.player_index)
+  end,
+  starting_item_elem_changed = function(event, param)
+    if event.name ~= defines.events.on_gui_elem_changed then return end
+    local element = event.element
+    if not (element and element.valid) then return end
+    local items = param.items
+    local previous = param.previous
+    if previous then
+      items[param.previous] = nil
+    end
+    local name = element.elem_value
+    if name then
+      if items[name] then
+        game.players[event.player_index].print("No doofus, its already there")
+      else
+        items[name] = game.item_prototypes[name].stack_size
+      end
+    end
+    refresh_inventory()
+  end,
+  starting_item_dropdown_changed = function(event, param)
+    if event.name ~= defines.events.on_gui_selection_state_changed then return end
+    local dropdown = event.element
+    if not (dropdown and dropdown.valid) then return end
+    script_data.config.team_config.starting_chest.selected = script_data.config.team_config.starting_chest.options[dropdown.selected_index]
+    refresh_inventory()
+    refresh_config()
   end,
   disable_elem_changed = function(event, param)
     if event.name ~= defines.events.on_gui_elem_changed then return end
@@ -962,6 +1103,7 @@ function create_config_gui(player)
       type = "toggle_balance_options"
     }
   )
+  register_gui_action(button_flow.add{type = "button", caption = "Starting items", style = "dialog_button"}, {type = "starting_chest"})
   register_gui_action(button_flow.add{type = "sprite-button", sprite = "utility/export_slot", tooltip = {"gui.export-to-string"}, style = "slot_button"}, {type = "pvp_export"})
   register_gui_action(button_flow.add{type = "sprite-button", sprite = "utility/import_slot", tooltip = {"gui-blueprint-library.import-string"}, style = "slot_button"}, {type = "pvp_import"})
   local pusher = button_flow.add{type = "flow"}
