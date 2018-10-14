@@ -109,8 +109,8 @@ local unit =
     ammo_category = "bullet",
     warmup = SU(15),
     cooldown = SU(145),
-    range = 40,
-    --min_attack_distance = 32,
+    range = 45,
+    min_attack_distance = 32,
     --projectile_creation_distance = 1.5,
     --projectile_center = {0, -1.5},
     projectile_creation_distance = 1.6,
@@ -135,14 +135,9 @@ local unit =
           type = "direct",
           action_delivery =
           {
-            type = "projectile",
-            projectile = name.." Projectile",
-            starting_speed = SD(1.5),
-            starting_speed_deviation = SD(0.1),
-            direction_deviation = 0.05,
-            range_deviation = 0.1,
-            starting_frame_deviation = 5,
-            max_range = 40,
+            type = "stream",
+            stream = name.." Stream",
+            source_offset = {0, -5},          
             source_effects =
             {
               type = "create-explosion",
@@ -181,67 +176,103 @@ local unit =
   run_animation = sprite_base.animation
 }
 
-local projectile = util.copy(data.raw.projectile["cannon-projectile"])
-projectile.name = name.." Projectile"
-projectile.animation.scale = 2.5
-projectile.blend_mode = "additive-soft"
-other_animation =
-{
-  layers =
-  {
-    {
-      filename = "__base__/graphics/entity/artillery-projectile/hr-shell.png",
-      width = 64,
-      height = 64,
-      shift = {1, 0},
-      scale = 1,
-      frame_count = 1
-    },
-    projectile.animation,
-  }
-}
-projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
-projectile.force_condition = "not-same"
-projectile.height = 0
-projectile.action = 
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = "explosion"
-      }
-    }
-  }
-}
-projectile.acceleration = SA(0)
-projectile.final_action = {
-  type = "area",
-  radius = 2.5,
-  force = "not-same",
-  collision_mode = "distance-from-center",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = "explosion"
-      },
-      {
-        type = "damage",  
-        damage = {amount = 15 , type = util.damage_type("shell_tank")}
-      }
-    }
-  }
-}
---projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
+local particle_gfx = util.copy(data.raw.projectile["cannon-projectile"])
+
+
+local animation = 
+{
+  filename = path.."shell_tank_projectile.png",
+  line_length = 4,
+  width = 46,
+  height = 82,
+  frame_count = 16,
+  priority = "high",
+  scale = 0.3,
+  animation_speed = 1,
+  blend_mode = "additive"
+}
+
+local shadow =
+{
+  filename = path.."shell_tank_projectile_shadow.png",
+  line_length = 4,
+  width = 94,
+  height = 170,
+  frame_count = 16,
+  priority = "high",
+  shift = {-0.09, 0.395},
+  draw_as_shadow = true,
+  scale = 0.3,
+  animation_speed = 1,
+}
+
+local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
+stream.name = name.." Stream"
+stream.oriented_particle = true
+stream.action =
+{
+  {
+    type = "direct",
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "create-entity",
+          entity_name = "big-explosion"
+        }
+      }
+    }
+  },
+  {
+    type = "area",
+    collision_mode = "distance-from-center",
+    radius = 1.5,
+    force = "not-same",
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "damage",
+          damage = { amount = 10, type = util.damage_type(name) }
+        }
+      }
+    }
+  }
+}
+
+stream.particle = animation
+stream.shadow = shadow
+--stream.shadow.draw_as_shadow = true
+stream.particle.scale = 0.7
+stream.particle_buffer_size = 1
+stream.particle_spawn_interval = SU(100)
+stream.particle_spawn_timeout = SU(0)
+stream.particle_vertical_acceleration = SA(1.981 / 90)
+stream.particle_horizontal_speed = SD(1.2)
+stream.particle_horizontal_speed_deviation = SD(0.03)
+stream.particle_start_alpha = 1
+stream.particle_end_alpha = 1
+stream.particle_start_scale = 0.7
+stream.particle_loop_frame_count = 16
+stream.particle_fade_out_threshold = 1
+stream.particle_loop_exit_threshold = 1
+stream.spine_animation = nil
+stream.smoke_sources =
+{
+  {
+    name = "soft-fire-smoke",
+    frequency = 2, --0.25,
+    position = {0.0, 0}, -- -0.8},
+    starting_frame_deviation = 60
+  }
+}
+stream.progress_to_create_smoke = 0 --not merged
+stream.target_position_deviation = 1.5
 
 local item = {
   type = "item",
@@ -274,4 +305,4 @@ local recipe = {
 }
 
 
-data:extend{unit, projectile, item, recipe}
+data:extend{unit, item, recipe, stream}
