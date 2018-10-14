@@ -400,7 +400,7 @@ local add_sprites = function(scale, speed)
     local new = util.copy(sprite)
     new.animation_speed = (new.animation_speed or 1) * speed
     new.scale = (new.scale or 1) * scale
-    new.blend_mode = "additive-soft"
+    new.blend_mode = "additive"
     table.insert(new_animations, new)
   end
 end
@@ -415,6 +415,9 @@ add_sprites(0.6, 1.1)
 add_sprites(0.5, 1.2)
 
 explosion.animations = new_animations
+explosion.light = nil
+explosion.smoke = nil
+explosion.smoke_count = 0
 
 
 
