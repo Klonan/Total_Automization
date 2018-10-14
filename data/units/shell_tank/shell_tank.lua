@@ -24,9 +24,57 @@ for k, layer in pairs (sprite_base.animation.layers) do
     end
   end
 end
-for k, layer in pairs (sprite_base.turret_animation.layers) do
+local cannon_pictures = util.copy(data.raw["artillery-turret"]["artillery-turret"])
+util.recursive_hack_make_hr(cannon_pictures)
+
+for k, layer in pairs (cannon_pictures.cannon_base_pictures.layers) do
+  local stripes = {}
+  for k, path in pairs (layer.filenames) do
+    table.insert(stripes, {
+      filename = path,
+      height_in_frames = 4,
+      width_in_frames = 1
+    })
+  end
+  layer.stripes = stripes
+  layer.filenames = nil
+  layer.frame_count = 1
+  if layer.draw_as_shadow then
+  else
+    layer.shift = {layer.shift.x or 0, (layer.shift.y or 0) - 2.5}
+  end
+end
+
+
+for k, layer in pairs (cannon_pictures.cannon_barrel_pictures.layers) do
+  local stripes = {}
+  for k, path in pairs (layer.filenames) do
+    table.insert(stripes, {
+      filename = path,
+      height_in_frames = 4,
+      width_in_frames = 1
+    })
+  end
+  layer.stripes = stripes
+  layer.filenames = nil
+  layer.frame_count = 1
+  if layer.draw_as_shadow then
+  else
+    layer.shift = {layer.shift.x or 0, (layer.shift.y or 0) - 3}
+  end
+end
+
+
+for k, layer in pairs (cannon_pictures.cannon_barrel_pictures.layers) do
   table.insert(sprite_base.animation.layers, layer)
 end
+for k, layer in pairs (cannon_pictures.cannon_base_pictures.layers) do
+  table.insert(sprite_base.animation.layers, layer)
+end
+
+--error(serpent.block(sprite_base.animation.layers))
+
+
 
 
 

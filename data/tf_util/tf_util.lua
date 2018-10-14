@@ -1,7 +1,7 @@
 local util = require("util")
 
 local is_sprite_def = function(array)
-  return array.width and array.height and (array.filename or array.stripes)
+  return array.width and array.height and (array.filename or array.stripes or array.filenames)
 end
 
 util.is_sprite_def = is_sprite_def
