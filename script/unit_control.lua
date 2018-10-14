@@ -939,10 +939,16 @@ end
 
 local on_player_removed = function(event)
   local frame = data.open_frames[event.player_index]
-  if frame then
+  if (frame and frame.valid) then
     util.deregister_gui(frame, data.button_actions)
     frame.destroy()
-    data.open_frames[event.player_index] = nil
+  end
+  data.open_frames[event.player_index] = nil
+  local group = get_selected_units(event.player_index)
+  if group then
+    for unit_number, ent in pairs (group) do
+      deselect_units(units[unit_number])
+    end
   end
 end
 
