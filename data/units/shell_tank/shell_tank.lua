@@ -211,7 +211,7 @@ local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
 stream.name = name.." Stream"
 stream.oriented_particle = true
 stream.action =
-{
+{ 
   {
     type = "direct",
     action_delivery =
@@ -221,24 +221,75 @@ stream.action =
       {
         {
           type = "create-entity",
-          entity_name = "big-explosion"
+          entity_name = name.." Explosion"
         }
       }
     }
   },
   {
     type = "area",
-    collision_mode = "distance-from-center",
-    radius = 1.5,
-    force = "not-same",
+    target_entities = false,
+    trigger_from_target = true,
+    repeat_count = 60,
+    radius = 5,
     action_delivery =
     {
       type = "instant",
       target_effects =
       {
         {
-          type = "damage",
-          damage = { amount = 10, type = util.damage_type(name) }
+          type = "create-entity",
+          entity_name = name.." Explosion"
+        }
+      }
+    }
+  },
+  {
+    type = "area",
+    target_entities = false,
+    trigger_from_target = true,
+    repeat_count = 60,
+    radius = 3,
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "create-entity",
+          entity_name = name.." Explosion"
+        }
+      }
+    }
+  },
+  {
+    type = "area",
+    force = "not-same",
+    radius = 5,
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "damage",  
+          damage = {amount = 15 , type = util.damage_type("shell_tank")}
+        }
+      }
+    }
+  },
+  {
+    type = "area",
+    force = "not-same",
+    radius = 3,
+    action_delivery =
+    {
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "damage",  
+          damage = {amount = 15 , type = util.damage_type("shell_tank")}
         }
       }
     }
@@ -274,6 +325,99 @@ stream.smoke_sources =
 stream.progress_to_create_smoke = 0 --not merged
 stream.target_position_deviation = 1.5
 
+
+local small_projectile = util.copy(data.raw.projectile["shotgun-pellet"])
+small_projectile.name = name.." Small Projectile"
+small_projectile.force_condition = "not-same"
+--small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
+small_projectile.collision_box = nil
+small_projectile.direction_only = false
+small_projectile.height = 0.5
+small_projectile.acceleration = SA(0)
+small_projectile.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "create-entity",
+        entity_name = name.." Explosion"
+      }
+    }
+  }
+}
+small_projectile.final_action = nil
+--util.recursive_hack_scale(small_projectile, 0.5)
+local animation = util.copy(small_projectile.animation)
+local shadow = util.copy(small_projectile.shadow)
+local make_animation = function(scale)
+  local data = util.copy(animation)
+  data.scale = 0-- (data.scale or 1) * scale
+  return data
+end
+local make_shadow = function(scale)
+  local data = util.copy(animation)
+  data.scale = 0-- (data.scale or 1) * scale
+  return data
+end
+
+small_projectile.animation =
+{
+  make_animation(0.8),
+  make_animation(0.85),
+  make_animation(0.9),
+  make_animation(0.95),
+  make_animation(1.0),
+  make_animation(1.05),
+  make_animation(1.10),
+  make_animation(1.15),
+  make_animation(1.2)
+}
+small_projectile.shadow =
+{
+  make_shadow(0.8),
+  make_shadow(0.85),
+  make_shadow(0.9),
+  make_shadow(0.95),
+  make_shadow(1.0),
+  make_shadow(1.05),
+  make_shadow(1.10),
+  make_shadow(1.15),
+  make_shadow(1.2)
+}
+
+
+local explosion = util.copy(data.raw.explosion.explosion)
+explosion.name = name.." Explosion"
+
+local sprites = explosion.animations
+local new_animations = {}
+local add_sprites = function(scale, speed)
+  for k, sprite in pairs (sprites) do
+    local new = util.copy(sprite)
+    new.animation_speed = (new.animation_speed or 1) * speed
+    new.scale = (new.scale or 1) * scale
+    new.blend_mode = "additive-soft"
+    table.insert(new_animations, new)
+  end
+end
+
+add_sprites(1, 0.5)
+add_sprites(0.95, 0.6)
+add_sprites(0.9, 0.7)
+add_sprites(0.85, 0.8)
+add_sprites(0.8, 0.9)
+add_sprites(0.75, 1)
+add_sprites(0.6, 1.1)
+add_sprites(0.5, 1.2)
+
+explosion.animations = new_animations
+
+
+
 local item = {
   type = "item",
   name = name,
@@ -305,4 +449,4 @@ local recipe = {
 }
 
 
-data:extend{unit, item, recipe, stream}
+data:extend{unit, item, recipe, stream, small_projectile, explosion}

@@ -31,8 +31,8 @@ local on_player_created = function(event)
     --laser_bot = 20,
     --tazer_bot = 20,
     --blaster_bot = 50
-    shell_tank = 15,
-    --plasma_bot = 20,
+    shell_tank = 50,
+    --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
@@ -51,8 +51,8 @@ local on_player_created = function(event)
   if player.character then player.character.destroy() end
 
   team2 = {
-    --beetle = 50,
-    --plasma_bot = 5,
+    beetle = 200,
+    --plasma_bot = 10,
     --rocket_guy = 20,
     --smg_guy = 50,
     --flame_car = 20,
