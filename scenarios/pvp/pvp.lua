@@ -41,7 +41,8 @@ local events =
   on_round_end = script.generate_event_name(),
   on_round_start = script.generate_event_name(),
   on_team_lost = script.generate_event_name(),
-  on_team_won = script.generate_event_name()
+  on_team_won = script.generate_event_name(),
+  on_player_joined_team = script.generate_event_name()
 }
 
 local starting_area_chunk_radius =
@@ -1298,7 +1299,7 @@ function set_player(player, team, mute)
     type = defines.controllers.character,
     character = surface.create_entity{name = "player", position = position, force = force}
   }
-  player.spectator = false
+  player.spectator = true
   init_player_gui(player)
   for k, other_player in pairs (game.connected_players) do
     update_team_list_frame(player)
@@ -1314,6 +1315,7 @@ function set_player(player, team, mute)
   if not mute then
     game.print({"joined", player.name, player.force.name})
   end
+  script.raise_event(events.on_player_joined_team, {player_index = player.index, team = team})
 end
 
 function choose_joining_gui(player)

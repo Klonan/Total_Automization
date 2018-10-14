@@ -545,6 +545,11 @@ local on_player_gun_inventory_changed = function(event)
   end
 end
 
+local on_player_joined_team = function(event)
+  local player = game.players[event.player_index]
+  player.print("ANYtAHIGAN")
+end
+
 local events =
 {
   [defines.events.on_player_created] = on_player_created,
@@ -556,6 +561,17 @@ local events =
   [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
 
+local load_pvp_events = function()
+  if not remote.interfaces["pvp"] then return end
+
+  local pvp_events = remote.call("pvp", "get_events")
+  for name, id in pairs (pvp_events) do
+    defines.events[name] = id
+  end
+  events[defines.events.on_player_joined_team] = on_player_joined_team
+  classes.on_event = handler(events)
+end
+
 classes.set_class = set_class
 
 classes.on_event = handler(events)
@@ -565,10 +581,12 @@ classes.on_init = function()
   for k, player in pairs (game.players) do
     data.selected_loadouts[player.name] = default_loadout()
   end
+  load_pvp_events()
 end
 
 classes.on_load = function()
   data = global.classes or data
+  load_pvp_events()
 end
 
 classes.class_list = class_list

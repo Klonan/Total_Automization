@@ -32,7 +32,7 @@ local register_events = function()
   --script.on_event(defines.events, control.on_event())
   events = 
   {
-    [defines.events.on_round_start] = on_round_start,
+    [defines.events.on_round_start] = on_round_start
   }
   pvp_interface.on_event = handler(events)
   
