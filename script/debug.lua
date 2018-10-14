@@ -27,14 +27,14 @@ local on_player_created = function(event)
   --if true then return {} end
   local team1 = {
     --beetle = 80,
-    --plasma_bot = 10,
+    plasma_bot = 1,
     --laser_bot = 20,
     --tazer_bot = 20,
     --blaster_bot = 50
     --plasma_bot = 20,
     --acid_worm = 20,
     --piercing_biter = 50
-    scatter_spitter = 20
+    --scatter_spitter = 20
     --smg_guy = 50
   }
   local pos = {x = -40, y = 0}
@@ -53,10 +53,10 @@ local on_player_created = function(event)
     --beetle = 50,
     --plasma_bot = 5,
     --rocket_guy = 20,
-    smg_guy = 50,
+    --smg_guy = 50,
     --flame_car = 20,
     --rocket_guy = 20,
-    --shell_tank = 10,
+    shell_tank = 1,
     --shell_tank = 80
     --scatter_spitter = 20,
     --piercing_biter = 20,

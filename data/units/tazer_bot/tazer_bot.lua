@@ -111,9 +111,9 @@ beam.action =
         action =
         {
           type = "area",
-          radius = 3,
+          radius = 2.5,
           force = "not-same",
-          trigger_from_target = true, --not merged
+          trigger_from_target = true,
           action_delivery =
           {
             type = "beam",
@@ -154,7 +154,7 @@ small_beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 10, type = "electric"}
+        damage = { amount = 5, type = "electric"}
       },
       {
         type = "create-sticker",

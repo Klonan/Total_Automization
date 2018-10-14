@@ -125,38 +125,36 @@ projectile.height = 0.5
 projectile.max_speed = SD(0.75)
 projectile.action =
 {
-  type = "direct",
-  action_delivery =
   {
-    type = "instant",
-    target_effects =
+    type = "direct",
+    action_delivery =
     {
+      type = "instant",
+      target_effects =
       {
-        type = "create-entity",
-        entity_name = name.." Splash"
-      },
-      {
-        type = "damage",  
-        damage = {amount = 20 , type = util.damage_type("plasma_bot")}
+        {
+          type = "create-entity",
+          entity_name = name.." Splash"
+        }
       }
+    }
+  },
+  {
+    type = "area",
+    target_entities = false,
+    trigger_from_target = true,
+    repeat_count = 100,
+    radius = 1,
+    action_delivery =
+    {
+      type = "projectile",
+      projectile = name.." Small Projectile",
+      starting_speed = SD(0.35),
+      starting_speed_deviation = SD(0.35),
     }
   }
 }
-projectile.final_action = 
-{
-  type = "area",
-  target_entities = false,
-  trigger_from_target = true,
-  repeat_count = 100,
-  radius = 1,
-  action_delivery =
-  {
-    type = "projectile",
-    projectile = name.." Small Projectile",
-    starting_speed = SD(0.35),
-    starting_speed_deviation = SD(0.35),
-  }
-}
+projectile.final_action = nil
 --[[{
   type = "area",
   radius = 2.5,
@@ -210,7 +208,8 @@ util.recursive_hack_scale(projectile, 2)
 local small_projectile = util.copy(projectile)
 small_projectile.name = name.." Small Projectile"
 small_projectile.force_condition = "not-same"
-small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
+--small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
+small_projectile.collision_box = nil
 small_projectile.direction_only = true
 small_projectile.height = 0
 small_projectile.max_speed = SD(1)
@@ -224,12 +223,29 @@ small_projectile.action =
     target_effects =
     {
       {
-        type = "damage",  
-        damage = {amount = 2.5 , type = util.damage_type("plasma_bot")}
-      },
-      {
         type = "create-entity",
         entity_name = name.." Small Splash"
+      },
+      {
+        type = "nested-result",
+        action =
+        {
+          type = "area",
+          radius = 1,
+          --collision_mode = "distance-from-center",
+          force = "not-same",
+          action_delivery =
+          {
+            type = "instant",
+            target_effects =
+            {
+              {
+                type = "damage",  
+                damage = {amount = 2.5 , type = util.damage_type("plasma_bot")}
+              }
+            }
+          }
+        }
       }
     }
   }

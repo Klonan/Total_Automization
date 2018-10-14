@@ -58,6 +58,9 @@ local spawn_player = function(player)
       ammo_stack.set_stack(ammo_name)
     end
   end
+  if not player.character then
+    player.character = character
+  end
 
 end
 
@@ -461,7 +464,12 @@ end
 local change_class_hotkey_pressed = function(event)
   local player = game.players[event.player_index]
   if not (player and player.valid) then return end
-  game.print(player.name or "Nameless player")
+  local x = player.position.x
+  local y = player.position.y
+  if not (player.surface.count_entities_filtered{area = {{x - 32, y - 32},{x + 32, y + 32}}, name = names.entities.command_center} > 0) then
+    player.print("You can only change your class when near a command center")
+    return
+  end
   choose_class_gui_init(player)
 end
 
@@ -547,7 +555,9 @@ end
 
 local on_player_joined_team = function(event)
   local player = game.players[event.player_index]
-  player.print("ANYtAHIGAN")
+  if not (player and player.valid) then return end
+  if player.character then player.character.destroy() end
+  choose_class_gui_init(player)
 end
 
 local events =
