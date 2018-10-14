@@ -72,12 +72,10 @@ for k, layer in pairs (cannon_pictures.cannon_base_pictures.layers) do
   table.insert(sprite_base.animation.layers, layer)
 end
 
---error(serpent.block(sprite_base.animation.layers))
-
-
-
-
-
+local shifts = require(path.."shell_tank_creation_parameters")
+for k, shift in pairs (shifts) do
+  shift[2][2] = shift[2][2] - 1.35
+end
 
 local unit =
 {
@@ -112,9 +110,14 @@ local unit =
     warmup = SU(15),
     cooldown = SU(145),
     range = 40,
-    min_attack_distance = 32,
-    projectile_creation_distance = 1.5,
-    projectile_center = {0, -1.5},
+    --min_attack_distance = 32,
+    --projectile_creation_distance = 1.5,
+    --projectile_center = {0, -1.5},
+    projectile_creation_distance = 1.6,
+    projectile_center = {-0.15625, -1.5},
+    --range = 7 * 32,
+    --min_range = 1 * 32,
+    projectile_creation_parameters = shifts,
     sound =
     {
       {
@@ -139,21 +142,12 @@ local unit =
             direction_deviation = 0.05,
             range_deviation = 0.1,
             starting_frame_deviation = 5,
-            max_range = 40
-          }
-        },
-        {
-          type = "direct",
-          action_delivery =
-          {
-            type = "projectile",
-            projectile = name.." Projectile",
-            starting_speed = SD(1.5),
-            starting_speed_deviation = SD(0.1),
-            direction_deviation = 0.05,
-            range_deviation = 0.1,
-            starting_frame_deviation = 5,
-            max_range = 40
+            max_range = 40,
+            source_effects =
+            {
+              type = "create-explosion",
+              entity_name = "artillery-cannon-muzzle-flash"
+            }
           }
         }
       }
