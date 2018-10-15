@@ -74,7 +74,7 @@ end
 
 local shifts = require(path.."shell_tank_creation_parameters")
 for k, shift in pairs (shifts) do
-  shift[2][2] = shift[2][2] - 1.35
+  shift[2][2] = shift[2][2] - 1.3
 end
 
 local unit =
@@ -88,7 +88,7 @@ local unit =
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 225,
-  radar_range = 2,
+  radar_range = 3,
   order="b-b-b",
   subgroup="enemies",
   resistances = nil,
@@ -107,14 +107,15 @@ local unit =
   {
     type = "projectile",
     ammo_category = "bullet",
-    warmup = SU(15),
+    warmup = SU(30),
     cooldown = SU(145),
-    range = 45,
-    min_attack_distance = 32,
+    cooldown_deviation = 0.1,
+    range = 56,
+    min_attack_distance = 40,
     --projectile_creation_distance = 1.5,
     --projectile_center = {0, -1.5},
     projectile_creation_distance = 1.6,
-    projectile_center = {-0.15625, -1.5},
+    projectile_center = {-0.15625, -1.2},
     --range = 7 * 32,
     --min_range = 1 * 32,
     projectile_creation_parameters = shifts,
@@ -149,7 +150,7 @@ local unit =
     },
     animation = sprite_base.animation
   },
-  vision_distance = 40,
+  vision_distance = 60,
   has_belt_immunity = true,
   movement_speed = SD(0.15),
   distance_per_frame = 0.15,
@@ -304,8 +305,8 @@ stream.particle_buffer_size = 1
 stream.particle_spawn_interval = SU(100)
 stream.particle_spawn_timeout = SU(0)
 stream.particle_vertical_acceleration = SA(1.981 / 90)
-stream.particle_horizontal_speed = SD(1.2)
-stream.particle_horizontal_speed_deviation = SD(0.03)
+stream.particle_horizontal_speed = SD(1)
+stream.particle_horizontal_speed_deviation = SD(0.2)
 stream.particle_start_alpha = 1
 stream.particle_end_alpha = 1
 stream.particle_start_scale = 0.7

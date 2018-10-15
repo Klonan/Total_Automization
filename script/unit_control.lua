@@ -660,7 +660,7 @@ local attack_closest = function(unit_data, entities)
   --local quick_dist = quick_dist
   if not checked_tables[entities] then
     for k, ent in pairs (entities) do
-      if not ent.valid or not visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
+      if not ent.valid then
         entities[k] = nil
       end
     end
