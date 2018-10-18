@@ -23,9 +23,17 @@ local next_command_type =
   attack = 5,
 }
 
-local set_scout_command = function(unit_data, failure)
+local set_scout_command = function(unit_data, failure, delay)
   local unit = unit_data.entity
   if unit.type ~= "unit" then return end
+  if delay and delay > 0 then
+    unit.set_command
+    {
+      type = defines.command.stop,
+      ticks_to_wait = delay
+    }
+    return
+  end
   --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
   --unit.surface.create_entity{name = "explosion", position = unit.position}
   local position = unit.position
@@ -46,18 +54,20 @@ local set_scout_command = function(unit_data, failure)
   end
   local insert = table.insert
   local scout_range = 6
-  if failure then scout_range = 8 end
   local visible_chunks = {}
   local non_visible_chunks = {}
   local uncharted_chunks = {}
   local checked = {}
+  local force = unit.force
+  local is_charted = force.is_chunk_charted
+  local is_visible = force.is_chunk_visible
   for X = -scout_range, scout_range do
     for Y = -scout_range, scout_range do
       local chunk_position = {x = chunk_x + X, y = chunk_y + Y}
       if in_map(chunk_position) then
-        if (not unit.force.is_chunk_charted(surface, chunk_position)) then
+        if (not is_charted(surface, chunk_position)) then
           insert(uncharted_chunks, chunk_position)
-        elseif (not unit.force.is_chunk_visible(surface, chunk_position)) then
+        elseif (not is_visible(surface, chunk_position)) then
           insert(non_visible_chunks, chunk_position)
         else
           insert(visible_chunks, chunk_position)
@@ -67,24 +77,28 @@ local set_scout_command = function(unit_data, failure)
   end
   local chunk
   local tile_destination
+  local remove = table.remove
+  local random = math.random
+  local find_non_colliding_position = surface.find_non_colliding_position
+  local name = unit.name
   repeat
-    if #uncharted_chunks > 0 and not failure then
-      index = math.random(#uncharted_chunks)
+    if not failure and #uncharted_chunks > 0 then
+      index = random(#uncharted_chunks)
       chunk = uncharted_chunks[index]
-      table.remove(uncharted_chunks, index)
-      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
-    elseif #non_visible_chunks > 0 and not failure then
-      index = math.random(#non_visible_chunks)
+      remove(uncharted_chunks, index)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
+    elseif not failure and #non_visible_chunks > 0 then
+      index = random(#non_visible_chunks)
       chunk = non_visible_chunks[index]
-      table.remove(non_visible_chunks, index)
-      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+      remove(non_visible_chunks, index)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
     elseif #visible_chunks > 0 then
-      index = math.random(#visible_chunks)
+      index = random(#visible_chunks)
       chunk = visible_chunks[index]
-      table.remove(visible_chunks, index)
-      tile_destination = surface.find_non_colliding_position(unit.name, {(chunk.x * 32) + math.random(32), (chunk.y * 32) + math.random(32)}, 32, 4)
+      remove(visible_chunks, index)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
     else
-      tile_destination = surface.find_non_colliding_position(unit.name, unit.force.get_spawn_position(unit.surface), 32, 4)
+      tile_destination = find_non_colliding_position(name, force.get_spawn_position(surface), 32, 4)
     end
   until tile_destination
   unit.set_command
@@ -122,8 +136,8 @@ local clear_indicators = function(unit_data)
   for k, indicator in pairs (unit_data.indicators) do
     if indicator and indicator.valid then
       indicator.destroy()
+    end
   end
-end
   unit_data.indicators = nil
 end
 
@@ -154,15 +168,20 @@ local add_unit_indicators = function(unit_data)
   if unit_data.player then
     player = game.players[unit_data.player]
   end
-  if not (player and player.valid) then return end
+  if not (player and player.valid and player.connected) then return end
   local indicators = {}
   local unit = unit_data.entity
   local surface = unit.surface
+  local create_entity = surface.create_entity
   local render_index = player.index
-  table.insert(indicators,
-  surface.create_entity
+  local insert = table.insert
+  local position = unit.position
+  local name = "highlight-box"
+
+  insert(indicators,
+  create_entity
   {
-    name = "highlight-box", box_type = "entity",
+    name = name, box_type = "entity",
     target = unit, render_player_index = render_index,
     position = unit.position,
     blink_interval = 0
@@ -171,50 +190,50 @@ local add_unit_indicators = function(unit_data)
   local box = unit.prototype.collision_box
 
   if unit_data.destination then
-    table.insert(indicators,
-    surface.create_entity
+    insert(indicators,
+    create_entity
     {
-      name = "highlight-box", box_type = "copy",
+      name = name, box_type = "copy",
       render_player_index = render_index,
       position = unit_data.destination,
       bounding_box = shift_box(box, unit_data.destination),
       blink_interval = 0
-    })  
+    })
   end
 
   if unit_data.target and unit_data.target.valid then
-    table.insert(indicators,
-    surface.create_entity
+    insert(indicators,
+    create_entity
     {
-      name = "highlight-box", box_type = "not-allowed",
+      name = name, box_type = "not-allowed",
       render_player_index = render_index,
       target = unit_data.target,
       position = unit_data.target.position,
       blink_interval = 20
-    })  
+    })
   end
-  
+
   for k, command in pairs (unit_data.command_queue) do
-    if command.command_type == next_command_type.move then    
-      table.insert(indicators,
-      surface.create_entity
+    if command.command_type == next_command_type.move then
+      insert(indicators,
+      create_entity
       {
-        name = "highlight-box", box_type = "copy",
+        name = name, box_type = "copy",
         render_player_index = render_index,
-        position = unit.position,
+        position = position,
         bounding_box = shift_box(box, command.destination),
         blink_interval = 0
-      })  
+      })
     end
     if command.command_type == next_command_type.patrol then
       for k, destination in pairs (command.destinations) do
         if k ~= 1 or command.destination_index ~= "initial" then
-          table.insert(indicators,
-          surface.create_entity
+          insert(indicators,
+          create_entity
           {
-            name = "highlight-box", box_type = "electricity",
+            name = name, box_type = "electricity",
             render_player_index = render_index,
-            position = unit.position,
+            position = position,
             bounding_box = shift_box(box, destination),
             blink_interval = 0
           })
@@ -293,7 +312,7 @@ local gui_actions =
       if append and not data.idle then
         table.insert(data.command_queue, {command_type = next_command_type.scout})
       else
-        set_scout_command(data)
+        set_scout_command(data, false, unit_number % 120)
         data.command_queue = {{command_type = next_command_type.scout}}
         data.idle = false
         add_unit_indicators(data)
@@ -332,7 +351,7 @@ local gui_actions =
   end
 }
 
-local button_map = 
+local button_map =
 {
   [tool_names.unit_move_tool] = "move_button",
   [tool_names.unit_patrol_tool] = "patrol_button",
@@ -388,7 +407,7 @@ deregister_unit = function(entity)
   if group then
     --game.print("Deregistered unit from group")
     group[unit_number] = nil
-    --if table_size(group) == 0 then 
+    --if table_size(group) == 0 then
   end
   local player_index = unit.player
   if not player_index then
@@ -397,7 +416,7 @@ deregister_unit = function(entity)
   end
 
   local frame = data.open_frames[player_index]
-  
+
   if not (frame and frame.valid) then
     data.selected_units[player_index] = nil
     return
@@ -600,7 +619,7 @@ local make_patrol_command = function(param)
         if patrol_command and append then
           table.insert(patrol_command.destinations, next_destination)
         else
-          command = 
+          command =
           {
             command_type = next_command_type.patrol,
             destinations = {entity.position, next_destination},
@@ -650,14 +669,11 @@ local quick_dist = function(p1, p2)
 end
 
 local attack_closest = function(unit_data, entities)
-  --local min = 5000000000000000000000000
   local unit = unit_data.entity
   local position = unit.position
   local entities = entities
   local force = unit.force
   local surface = unit.surface
-  local visible = force.is_chunk_visible
-  --local quick_dist = quick_dist
   if not checked_tables[entities] then
     for k, ent in pairs (entities) do
       if not ent.valid then
@@ -667,18 +683,6 @@ local attack_closest = function(unit_data, entities)
     checked_tables[entities] = true
   end
   local closest = unit.surface.get_closest(unit.position, entities)
-  
-  --for k, ent in pairs (entities) do
-  --  if ent.valid and visible(surface, {ent.position.x / 32, ent.position.y / 32}) then
-  --    local sep = quick_dist(ent.position, position)
-  --    if sep < min then
-  --      min = sep
-  --      closest = ent
-  --    end
-  --  else
-  --    entities[k] = nil
-  --  end
-  --end
 
   if closest and closest.valid then
     unit.set_command
@@ -687,8 +691,6 @@ local attack_closest = function(unit_data, entities)
       distraction = defines.distraction.none,
       target = closest
     }
-    --surface.create_entity{name = "highlight-box", position = closest.position, source = closest, box_type = "not-allowed"}
-    --Still a 'maybe'
     unit_data.target = closest
     return true
   else
@@ -702,7 +704,7 @@ local make_attack_command = function(group, entities, append)
   local data = data.units
   for unit_number, unit in pairs (group) do
     local commandable = (unit.type == "unit")
-    local next_command = 
+    local next_command =
     {
       command_type = next_command_type.attack,
       targets = entities
@@ -735,7 +737,7 @@ local attack_units = function(event)
   game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
-local selected_area_actions = 
+local selected_area_actions =
 {
   [tool_names.unit_selection_tool] = unit_selection,
   [tool_names.deployer_selection_tool] = unit_selection,
@@ -746,7 +748,7 @@ local selected_area_actions =
   [tool_names.unit_force_attack_tool] = attack_units,
 }
 
-local alt_selected_area_actions = 
+local alt_selected_area_actions =
 {
   [tool_names.unit_selection_tool] = unit_selection,
   [tool_names.deployer_selection_tool] = unit_selection,
@@ -792,8 +794,8 @@ local on_gui_click = function(event)
   end
 end
 local on_entity_removed = function(event)
-  deregister_unit(event.entity)
   checked_tables = {}
+  deregister_unit(event.entity)
 end
 
 local idle_command = {type = defines.command.stop, radius = 1}
@@ -802,7 +804,7 @@ process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
   if not (entity and entity.valid) then
     game.print("Entity is nil??")
-    return 
+    return
   end
   local command_queue = unit_data.command_queue
   local next_command = command_queue[1]
@@ -889,8 +891,8 @@ local check_indicators = function(tick)
 end
 
 local on_tick = function(event)
-  check_indicators(event.tick)
   checked_tables = {}
+  check_indicators(event.tick)
 end
 
 local on_unit_deployed = function(event)
@@ -901,7 +903,7 @@ local on_unit_deployed = function(event)
   local source_data = data.units[source.unit_number]
   if not source_data then return end
   local queue = source_data.command_queue
-  data.units[unit.unit_number] = 
+  data.units[unit.unit_number] =
   {
     entity = unit,
     command_queue = util.copy(queue),
@@ -989,7 +991,7 @@ unit_control.on_init = function()
   game.map_settings.steering.moving.radius = 2
   game.map_settings.steering.moving.default = 2
   game.map_settings.max_failed_behavior_count = 2
-  
+
 end
 
 unit_control.on_load = function()

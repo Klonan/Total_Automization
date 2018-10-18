@@ -31,19 +31,19 @@ local on_player_created = function(event)
     --laser_bot = 20,
     --tazer_bot = 20,
     --blaster_bot = 50
-    shell_tank = 50,
+    --shell_tank = 50,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
-    --smg_guy = 50
+    smg_guy = 5000
   }
   local pos = {x = -40, y = 0}
     for name, count in pairs (team1) do
       for x = 1, count do
         local vec = get_position(math.random(400))
         player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
-      end 
+      end
     end
 
 
@@ -51,7 +51,7 @@ local on_player_created = function(event)
   if player.character then player.character.destroy() end
 
   team2 = {
-    beetle = 200,
+    --beetle = 200,
     --plasma_bot = 10,
     --rocket_guy = 20,
     --smg_guy = 50,
@@ -69,7 +69,7 @@ local on_player_created = function(event)
     for x = 1, count do
       local vec = get_position(math.random(400))
       player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
-    end 
+    end
   end
   player.get_quickbar().insert(names.unit_tools.unit_selection_tool)
   player.get_quickbar().insert(names.unit_tools.deployer_selection_tool)
@@ -78,7 +78,7 @@ local on_player_created = function(event)
   player.insert(names.entities.teleporter)
 end
 
-local events = 
+local events =
 {
   [defines.events.on_player_created] = on_player_created
 }
