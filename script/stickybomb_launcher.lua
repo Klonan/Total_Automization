@@ -95,20 +95,26 @@ local events =
   [defines.events.on_trigger_created_entity] = on_trigger_created_entity,
   [defines.events.on_pre_player_died] = kill_player_mines,
   [defines.events.on_pre_player_left_game] = kill_player_mines,
-  [defines.events.on_pre_player_changed_class] = kill_player_mines,
   [defines.events.on_entity_died] = on_entity_died
 }
 
-local lib = {}
+local register_events = function()
+  if remote.interfaces["classes"] then
+    local class_events = remote.call("classes", "get_events")
+    events[class_events.on_pre_player_changed_class] = kill_player_mines
+  end
+end
 
-lib.on_event = handler(events)
+local lib = {}
 
 lib.on_init = function()
   global.stickybomb_launcher = data
+  lib.on_event = handler(events)
 end
 
 lib.on_load = function()
   data = global.stickybomb_launcher or data
+  lib.on_event = handler(events)
 end
 
 return lib

@@ -4,7 +4,10 @@ local data =
   tick_check = {}
 }
 
-defines.events["on_unit_deployed"] = script.generate_event_name()
+local unit_deployment_events =
+{
+  on_unit_deployed = script.generate_event_name()
+}
 
 local names = names.deployers
 local units = names.units
@@ -33,7 +36,7 @@ local deploy_unit = function(source, name, count)
     local deploy_position = surface.find_non_colliding_position(name, position, 8, 1)
     if deploy_position then
       local unit = surface.create_entity{name = name, position = deploy_position, force = force}
-      script.raise_event(defines.events.on_unit_deployed,{unit = unit, source = source})
+      script.raise_event(unit_deployment_events.on_unit_deployed, {unit = unit, source = source})
       deployed = deployed + 1
     else
       break
@@ -94,30 +97,25 @@ local on_tick = function(event)
   data.tick_check[event.tick] = nil
 end
 
-local on_entity_settings_pasted = function(event)
-  local source = event.source
-  local destination = event.destination
-  if not (source and source.valid and destination and destination.valid) then return end
-  if not map[source.name] then return end
-  if not map[destination.name] then return end
-end
-
-local events = {
+local events =
+{
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_robot_built_entity] = on_built_entity,
   [defines.events.on_tick] = on_tick
 }
 
-local unit_deployment = {}
+remote.add_interface("unit_deployment", {get_events = function() return util.copy(unit_deployment_events) end})
 
-unit_deployment.on_event = handler(events)
+local unit_deployment = {}
 
 unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
+  unit_deployment.on_event = handler(events)
 end
 
 unit_deployment.on_load = function()
   data = global.unit_deployment
+  unit_deployment.on_event = handler(events)
 end
 
 return unit_deployment

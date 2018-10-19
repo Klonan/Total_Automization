@@ -1,5 +1,3 @@
---Well, I can't test this, as the game crashes...
-
 local data =
 {
   killcams = {}
@@ -48,16 +46,16 @@ local events =
   [defines.events.on_tick] = on_tick
 }
 
-killcam = {}
-
-killcam.on_event = handler(events)
+local killcam = {}
 
 killcam.on_init = function()
   global.killcam = data
+  killcam.on_event = handler(events)
 end
 
 killcam.on_load = function()
   data = global.killcam or data
+  killcam.on_event = handler(events)
 end
 
 return killcam

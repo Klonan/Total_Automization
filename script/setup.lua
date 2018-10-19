@@ -26,16 +26,18 @@ local events =
   [defines.events.on_force_created] = on_force_created
 }
 
-
 local setup = {}
 
 setup.on_init = function()
   for k, force in pairs (game.forces) do
     setup_force(force)
   end
+  setup.on_event = handler(events)
 end
 
-setup.on_event = handler(events)
+setup.on_load = function()
+  setup.on_event = handler(events)
+end
 
 return setup
 

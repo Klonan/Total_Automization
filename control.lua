@@ -42,55 +42,50 @@ remote.add_interface("debug", {dump = function() log(serpent.block(global)) end}
 
 libs.debug.libs = libs
 
-local control = {}
+--hack(?)
+local last_event = script.generate_event_name()
+local all_events = {}
+for k = 1, last_event do
+  all_events[k] = k
+end
 
-control.on_event = function()
-  return function(event)
-    for name, lib in pairs (libs) do
-      if lib.on_event then
-        lib.on_event(event)
-      end
+local on_event = function(event)
+  for name, lib in pairs (libs) do
+    if lib.on_event then
+      lib.on_event(event)
     end
   end
 end
 
-control.on_init = function()
-  return function()
-    game.speed = settings.startup["game-speed"].value
-    for name, lib in pairs (libs) do
-      if lib.on_init then
-        lib.on_init()
-      end
+local on_init = function()
+  game.speed = settings.startup["game-speed"].value
+  for name, lib in pairs (libs) do
+    if lib.on_init then
+      lib.on_init()
     end
-    script.on_event(defines.events, control.on_event())
   end
+  script.on_event(all_events, on_event)
 end
 
-control.on_load = function()
-  return
-  function()
-    for name, lib in pairs (libs) do
-      if lib.on_load then
-        lib.on_load()
-      end
+local on_load = function()
+  for name, lib in pairs (libs) do
+    if lib.on_load then
+      lib.on_load()
     end
-    script.on_event(defines.events, control.on_event())
   end
+  script.on_event(all_events, on_event)
 end
 
-control.on_configuration_changed = function()
-  return
-  function(data)
-    for name, lib in pairs (libs) do
-      if lib.on_configuration_changed then
-        lib.on_configuration_changed(data)
-      end
+local on_configuration_changed = function(data)
+  for name, lib in pairs (libs) do
+    if lib.on_configuration_changed then
+      lib.on_configuration_changed(data)
     end
   end
 end
 
-script.on_init(control.on_init())
+script.on_init(on_init)
 
-script.on_load(control.on_load())
+script.on_load(on_load)
 
-script.on_configuration_changed(control.on_configuration_changed())
+script.on_configuration_changed(on_configuration_changed)

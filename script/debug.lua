@@ -1,4 +1,3 @@
-local debug = {}
 local names = names
 local get_position = function(n)
   local root = n^0.5
@@ -84,12 +83,17 @@ local events =
   [defines.events.on_player_created] = on_player_created
 }
 
-debug.on_event = handler(events)
+local debug = {}
 
 debug.on_init = function()
   for k, surface in pairs (game.surfaces) do
     surface.always_day = true
   end
+  debug.on_event = handler(events)
+end
+
+debug.on_load = function()
+  debug.on_event = handler(events)
 end
 
 return debug

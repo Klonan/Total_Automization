@@ -1,6 +1,5 @@
 local teleporter_name = require"shared".entities.teleporter
 
-
 local data =
 {
   networks = {},
@@ -319,21 +318,16 @@ local events =
   [defines.events.on_player_changed_surface] = on_player_removed
 }
 
-
 local teleporters = {}
-
-teleporters.on_event = function(event)
-  if not (event and event.name) then return end
-  local action = events[event.name] or function() return end
-  return action(event)
-end
 
 teleporters.on_init = function()
   global.teleporters = global.teleporters or data
+  teleporters.on_event = handler(events)
 end
 
 teleporters.on_load = function()
   data = global.teleporters
+  teleporters.on_event = handler(events)
 end
 
 return teleporters

@@ -1,7 +1,5 @@
 local tool_names = names.unit_tools
 
-local unit_control = {}
-
 local data =
 {
   button_actions = {},
@@ -968,7 +966,6 @@ local events =
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
   --[defines.events[names.hotkeys.unit_move]] = gui_actions.move_button,
-  [defines.events.on_unit_deployed] = on_unit_deployed,
   [defines.events[hotkeys.suicide]] = suicide,
   [defines.events.on_player_died] = on_player_removed,
   [defines.events.on_player_left_game] = on_player_removed,
@@ -976,7 +973,14 @@ local events =
   [defines.events.on_player_changed_surface] = on_player_removed
 }
 
-unit_control.on_event = handler(events)
+local register_events = function()
+  if remote.interfaces["unit_deployment"] then
+    local unit_deployment_events = remote.call("unit_deployment", "get_events")
+    events[unit_deployment.on_unit_deployed] = on_unit_deployed
+  end
+end
+
+local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
@@ -992,10 +996,12 @@ unit_control.on_init = function()
   game.map_settings.steering.moving.default = 0
   game.map_settings.max_failed_behavior_count = 2
 
+  unit_control.on_event = handler(events)
 end
 
 unit_control.on_load = function()
   data = global.unit_control
+  unit_control.on_event = handler(events)
 end
 
 return unit_control

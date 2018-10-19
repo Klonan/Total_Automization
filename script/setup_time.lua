@@ -90,18 +90,18 @@ local events =
   [defines.events.on_robot_mined_entity] = check_setup,
 }
 
-local on_event = handler(events)
-
 local setup_time = {}
 
-setup_time.on_event = on_event
+setup_time.on_event = handler(events)
 
 setup_time.on_load = function()
   data = global.setup_time
+  setup_time.on_event = handler(events)
 end
 
 setup_time.on_init = function()
   global.setup_time = data
+  setup_time.on_event = handler(events)
 end
 
 return setup_time

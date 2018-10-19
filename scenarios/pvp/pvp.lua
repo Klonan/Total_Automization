@@ -1315,7 +1315,8 @@ function set_player(player, team, mute)
   if not mute then
     game.print({"joined", player.name, player.force.name})
   end
-  script.raise_event(events.on_player_joined_team, {player_index = player.index, team = team})
+  --error(events.on_player_joined_team)
+  script.raise_event(events.on_player_joined_team, {player_index = player.index, team = team, force = force})
 end
 
 function choose_joining_gui(player)

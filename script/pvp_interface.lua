@@ -1,9 +1,6 @@
 --Interfaces with the base game PvP scenario.
-if not remote.interfaces["pvp"] then return {} end
 
-local pvp_interface = {}
-
-local on_round_start = function()
+local on_round_start = function(event)
   for k, force in pairs (game.forces) do
     force.disable_research()
     force.inserter_stack_size_bonus = 1
@@ -22,24 +19,19 @@ local on_round_start = function()
   end
 end
 
-local names = names
 local events = {}
-local register_events = function()
-  local pvp_events = remote.call("pvp", "get_events")
-  for name, id in pairs (pvp_events) do
-    defines.events[name] = id
-  end
-  --script.on_event(defines.events, control.on_event())
-  events =
-  {
-    [defines.events.on_round_start] = on_round_start
-  }
-  pvp_interface.on_event = handler(events)
 
+local register_pvp_events = function()
+  local pvp_events = remote.call("pvp", "get_events")
+  events[pvp_events.on_round_start] = on_round_start
 end
 
-local on_init = function()
-  register_events()
+local names = names
+
+local pvp_interface = {}
+
+pvp_interface.on_init = function()
+  if not remote.interfaces["pvp"] then return end
   local config = remote.call("pvp", "get_config")
   local prototypes = config.prototypes
   prototypes.turret = names.entities.small_gun_turret
@@ -64,17 +56,15 @@ local on_init = function()
   config.game_config.base_exclusion_time = nil
   config.victory.space_race = nil
   config.victory.required_satellites_sent = nil
-
-
-
-
   remote.call("pvp", "set_config", config)
+  register_pvp_events()
+  pvp_interface.on_event = handler(events)
 end
 
-local on_load = function()
-  register_events()
+pvp_interface.on_load = function()
+  if not remote.interfaces["pvp"] then return end
+  register_pvp_events()
+  pvp_interface.on_event = handler(events)
 end
 
-pvp_interface.on_init = on_init
-pvp_interface.on_load = on_load
 return pvp_interface

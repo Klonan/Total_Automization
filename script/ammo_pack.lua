@@ -32,18 +32,19 @@ local on_player_ammo_inventory_changed = function(event)
   }
 end
 
-local on_trigger_created_entity = function(event)
-  
-end
-
 local events =
 {
-  [defines.events.on_player_ammo_inventory_changed] = on_player_ammo_inventory_changed,
-  [defines.events.on_trigger_created_entity] = on_trigger_created_entity
+  [defines.events.on_player_ammo_inventory_changed] = on_player_ammo_inventory_changed
 }
 
 local ammo_pack = {}
 
-ammo_pack.on_event = handler(events)
+ammo_pack.on_init = function()
+  ammo_pack.on_event = handler(events)
+end
+
+ammo_pack.on_load = function()
+  ammo_pack.on_event = handler(events)
+end
 
 return ammo_pack

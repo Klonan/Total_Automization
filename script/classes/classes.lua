@@ -1,13 +1,7 @@
-defines.events.on_pre_player_changed_class = script.generate_event_name()
-
 local util = require("script/script_util")
 hotkeys = names.hotkeys
 local names = names
 local loadouts = require("script/classes/loadouts")
-
-classes =
-{
-}
 
 local data =
 {
@@ -16,8 +10,13 @@ local data =
   current_loadouts = {}
 }
 
+local class_events =
+{
+  on_pre_player_changed_class = script.generate_event_name()
+}
+
 local spawn_player = function(player)
-  script.raise_event(defines.events.on_pre_player_changed_class, {player_index = player.index})
+  script.raise_event(class_events.on_pre_player_changed_class, {player_index = player.index})
   local loadout = data.current_loadouts[player.name]
   if not loadout then return error("NO CURRENT LOADOUT FOR PLAYER "..player.name) end
   local spec = loadouts[loadout.name]
@@ -571,34 +570,33 @@ local events =
   [defines.events[hotkeys.change_class]] = change_class_hotkey_pressed
 }
 
-local load_pvp_events = function()
-  if not remote.interfaces["pvp"] then return end
-
-  local pvp_events = remote.call("pvp", "get_events")
-  for name, id in pairs (pvp_events) do
-    defines.events[name] = id
+local register_events = function()
+  if remote.interfaces["pvp"] then
+    local pvp_events = remote.call("pvp", "get_events")
+    events[pvp_events.on_player_joined_team] = on_player_joined_team
   end
-  events[defines.events.on_player_joined_team] = on_player_joined_team
-  classes.on_event = handler(events)
 end
 
-classes.set_class = set_class
+remote.add_interface("classes",
+{
+  get_events = function() return util.copy(class_events) end
+})
 
-classes.on_event = handler(events)
+local classes = {}
 
 classes.on_init = function()
   global.classes = global.classes or data
   for k, player in pairs (game.players) do
     data.selected_loadouts[player.name] = default_loadout()
   end
-  load_pvp_events()
+  register_events()
+  classes.on_event = handler(events)
 end
 
 classes.on_load = function()
   data = global.classes or data
-  load_pvp_events()
+  register_events()
+  classes.on_event = handler(events)
 end
-
-classes.class_list = class_list
 
 return classes
