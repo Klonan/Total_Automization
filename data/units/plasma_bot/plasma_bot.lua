@@ -42,8 +42,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = SU(150),
     cooldown_deviation = 0.2,
-    range = 40,
-    min_attack_distance = 32,
+    range = 56,
+    min_attack_distance = 46,
     projectile_creation_distance = 0.5,
     sound = 
     {
@@ -72,17 +72,17 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(0),
+          starting_speed = SD(-0.2),
           direction_deviation = 0.05,
           range_deviation = 0.05,
-          max_range = 40
+          max_range = 60
           }
         }
       }
     },
     animation = {layers = {base.idle_with_cargo, base.shadow_idle_with_cargo, idle_mask}}
   },
-  vision_distance = 40,
+  vision_distance = 60,
   has_belt_immunity = true,
   movement_speed = SD(0.22),
   distance_per_frame = 0.15,
@@ -241,7 +241,7 @@ small_projectile.action =
             {
               {
                 type = "damage",  
-                damage = {amount = 2.5 , type = util.damage_type("plasma_bot")}
+                damage = {amount = 1 , type = util.damage_type("plasma_bot")}
               }
             }
           }
