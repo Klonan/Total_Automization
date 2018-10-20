@@ -150,7 +150,7 @@ local unit =
     },
     animation = sprite_base.animation
   },
-  vision_distance = 48,
+  vision_distance = 42,
   has_belt_immunity = true,
   movement_speed = SD(0.15),
   distance_per_frame = 0.15,
@@ -324,7 +324,7 @@ stream.smoke_sources =
   }
 }
 stream.progress_to_create_smoke = 0
-stream.target_position_deviation = 1.5
+stream.target_position_deviation = 3
 
 
 local small_projectile = util.copy(data.raw.projectile["shotgun-pellet"])

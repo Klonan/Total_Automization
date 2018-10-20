@@ -6,6 +6,7 @@ SD = function(v)
   return v / settings.startup["game-speed"].value
 end
 
+
 handler = require("script/event_handler")
 names = require("shared")
 util = require("script/script_util")

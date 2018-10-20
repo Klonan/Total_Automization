@@ -18,6 +18,7 @@ end
 local on_player_created = function(event)
 
   local player = game.players[event.player_index]
+  player.force = "player"
   --player.insert(names.entities.buy_chest)
   --player.insert(names.entities.sell_chest)
 
