@@ -42,19 +42,22 @@ remote.add_interface("debug", {dump = function() log(serpent.block(global)) end}
 
 libs.debug.libs = libs
 
---hack(?)
-local last_event = script.generate_event_name()
-local all_events = {}
-for k = 1, last_event do
-  all_events[k] = k
-end
-
 local on_event = function(event)
   for name, lib in pairs (libs) do
     if lib.on_event then
       lib.on_event(event)
     end
   end
+end
+
+local register_all_events = function()
+  --hack(?)
+  local last_event = script.generate_event_name()
+  local all_events = {}
+  for k = 1, last_event do
+    all_events[k] = k
+  end
+  script.on_event(all_events, on_event)
 end
 
 local on_init = function()
@@ -64,7 +67,7 @@ local on_init = function()
       lib.on_init()
     end
   end
-  script.on_event(all_events, on_event)
+  register_all_events()
 end
 
 local on_load = function()
@@ -73,7 +76,7 @@ local on_load = function()
       lib.on_load()
     end
   end
-  script.on_event(all_events, on_event)
+  register_all_events()
 end
 
 local on_configuration_changed = function(data)

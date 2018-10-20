@@ -29,12 +29,12 @@ local on_player_created = function(event)
     --plasma_bot = 1,
     --tazer_bot = 20,
     --blaster_bot = 50
-    --shell_tank = 50,
+    shell_tank = 1000,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
-    --smg_guy = 5000
+    --smg_guy = 500
   }
   local pos = {x = -40, y = 0}
     for name, count in pairs (team1) do

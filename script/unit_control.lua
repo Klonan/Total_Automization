@@ -515,7 +515,7 @@ local make_move_command = function(param)
           destination = destination,
           pathfind_flags =
           {
-            allow_destroy_friendly_entities = true,
+            allow_destroy_friendly_entities = false,
             cache = false
           }
         }

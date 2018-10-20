@@ -94,7 +94,7 @@ local unit =
   resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-1.5, -1.5}, {1.5, 1.5}},
+  collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-2, -2}, {2, 2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
@@ -150,7 +150,7 @@ local unit =
     },
     animation = sprite_base.animation
   },
-  vision_distance = 60,
+  vision_distance = 48,
   has_belt_immunity = true,
   movement_speed = SD(0.15),
   distance_per_frame = 0.15,
@@ -323,7 +323,7 @@ stream.smoke_sources =
     starting_frame_deviation = 60
   }
 }
-stream.progress_to_create_smoke = 0 --not merged
+stream.progress_to_create_smoke = 0
 stream.target_position_deviation = 1.5
 
 
