@@ -18,6 +18,7 @@ require "data/hotkeys"
 require "data/unit_control/unit_control"
 require "data/units/units"
 require "data/items/items"
+require "data/soundtrack/soundtrack"
 --require "data/changes/changes"
 
 --for name, font in pairs (data.raw.font) do
