@@ -31,13 +31,12 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
-  only_shoot_healthy = true,
   minable = {result = name, mining_time = 2},
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(90),
+    cooldown = SU(125),
     cooldown_deviation = 0.25,
     range = 32,
     min_attack_distance = 26,
@@ -69,7 +68,7 @@ local bot =
           starting_speed_deviation = SD(0.05),
           --direction_deviation = 0.1,
           range_deviation = 0.1,
-          max_range = 32
+          max_range = 40
           },
           {
             type = "instant",
@@ -136,16 +135,111 @@ projectile.action =
     target_effects =
     {
       {
-        type = "damage",
-        damage = {amount = 25 , type = util.damage_type("rocket_guy")}
-      },
-      {
-        type = "create-entity",
-        entity_name = "explosion"
-      },
+        type = "nested-result",
+        action =
+        {
+          {
+            type = "area",
+            target_entities = false,
+            trigger_from_target = true,
+            repeat_count = 2 * math.pi * 1 * 1,
+            radius = 1,
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "create-entity",
+                  entity_name = name.." Explosion"
+                }
+              }
+            }
+          },
+          {
+            type = "area",
+            target_entities = false,
+            trigger_from_target = true,
+            repeat_count = math.pi * 2 * 2,
+            radius = 2,
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "create-entity",
+                  entity_name = name.." Explosion"
+                }
+              }
+            }
+          },
+          {
+            type = "area",
+            radius = 2,
+            force = "not-same",
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "damage",
+                  damage = {amount = 5, type = util.damage_type("rocket")}
+                }
+              }
+            }
+          },
+          {
+            type = "area",
+            radius = 1,
+            force = "not-same",
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "damage",
+                  damage = {amount = 10, type = util.damage_type("rocket")}
+                },
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
+
+local explosion = util.copy(data.raw.explosion.explosion)
+explosion.name = name.." Explosion"
+
+local sprites = explosion.animations
+local new_animations = {}
+local add_sprites = function(scale, speed)
+  for k, sprite in pairs (sprites) do
+    local new = util.copy(sprite)
+    new.animation_speed = (new.animation_speed or 1) * speed
+    new.scale = (new.scale or 1) * scale
+    new.blend_mode = "additive"
+    table.insert(new_animations, new)
+  end
+end
+
+add_sprites(1, 0.5)
+add_sprites(0.95, 0.6)
+add_sprites(0.9, 0.7)
+add_sprites(0.85, 0.8)
+add_sprites(0.8, 0.9)
+add_sprites(0.75, 1)
+add_sprites(0.6, 1.1)
+add_sprites(0.5, 1.2)
+
+explosion.animations = new_animations
+explosion.light = nil
+explosion.smoke = nil
+explosion.smoke_count = 0
 
 local item = {
   type = "item",
@@ -176,4 +270,4 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, item, recipe}
+data:extend{bot, projectile, item, recipe, explosion}

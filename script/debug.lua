@@ -30,12 +30,13 @@ local on_player_created = function(event)
     --plasma_bot = 1,
     --tazer_bot = 20,
     --blaster_bot = 50
-    --shell_tank = 1000,
+    shell_tank = 500,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
-    smg_guy = 2000
+    smg_guy = 2000,
+    rocket_guy = 1000
   }
   local pos = {x = -40, y = 0}
     for name, count in pairs (team1) do
@@ -52,24 +53,24 @@ local on_player_created = function(event)
   team2 = {
     --beetle = 200,
     --plasma_bot = 10,
-    --blaster_bot = 500,
+    --blaster_bot = 200,
     --laser_bot = 300,
-    --tazer_bot = 300,
-    --smg_guy = 50,
+    --tazer_bot = 100,
+    --smg_guy = 30,
     --flame_car = 30,
     --rocket_guy = 20,
     --shell_tank = 80
-    --scatter_spitter = 3,
+    --scatter_spitter = 100,
     --piercing_biter = 30,
     --rocket_guy = 30,
     --laser_bot = 20
-    --acid_worm = 10
+    --acid_worm = 50
   }
   local pos = {x = 20, y = 0}
   for name, count in pairs (team2) do
     for x = 1, count do
       local vec = get_position(math.random(400))
-      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "player"}
+      player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
     end
   end
   player.get_quickbar().insert(names.unit_tools.unit_selection_tool)

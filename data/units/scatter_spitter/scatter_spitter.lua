@@ -22,6 +22,7 @@ unit.corpse = nil
 unit.has_belt_immunity = true
 unit.minable = {result = name, mining_time = 2}
 unit.healing_per_tick = SD(1/60)
+unit.vision_distance = 40
 local animation = util.copy(unit.attack_parameters.animation)
 for k, layer in pairs (animation.layers) do
   layer.animation_speed = SD(layer.animation_speed or 1)
@@ -280,6 +281,14 @@ local recipe = {
   result = name
 }
 
-data:extend{unit, projectile, sticker, splash, item, recipe}
+data:extend
+{
+  unit,
+  projectile,
+  sticker,
+  splash,
+  --item,
+  --recipe
+}
 
 

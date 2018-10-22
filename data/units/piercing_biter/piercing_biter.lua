@@ -91,6 +91,11 @@ local recipe = {
   result = name
 }
 
-data:extend{unit, item, recipe}
+data:extend
+{
+  unit,
+  --item,
+  --recipe
+}
 
 

@@ -198,4 +198,11 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, stream, splash, item, recipe}
+data:extend
+{
+  bot,
+  stream,
+  splash,
+  --item,
+  --recipe
+}

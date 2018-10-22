@@ -13,5 +13,5 @@ local group =
 
 
 require("iron_deploy_machine")
-require("bio_deploy_machine")
+--require("bio_deploy_machine")
 require("circuit_deploy_machine")
