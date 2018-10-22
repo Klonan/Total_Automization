@@ -2793,12 +2793,13 @@ end
 
 function create_starting_chest(force)
   if not (force and force.valid) then return end
+  if not script_data.config.team_config.starting_chest then return end
   local value = script_data.config.team_config.starting_chest.selected
-  if value == "none" then return end
   local multiplier = script_data.config.team_config.starting_chest_multiplier
   if not (multiplier > 0) then return end
   local inventory = script_data.config.inventory_list[value]
   if not inventory then return end
+  if not (table_size(inventory) > 0) then return end
   local surface = script_data.surface
   local chest_name = script_data.config.prototypes.chest
   local prototype = game.entity_prototypes[chest_name]

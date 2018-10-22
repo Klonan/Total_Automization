@@ -32,6 +32,10 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
+  ai_settings =
+  {
+    do_separation = false
+  },
   attack_parameters =
   {
     type = "projectile",

@@ -158,11 +158,7 @@ config.get_config = function()
   data.inventory_list =
   {
     none =
-    {
-      ["iron-plate"] = 8,
-      ["burner-mining-drill"] = 1,
-      ["stone-furnace"] = 1
-    },
+    {},
     small =
     {
       ["iron-plate"] = 200,

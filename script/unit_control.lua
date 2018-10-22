@@ -945,6 +945,7 @@ local on_player_removed = function(event)
   end
   data.open_frames[event.player_index] = nil
   local group = get_selected_units(event.player_index)
+  local units = data.units
   if group then
     for unit_number, ent in pairs (group) do
       deselect_units(units[unit_number])
