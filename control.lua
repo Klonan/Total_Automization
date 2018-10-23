@@ -23,16 +23,16 @@ end
 local libs = {
   debug = require "script/debug",
   teleporters = require "script/teleporters",
-  classes = require "script/classes/classes",
-  stickybomb_launcher = require "script/stickybomb_launcher",
   unit_deployment = require("script/unit_deployment"),
   unit_control = require "script/unit_control",
   command_center = require("script/command_center"),
   killcam = require("script/killcam"),
-  setup = require("script/setup"),
-  setup_time = require("script/setup_time"),
   pvp_interface = require("script/pvp_interface"),
-  ammo_pack = require("script/ammo_pack"),
+  --setup = require("script/setup"),
+  --classes = require "script/classes/classes",
+  --stickybomb_launcher = require "script/stickybomb_launcher",
+  --setup_time = require("script/setup_time"),
+  --ammo_pack = require("script/ammo_pack"),
   --damage_indicator = require("script/damage_indicator"),
   --trade_chests = require("script/trade_chests")
 }

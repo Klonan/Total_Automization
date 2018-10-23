@@ -1,13 +1,15 @@
 local name = names.ammo.pistol_magazine
-local ammo = util.copy(data.raw.ammo["firearm-magazine"])
-ammo.name = name
-ammo.localised_name = name
-ammo.magazine_size = 12
-ammo.stack_size = 20
+--local ammo = util.copy(data.raw.ammo["firearm-magazine"])
+local ammo = data.raw.ammo["firearm-magazine"]
+--ammo.name = name
+--ammo.localised_name = name
+--ammo.magazine_size = 12
+--ammo.stack_size = 20
 ammo.reload_time = SU(45)
 ammo.ammo_type =
 {
-  category = util.ammo_category("pistol"),
+  --category = util.ammo_category("pistol"),
+  category = "bullet",
   target_type = "direction",
   action =
   {
@@ -43,8 +45,8 @@ ammo.ammo_type =
 local projectile = util.copy(data.raw.projectile["cannon-projectile"])
 projectile.name = name
 projectile.localised_name = name
-projectile.piercing_damage = 0
 projectile.force_condition = "not-same"
+projectile.piercing_damage = 0
 projectile.action =
 {
   type = "direct",
@@ -59,7 +61,7 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 6 , type = util.damage_type("pistol")}
+        damage = {amount = 5 , type = util.damage_type("pistol")}
       }
     }
   }
