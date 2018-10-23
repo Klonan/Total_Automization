@@ -29,7 +29,7 @@ local slot = data.raw["gui-style"].default.slot_button
 slot.width = 64
 slot.height = 64
 ]]
-
+if true then return end
 local style = data.raw["gui-style"].default
 style.working_weapon_button.height = 96 + 4
 style.working_weapon_button.width = 96 + 4
