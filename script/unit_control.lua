@@ -977,7 +977,7 @@ local events =
 local register_events = function()
   if remote.interfaces["unit_deployment"] then
     local unit_deployment_events = remote.call("unit_deployment", "get_events")
-    events[unit_deployment.on_unit_deployed] = on_unit_deployed
+    events[unit_deployment_events.on_unit_deployed] = on_unit_deployed
   end
 end
 
@@ -996,12 +996,13 @@ unit_control.on_init = function()
   game.map_settings.steering.moving.radius = 0
   game.map_settings.steering.moving.default = 0
   game.map_settings.max_failed_behavior_count = 2
-
+  register_events()
   unit_control.on_event = handler(events)
 end
 
 unit_control.on_load = function()
   data = global.unit_control
+  register_events()
   unit_control.on_event = handler(events)
 end
 
