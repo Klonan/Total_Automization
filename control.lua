@@ -55,7 +55,7 @@ local register_all_events = function()
   --hack(?)
   local last_event = script.generate_event_name()
   local all_events = {}
-  for k = 1, last_event do
+  for k = 0, last_event do
     all_events[k] = k
   end
   script.on_event(all_events, on_event)
