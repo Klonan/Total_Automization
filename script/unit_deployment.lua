@@ -11,6 +11,7 @@ local unit_deployment_events =
 
 local names = names.deployers
 local units = names.units
+--todo allow other mods to add deployers 
 local map = {}
 for k, deployer in pairs (names) do
   map[deployer] = true
