@@ -12,7 +12,7 @@ local lowest_f_score = function(set, f_score)
   for k, cell in pairs(set) do
     local score = f_score[cell.owner.unit_number]
     if score <= lowest then
-      lowest = score 
+      lowest = score
       bestcell = cell
     end
   end
@@ -32,33 +32,33 @@ unwind_path = function(flat_path, map, current_cell)
 end
 
 local get_path = function(start, goal, cells)
-  
+
   local closed_set = {}
   local open_set = {}
   local came_from = {}
-  
+
   local g_score = {}
   local f_score = {}
   local start_index = start.owner.unit_number
   open_set[start_index] = start
   g_score[start_index] = 0
   f_score[start_index] = dist(start, goal)
-  
+
   local insert = table.insert
   while table_size(open_set) > 0 do
-    
+
     local current = lowest_f_score(open_set, f_score)
-    
+
     if current == goal then
       local path = unwind_path({}, came_from, goal)
       insert(path, goal)
       return path
     end
-    
+
     local current_index = current.owner.unit_number
     open_set[current_index] = nil
     closed_set[current_index] = current
-    
+
     for k, neighbor in pairs(current.neighbours) do
       local neighbor_index = neighbor.owner.unit_number
       if not closed_set[neighbor_index] then
@@ -75,7 +75,7 @@ local get_path = function(start, goal, cells)
         end
       end
     end
-    
+
   end
   return nil -- no valid path
 end
@@ -124,7 +124,7 @@ local set_drone_command = function(unit, destination_entity)
   if not (starting_cell and destination_cell) then return end
   local path = get_path(starting_cell, destination_cell, cells)
   if not path then game.print("No path for drone command") end
-  
+
   local biter = unit.surface.create_entity{name = "SMG Guy", force = unit.force, position = {unit.position.x + 3, unit.position.y}}
   local commands = {}
   for k, cell in pairs (path) do
