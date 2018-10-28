@@ -131,7 +131,7 @@ local set_drone_command = function(unit, destination_entity)
     local command =
     {
       type = defines.command.go_to_location,
-      destination = cell.owner.position,
+      destination_entity = cell.owner,
       radius = cell.construction_radius
     }
     table.insert(commands, command)
@@ -139,7 +139,7 @@ local set_drone_command = function(unit, destination_entity)
   table.insert(commands,
   {
     type = defines.command.go_to_location,
-    destination = destination_entity.position,
+    destination_entity = destination_entity,
     radius = 4
   })
   biter.set_command
