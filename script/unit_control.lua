@@ -24,6 +24,7 @@ local next_command_type =
 local set_scout_command = function(unit_data, failure, delay)
   local unit = unit_data.entity
   if unit.type ~= "unit" then return end
+  unit.speed = unit.prototype.speed
   if delay and delay > 0 then
     unit.set_command
     {
@@ -474,16 +475,36 @@ local get_offset = function(entities)
   local map = {}
   local small = 1
   for k, entity in pairs (entities) do
-    if not map[entity.name] then
-      map[entity.name] = entity.prototype
+    local name = entity.name
+    if not map[name] then
+      map[name] = entity.prototype
     end
   end
   local rad = util.radius
+  local speed = math.huge
   local max = math.max
+  local min = math.min
   for name, prototype in pairs (map) do
     small = max(small, rad(prototype.selection_box) * 2)
+    speed = min(speed, prototype.speed)
   end
-  return small, math.ceil((small * (table_size(entities) -1) ^ 0.5))
+  return small, math.ceil((small * (table_size(entities) -1) ^ 0.5)), speed
+end
+
+local get_min_speed = function(entities)
+  local map = {}
+  local speed = math.huge
+  for k, entity in pairs (entities) do
+    local name = entity.name
+    if not map[name] then
+      map[name] = entity.prototype
+    end
+  end
+  local min = math.min
+  for name, prototype in pairs (map) do
+    speed = min(speed, prototype.speed)
+  end
+  return speed
 end
 
 local make_move_command = function(param)
@@ -497,7 +518,7 @@ local make_move_command = function(param)
   local type = defines.command.go_to_location
   local find = surface.find_non_colliding_position
   local index
-  local offset, radius = get_offset(group)
+  local offset, radius, speed = get_offset(group)
   local insert = table.insert
   for x = -radius / 2, radius / 2, offset do
     for y = -radius / 2, radius / 2, offset do
@@ -513,6 +534,7 @@ local make_move_command = function(param)
           type = type, distraction = distraction,
           radius = 0.2,
           destination = destination,
+          speed = speed,
           pathfind_flags =
           {
             allow_destroy_friendly_entities = false,
@@ -523,6 +545,7 @@ local make_move_command = function(param)
         if append then
           if unit_data.idle and unit then
             entity.set_command(command)
+            entity.speed = speed
             unit_data.destination = destination
           end
           insert(unit_data.command_queue, command)
@@ -530,6 +553,7 @@ local make_move_command = function(param)
           unit_data.command_queue = {command}
           if unit then
             entity.set_command(command)
+            entity.speed = speed
             unit_data.command_queue = {}
             unit_data.destination = destination
           else
@@ -604,7 +628,7 @@ local make_patrol_command = function(param)
   local type = defines.command.go_to_location
   local find = surface.find_non_colliding_position
   local index
-  local offset, radius = get_offset(group)
+  local offset, radius, speed = get_offset(group)
   local insert = table.insert
   for x = -radius / 2, radius / 2, offset do
     for y = -radius / 2, radius / 2, offset do
@@ -621,7 +645,8 @@ local make_patrol_command = function(param)
           {
             command_type = next_command_type.patrol,
             destinations = {entity.position, next_destination},
-            destination_index = "initial"
+            destination_index = "initial",
+            speed = speed
           }
         end
         if not append then
@@ -680,6 +705,7 @@ local attack_closest = function(unit_data, entities)
     end
     checked_tables[entities] = true
   end
+  unit.speed = unit.prototype.speed
   local closest = unit.surface.get_closest(unit.position, entities)
 
   if closest and closest.valid then
@@ -811,9 +837,16 @@ process_command_queue = function(unit_data, result)
 
   if not (next_command) then
     entity.set_command(idle_command)
+    if entity.type == "unit" then
+      entity.speed = entity.prototype.speed
+    end
     unit_data.idle = true
     --game.print("No next command??")
     return
+  end
+
+  if entity.type == "unit" then
+    entity.speed = next_command.speed or entity.prototype.speed
   end
 
   local type = next_command.command_type
