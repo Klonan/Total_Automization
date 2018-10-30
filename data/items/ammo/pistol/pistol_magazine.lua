@@ -47,6 +47,7 @@ projectile.name = name
 projectile.localised_name = name
 projectile.force_condition = "not-same"
 projectile.piercing_damage = 0
+projectile.hit_at_collision_position = true
 projectile.action =
 {
   type = "direct",
@@ -69,6 +70,3 @@ projectile.action =
 projectile.final_action = nil
 
 data:extend{ammo, projectile}
-
-
-

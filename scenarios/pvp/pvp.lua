@@ -57,12 +57,13 @@ local starting_area_chunk_radius =
 
 get_starting_area_radius = function(as_tiles)
   local surface = game.surfaces[1]
-  local size = surface.map_gen_settings.starting_area
-  local radius = starting_area_chunk_radius[size]
+  local radius = surface.get_starting_area_radius()
+  --local size = surface.map_gen_settings.starting_area
+  --local radius = starting_area_chunk_radius[size]
   if as_tiles then
-    return radius * 32
+    return radius
   end
-  return radius
+  return radius / 32
 end
 
 function create_spawn_positions()
@@ -452,9 +453,9 @@ toggle_starting_chest_gui = function(player)
 
 
   register_gui_action(elem, {type = "starting_item_elem_changed", items = items})
-  
+
   register_gui_action(frame.add{type = "button", caption = "Close", style = "dialog_button"}, {type = "starting_chest"})
-  
+
 
 
 end
@@ -593,7 +594,7 @@ local gui_functions =
     if not (checkbox and checkbox.valid) then return end
     local player = game.players[event.player_index]
     local current_team = script_data.team_players[event.player_index]
-    if not current_team then 
+    if not current_team then
       player.print({"cant-ready"})
       checkbox.state = false
       return
@@ -782,7 +783,7 @@ local gui_functions =
   end,
   disable_elem_changed = function(event, param)
     if event.name ~= defines.events.on_gui_elem_changed then return end
-    
+
     local gui = event.element
     local player = game.players[event.player_index]
     if not (player and player.valid and gui and gui.valid) then return end
@@ -864,16 +865,16 @@ local gui_functions =
     local team = param.team
     if not team then return end
     set_player(player, team)
-  
+
     for k, player in pairs (game.forces.player.players) do
       choose_joining_gui(player)
       choose_joining_gui(player)
     end
-  
+
     for k, player in pairs (game.connected_players) do
       update_team_list_frame(player)
     end
-  
+
   end,
   list_teams_button = function(event, param)
     local player = game.players[event.player_index]
@@ -1419,7 +1420,7 @@ function toggle_balance_options_gui(player)
         input.text = tostring((modifier * 100) + 100)
         input.style.maximal_width = 60
       else
-        table.add{type = "label", caption = tostring((modifier * 100) + 100)}  
+        table.add{type = "label", caption = tostring((modifier * 100) + 100)}
       end
       table.add{type = "label", caption = "%"}
     end
@@ -1658,7 +1659,7 @@ function oil_harvest_button_press(event)
   end
   frame = flow.add{type = "frame", name = "oil_harvest_frame", caption = {"oil_harvest"}, direction = "vertical"}
   frame.style.title_bottom_padding = 8
-  
+
   if script_data.config.game_config.time_limit > 0 then
     table.insert(script_data.timers, frame.add{type = "label", caption = {"time_left", get_time_left()}})
   end
@@ -2457,7 +2458,7 @@ function create_starting_turrets(force)
   if script_data.config.game_config.turret_ammunition then
     ammo_name = script_data.config.game_config.turret_ammunition.selected
   end
-  
+
   local surface = script_data.surface
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
@@ -3102,7 +3103,7 @@ function recipe_picker_elem_update(player)
   end
 
   if not elem_value then return end
-  
+
   local recipe = player.force.recipes[elem_value]
   local recipe_frame = production_score_frame.add{type = "frame", direction = "vertical", style = "image_frame"}
   script_data.elements.recipe_frame[player.index] = recipe_frame

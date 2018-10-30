@@ -31,7 +31,7 @@ local names = names
 local pvp_interface = {}
 
 pvp_interface.on_init = function()
-  if not remote.interfaces["pvp"] then return end
+  if true or not remote.interfaces["pvp"] then return end
   local config = remote.call("pvp", "get_config")
   local prototypes = config.prototypes
   prototypes.turret = names.entities.small_gun_turret
