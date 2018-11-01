@@ -26,7 +26,7 @@ local on_player_created = function(event)
 
   --if true then return {} end
   local team1 = {
-    flame_car = 20,
+    scout_car = 20,
     --beetle = 80,
     --plasma_bot = 1,
     --tazer_bot = 20,
@@ -58,7 +58,7 @@ local on_player_created = function(event)
     laser_bot = 20,
     --tazer_bot = 100,
     --smg_guy = 30,
-    --flame_car = 30,
+    --scout_car = 30,
     --rocket_guy = 20,
     --shell_tank = 80
     --scatter_spitter = 100,

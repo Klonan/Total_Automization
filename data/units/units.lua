@@ -2,7 +2,7 @@ local require = function(name) return require("data/units/"..name) end
 
 require("smg_guy/smg_guy")
 require("rocket_guy/rocket_guy")
-require("flame_car/flame_car")
+require("scout_car/scout_car")
 require("shell_tank/shell_tank")
 
 require("blaster_bot/blaster_bot")

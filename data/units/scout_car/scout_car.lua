@@ -1,4 +1,4 @@
-local name = names.units.flame_car
+local name = names.units.scout_car
 
 local sprite_base = util.copy(data.raw.car.car)
 local turret_base = util.copy(data.raw.car.tank.turret_animation)
@@ -37,7 +37,7 @@ for k, layer in pairs (turret_base.layers) do
   layer.shift[2] = layer.shift[2] + turret_shift[2]
   table.insert(sprite_base.animation.layers, layer)
 end
-local path = util.path("data/units/flame_car/")
+local path = util.path("data/units/scout_car/")
 
 
 local unit =
@@ -169,7 +169,7 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 12 , type = util.damage_type("flame_car")}
+        damage = {amount = 12 , type = util.damage_type("scout_car")}
       }
     }
   }
