@@ -1,7 +1,42 @@
 local name = names.units.flame_car
 
 local sprite_base = util.copy(data.raw.car.car)
+local turret_base = util.copy(data.raw.car.tank.turret_animation)
+
+for k, layer in pairs (sprite_base.animation.layers) do
+  layer.frame_count = 1
+  layer.max_advance = nil
+  layer.line_length = nil
+  if layer.stripes then
+    for k, strip in pairs (layer.stripes) do
+      strip.width_in_frames = 1
+    end
+    if layer.apply_runtime_tint or layer.draw_as_shadow then
+      local new_stripes = {}
+      for k, stripe in pairs (layer.stripes) do
+        if k % 2 ~= 0 then
+          table.insert(new_stripes, stripe)
+        end
+      end
+      layer.stripes = new_stripes
+      --error(serpent.block(layer))
+    end
+  end
+end
+
+util.recursive_hack_make_hr(turret_base)
+util.recursive_hack_scale(turret_base, 0.75)
+
+local turret_shift = {0.1, 0}
+
+for k, layer in pairs (turret_base.layers) do
+  layer.shift = layer.shift or {0,0}
+  layer.shift[1] = layer.shift[1] + turret_shift[1]
+  layer.shift[2] = layer.shift[2] + turret_shift[2]
+  table.insert(sprite_base.animation.layers, layer)
+end
 local path = util.path("data/units/flame_car/")
+
 
 local unit =
 {
@@ -33,34 +68,10 @@ local unit =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(1),
-    range = 15,
-    min_attack_distance = 12,
+    cooldown = SU(100),
+    range = 25,
+    min_attack_distance = 22,
     projectile_creation_distance = 1.5,
-    cyclic_sound =
-    {
-      begin_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_start.ogg",
-          volume = 0.5
-        }
-      },
-      middle_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_mid.ogg",
-          volume = 0.5
-        }
-      },
-      end_sound =
-      {
-        {
-          filename = path.."flamethrower_shoot_end.ogg",
-          volume = 0.5
-        }
-      }
-    },
     ammo_type =
     {
       category = "bullet",
@@ -69,17 +80,17 @@ local unit =
       {
         {
           type = "direct",
-          repeat_count = 1,
+          repeat_count = 2,
           action_delivery =
           {
             type = "projectile",
             projectile = name.." Projectile",
-            starting_speed = SD(0.6),
+            starting_speed = SD(1),
             starting_speed_deviation = SD(0.05),
-            direction_deviation = math.pi * 0.25,
+            direction_deviation = 0.25,
             --range_deviation = 0.05,
             --starting_frame_deviation = 5,
-            max_range = 20
+            max_range = 28
           }
         }
       }
@@ -121,7 +132,7 @@ local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
 projectile.force_condition = "not-same"
-projectile.height = 0
+projectile.height = 1
 projectile.action = 
 {
   type = "direct",
@@ -132,30 +143,14 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 0.8 , type = util.damage_type("flame_car")}
-      },
-      {
-        type = "create-sticker",
-        sticker = name.." Sticker"
+        damage = {amount = 10 , type = util.damage_type("flame_car")}
       }
     }
   }
 }
-projectile.acceleration = SA(-0.0075)
+projectile.acceleration = 0
 projectile.final_action = nil
-projectile.animation = require("data/tf_util/tf_fire_util").create_fire_pictures({animation_speed = SD(1), scale = 0.5})
 
-
-local sticker = util.copy(data.raw.sticker["fire-sticker"])
-sticker.name = name.." Sticker"
-sticker.duration_in_ticks = SU(3 * 60)
-sticker.target_movement_modifier = 1
-sticker.damage_per_tick = { amount = SD(5 / 60), type = util.damage_type("flame_car_sticker") }
-sticker.spread_fire_entity = nil
-sticker.fire_spread_cooldown = nil
-sticker.fire_spread_radius = nil
-sticker.animation.scale = 0.5
-sticker.stickers_per_square_meter = 25
 
 local item = {
   type = "item",
@@ -187,4 +182,4 @@ local recipe = {
 }
 
 
-data:extend{unit, projectile, item, recipe, sticker}
+data:extend{unit, projectile, item, recipe}
