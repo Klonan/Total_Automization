@@ -3,6 +3,8 @@ local name = names.units.flame_car
 local sprite_base = util.copy(data.raw.car.car)
 local turret_base = util.copy(data.raw.car.tank.turret_animation)
 
+util.recursive_hack_make_hr(sprite_base)
+
 for k, layer in pairs (sprite_base.animation.layers) do
   layer.frame_count = 1
   layer.max_advance = nil
@@ -61,7 +63,7 @@ local unit =
   min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
   distraction_cooldown = SU(30),
-  move_while_shooting = false,
+  move_while_shooting = true,
   can_open_gates = true,
   minable = {result = name, mining_time = 2},
   attack_parameters =
@@ -69,9 +71,17 @@ local unit =
     type = "projectile",
     ammo_category = "bullet",
     cooldown = SU(100),
-    range = 25,
-    min_attack_distance = 22,
+    cooldown_deviation = 0.1,
+    range = 30,
+    min_attack_distance = 25,
     projectile_creation_distance = 1.5,
+    sound =
+    {
+      {
+        filename = "__base__/sound/fight/tank-cannon.ogg",
+        volume = 1.0
+      }
+    },
     ammo_type =
     {
       category = "bullet",
@@ -83,14 +93,26 @@ local unit =
           repeat_count = 2,
           action_delivery =
           {
-            type = "projectile",
-            projectile = name.." Projectile",
-            starting_speed = SD(1),
-            starting_speed_deviation = SD(0.05),
-            direction_deviation = 0.25,
-            --range_deviation = 0.05,
-            --starting_frame_deviation = 5,
-            max_range = 28
+            {
+              type = "projectile",
+              projectile = name.." Projectile",
+              starting_speed = SD(1),
+              starting_speed_deviation = SD(0.05),
+              direction_deviation = 0.1,
+              --range_deviation = 0.05,
+              --starting_frame_deviation = 5,
+              max_range = 30
+            },
+            {
+              type = "instant",
+              source_effects =
+              {
+                {
+                  type = "create-explosion",
+                  entity_name = "explosion-gunshot"
+                }
+              }
+            }
           }
         }
       }
@@ -142,14 +164,20 @@ projectile.action =
     target_effects =
     {
       {
+        type = "create-entity",
+        entity_name = "explosion"
+      },
+      {
         type = "damage",
-        damage = {amount = 10 , type = util.damage_type("flame_car")}
+        damage = {amount = 12 , type = util.damage_type("flame_car")}
       }
     }
   }
 }
 projectile.acceleration = 0
 projectile.final_action = nil
+projectile.animation.blend_mode = "additive"
+util.recursive_hack_scale(projectile, 2)
 
 
 local item = {

@@ -22,21 +22,22 @@ local on_player_created = function(event)
   --player.insert(names.entities.buy_chest)
   --player.insert(names.entities.sell_chest)
 
-  if true then return end
+  --if true then return end
 
   --if true then return {} end
   local team1 = {
+    flame_car = 20,
     --beetle = 80,
     --plasma_bot = 1,
     --tazer_bot = 20,
     --blaster_bot = 50
-    shell_tank = 500,
+    --shell_tank = 500,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
-    smg_guy = 2000,
-    rocket_guy = 1000
+    smg_guy = 30,
+    --rocket_guy = 1000
   }
   local pos = {x = -40, y = 0}
     for name, count in pairs (team1) do
@@ -53,8 +54,8 @@ local on_player_created = function(event)
   team2 = {
     --beetle = 200,
     --plasma_bot = 10,
-    --blaster_bot = 200,
-    --laser_bot = 300,
+    blaster_bot = 30,
+    laser_bot = 20,
     --tazer_bot = 100,
     --smg_guy = 30,
     --flame_car = 30,
