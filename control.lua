@@ -22,14 +22,14 @@ end
 
 local libs = {
   debug = require "script/debug",
-  teleporters = require "script/teleporters",
   unit_deployment = require("script/unit_deployment"),
   unit_control = require "script/unit_control",
   command_center = require("script/command_center"),
   killcam = require("script/killcam"),
   pvp_interface = require("script/pvp_interface"),
-  logistic_beacon = require("script/logistic_beacon"),
-  construction_done = require("script/construction_drone")
+  --teleporters = require "script/teleporters",
+  --logistic_beacon = require("script/logistic_beacon"),
+  --construction_done = require("script/construction_drone")
   --setup = require("script/setup"),
   --classes = require "script/classes/classes",
   --stickybomb_launcher = require "script/stickybomb_launcher",
