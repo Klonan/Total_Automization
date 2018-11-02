@@ -50,14 +50,14 @@ local subgroup =
   type = "item-subgroup",
   name = "iron-units",
   group = "combat",
-  order = "a"
+  order = "y"
 }
 
 local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"iron-plate", 50},

@@ -29,10 +29,14 @@ local bot =
   move_while_shooting = false,
   can_open_gates = true,
   minable = {result = name, mining_time = 2},
+  ai_settings =
+  {
+    do_separation = false
+  },
   attack_parameters =
   {
     type = "beam",
-    ammo_category = "bullet",
+    ammo_category = util.ammo_category(name),
     cooldown = SU(150),
     cooldown_deviation = 0.15,
     range = 20,
@@ -127,7 +131,7 @@ beam.action =
       },
       {
         type = "damage",
-        damage = { amount = 10, type = "electric"}
+        damage = { amount = 10, type = util.damage_type(name)}
       },
       {
         type = "create-sticker",
@@ -154,7 +158,7 @@ small_beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 5, type = "electric"}
+        damage = { amount = 5, type = util.damage_type(name)}
       },
       {
         type = "create-sticker",

@@ -32,6 +32,10 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
+  ai_settings =
+  {
+    do_separation = false
+  },
   minable = {result = name, mining_time = 2},
   attack_parameters =
   {
@@ -60,7 +64,7 @@ local bot =
     },
     ammo_type =
     {
-      category = "bullet",
+      category = util.ammo_category(name),
       target_type = "direction",
       action =
       {
@@ -131,7 +135,7 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 8 , type = util.damage_type("blaster_bot")}
+        damage = {amount = 8 , type = util.damage_type(name)}
       }
     }
   }
@@ -156,7 +160,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.circuit_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"electronic-circuit", 8},

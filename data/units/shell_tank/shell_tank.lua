@@ -103,6 +103,10 @@ local unit =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
+  ai_settings =
+  {
+    do_separation = false
+  },
   attack_parameters =
   {
     type = "projectile",
@@ -128,7 +132,7 @@ local unit =
     },
     ammo_type =
     {
-      category = "bullet",
+      category = util.ammo_category(name),
       target_type = "direction",
       action =
       {
@@ -274,7 +278,7 @@ stream.action =
       {
         {
           type = "damage",  
-          damage = {amount = 15 , type = util.damage_type("shell_tank")}
+          damage = {amount = 15 , type = util.damage_type(name)}
         }
       }
     }
@@ -290,7 +294,7 @@ stream.action =
       {
         {
           type = "damage",  
-          damage = {amount = 15 , type = util.damage_type("shell_tank")}
+          damage = {amount = 15 , type = util.damage_type(name)}
         }
       }
     }
@@ -325,71 +329,6 @@ stream.smoke_sources =
 }
 stream.progress_to_create_smoke = 0
 stream.target_position_deviation = 3
-
-
-local small_projectile = util.copy(data.raw.projectile["shotgun-pellet"])
-small_projectile.name = name.." Small Projectile"
-small_projectile.force_condition = "not-same"
---small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
-small_projectile.collision_box = nil
-small_projectile.direction_only = false
-small_projectile.height = 0.5
-small_projectile.acceleration = SA(0)
-small_projectile.action =
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = name.." Explosion"
-      }
-    }
-  }
-}
-small_projectile.final_action = nil
---util.recursive_hack_scale(small_projectile, 0.5)
-local animation = util.copy(small_projectile.animation)
-local shadow = util.copy(small_projectile.shadow)
-local make_animation = function(scale)
-  local data = util.copy(animation)
-  data.scale = 0-- (data.scale or 1) * scale
-  return data
-end
-local make_shadow = function(scale)
-  local data = util.copy(animation)
-  data.scale = 0-- (data.scale or 1) * scale
-  return data
-end
-
-small_projectile.animation =
-{
-  make_animation(0.8),
-  make_animation(0.85),
-  make_animation(0.9),
-  make_animation(0.95),
-  make_animation(1.0),
-  make_animation(1.05),
-  make_animation(1.10),
-  make_animation(1.15),
-  make_animation(1.2)
-}
-small_projectile.shadow =
-{
-  make_shadow(0.8),
-  make_shadow(0.85),
-  make_shadow(0.9),
-  make_shadow(0.95),
-  make_shadow(1.0),
-  make_shadow(1.05),
-  make_shadow(1.10),
-  make_shadow(1.15),
-  make_shadow(1.2)
-}
-
 
 local explosion = util.copy(data.raw.explosion.explosion)
 explosion.name = name.." Explosion"
@@ -440,7 +379,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.iron_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"engine-unit", 10},
@@ -453,4 +392,4 @@ local recipe = {
 }
 
 
-data:extend{unit, item, recipe, stream, small_projectile, explosion}
+data:extend{unit, item, recipe, stream, explosion}

@@ -54,14 +54,14 @@ local subgroup =
   type = "item-subgroup",
   name = "circuit-units",
   group = "combat",
-  order = "a"
+  order = "z"
 }
 
 local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"electronic-circuit", 50},

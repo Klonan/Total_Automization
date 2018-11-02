@@ -24,7 +24,7 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
     },
     {
       type = "area",
-      collision_mode = "distance-from-center",
+      --collision_mode = "distance-from-center",
       radius = 1.5,
       force = "not-same",
       action_delivery =
@@ -57,7 +57,7 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
   --stream.particle.tint = {r = 0.5, g = 0, b = 1}
   stream.spine_animation = nil
   stream.smoke_sources = nil
-  stream.target_position_deviation = 3
+  stream.target_position_deviation = 2
 
   local splash = 
   {
@@ -139,4 +139,16 @@ local small_worm = data.raw.turret["small-worm-turret"]
 local small_worm_range = 50
 small_worm.attack_parameters = make_worm_attack(small_worm.name, small_worm_range, 5, 30, 100)
 small_worm.range = small_worm_range
-small_worm.prepare_range = small_worm_range + 4
+small_worm.prepare_range = small_worm_range * 1.05
+
+local medium_worm = data.raw.turret["medium-worm-turret"]
+local medium_worm_range = 55
+medium_worm.attack_parameters = make_worm_attack(medium_worm.name, medium_worm_range, 15, 30, 120)
+medium_worm.range = medium_worm_range
+medium_worm.prepare_range = medium_worm_range * 1.05
+
+local big_worm = data.raw.turret["big-worm-turret"]
+local big_worm_range = 60
+big_worm.attack_parameters = make_worm_attack(big_worm.name, big_worm_range, 25, 30, 180)
+big_worm.range = big_worm_range
+big_worm.prepare_range = big_worm_range * 1.05

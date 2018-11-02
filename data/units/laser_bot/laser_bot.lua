@@ -47,12 +47,16 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
+  ai_settings =
+  {
+    do_separation = false
+  },
   minable = {result = name, mining_time = 2},
   
   attack_parameters =
   {
     type = "beam",
-    ammo_category = "electric",
+    ammo_category = util.ammo_category(name),
     cooldown = SU(100),
     cooldown_deviation = 0.15,
     range = 32,
@@ -63,7 +67,7 @@ local bot =
     --source_offset = {0, -0.1},
     ammo_type =
     {
-      category = "laser-turret",
+      category = util.ammo_category(name),
       energy_consumption = "800kJ",
       action =
       {
@@ -123,7 +127,7 @@ beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 12.5, type = util.damage_type("laser_bot")}
+        damage = { amount = 12, type = util.damage_type(name)}
       }
     }
   }
@@ -147,7 +151,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.circuit_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"advanced-circuit", 8},

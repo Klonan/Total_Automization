@@ -31,11 +31,15 @@ local bot =
   distraction_cooldown = SU(15),
   move_while_shooting = false,
   can_open_gates = true,
+  ai_settings =
+  {
+    do_separation = false
+  },
   minable = {result = name, mining_time = 2},
   attack_parameters =
   {
     type = "projectile",
-    ammo_category = "bullet",
+    ammo_category = util.ammo_category(name),
     cooldown = SU(125),
     cooldown_deviation = 0.25,
     range = 28,
@@ -57,7 +61,7 @@ local bot =
     },
     ammo_type =
     {
-      category = "bullet",
+      category = util.ammo_category(name),
       target_type = "direction",
       action =
       {
@@ -188,7 +192,7 @@ projectile.action =
               {
                 {
                   type = "damage",
-                  damage = {amount = 5, type = util.damage_type("rocket")}
+                  damage = {amount = 5, type = util.damage_type(name)}
                 }
               }
             }
@@ -204,7 +208,7 @@ projectile.action =
               {
                 {
                   type = "damage",
-                  damage = {amount = 10, type = util.damage_type("rocket")}
+                  damage = {amount = 10, type = util.damage_type(name)}
                 },
               }
             }
@@ -262,7 +266,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.iron_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"steel-plate", 15},

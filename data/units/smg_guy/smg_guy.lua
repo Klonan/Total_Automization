@@ -68,7 +68,7 @@ local bot =
     },
     ammo_type =
     {
-      category = "bullet",
+      category = util.ammo_category(name),
       target_type = "direction",
       action =
       {
@@ -121,7 +121,7 @@ local bot =
   run_animation = base.animations[1].running
 }
 
-local projectile = util.copy(data.raw.projectile["cannon-projectile"])
+local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.action =
@@ -134,7 +134,7 @@ projectile.action =
     {
       {
         type = "damage",
-        damage = {amount = 2.5 , type = util.damage_type("smg_guy")}
+        damage = {amount = 2.5 , type = util.damage_type(name)}
       },
       {
         type = "create-entity",
@@ -163,7 +163,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.iron_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"iron-plate", 15},
