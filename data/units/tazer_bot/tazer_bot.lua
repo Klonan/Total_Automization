@@ -205,7 +205,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = names.deployers.circuit_unit,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"battery", 10},
