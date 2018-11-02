@@ -22,7 +22,7 @@ local on_player_created = function(event)
   --player.insert(names.entities.buy_chest)
   --player.insert(names.entities.sell_chest)
 
-  --if true then return end
+  if true then return end
 
   --if true then return {} end
   local team1 = {

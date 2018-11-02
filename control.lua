@@ -1,9 +1,9 @@
 SU = function(v)
-  return v * settings.startup["game-speed"].value
+  return v  -- * settings.startup["game-speed"].value
 end
 
 SD = function(v)
-  return v / settings.startup["game-speed"].value
+  return v -- / settings.startup["game-speed"].value
 end
 
 
@@ -64,7 +64,7 @@ local register_all_events = function()
 end
 
 local on_init = function()
-  game.speed = settings.startup["game-speed"].value
+  --game.speed = settings.startup["game-speed"].value
   for name, lib in pairs (libs) do
     if lib.on_init then
       lib.on_init()
