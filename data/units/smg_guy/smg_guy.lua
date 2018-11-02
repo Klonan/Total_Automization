@@ -50,8 +50,13 @@ local bot =
       variations = 
       {
         {
-          filename = path.."smg_guy_shoot.ogg",
-          volume = 1
+          filename = "__base__/sound/fight/light-gunshot-1.ogg"
+        },
+        {
+          filename = "__base__/sound/fight/light-gunshot-2.ogg"
+        },
+        {
+          filename = "__base__/sound/fight/light-gunshot-3.ogg"
         }
       },
       aggregation =
@@ -102,14 +107,6 @@ local bot =
   destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
-  working_sound = {
-    sound =
-    {
-      { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
-    },
-    max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
-  },
   dying_sound =
   {
     {

@@ -9,9 +9,9 @@ machine.collision_box = {{-2.7, -2.7},{2.7, 2.7}}
 machine.selection_box = {{-2.9, -2.9},{2.9, 2.9}}
 machine.crafting_categories = {name}
 machine.crafting_speed = SD(1)
-machine.ingredient_count = 100
+machine.ingredient_count = nil
 machine.module_specification = nil
-machine.minable = {result = name, mining_time = 5}
+machine.minable = {result = name, mining_time = 2}
 machine.flags = {"placeable-neutral", "player-creation"}
 machine.fluid_boxes =
 {
@@ -68,4 +68,107 @@ local recipe = {
   result = name
 }
 
-data:extend{machine, item, category, subgroup, recipe}
+local technology_name = names.technologies.iron_units
+
+local technology_1 = {
+  type = "technology",
+  name = technology_name,
+  localised_name = technology_name,
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = name
+    },
+    {
+      type = "unlock-recipe",
+      recipe = names.units.smg_guy
+    }
+  },
+  unit =
+  {
+    count = 100,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+    },
+    time = 30
+  },
+  prerequisites = {"automation"},
+  order = "y-a"
+}
+
+local technology_2 = {
+  type = "technology",
+  name = technology_name.."-2",
+  localised_name = technology_name.." 2",
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = names.units.rocket_guy
+    },
+    {
+      type = "unlock-recipe",
+      recipe = names.units.scout_car
+    }
+  },
+  unit =
+  {
+    count = 200,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {technology_name},
+  order = "y-b",
+  upgrade = true
+}
+
+local technology_3 = {
+  type = "technology",
+  name = technology_name.."-3",
+  localised_name = technology_name.." 3",
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = names.units.shell_tank
+    }
+  },
+  unit =
+  {
+    count = 500,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+      {"science-pack-3", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {technology_name.."-2"},
+  order = "y-c",
+  upgrade = true
+}
+
+data:extend
+{
+  machine,
+  item,
+  category,
+  subgroup,
+  recipe,
+  technology_1,
+  technology_2,
+  technology_3
+}

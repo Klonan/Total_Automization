@@ -143,6 +143,12 @@ data.units =
   shell_tank = "Shell Tank"
 }
 
+data.technologies =
+{
+  iron_units = "Iron Units",
+  circuit_units = "Circuit Units"
+}
+
 data.entities =
 {
   recon_outpost = "Recon Outpost",

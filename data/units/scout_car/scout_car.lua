@@ -77,9 +77,30 @@ local unit =
     projectile_creation_distance = 1.5,
     sound =
     {
+      variations = 
       {
-        filename = "__base__/sound/fight/tank-cannon.ogg",
-        volume = 1.0
+        {
+          filename = "__base__/sound/fight/heavy-gunshot-1.ogg",
+          volume = 0.45
+        },
+        {
+          filename = "__base__/sound/fight/heavy-gunshot-2.ogg",
+          volume = 0.45
+        },
+        {
+          filename = "__base__/sound/fight/heavy-gunshot-3.ogg",
+          volume = 0.45
+        },
+        {
+          filename = "__base__/sound/fight/heavy-gunshot-4.ogg",
+          volume = 0.45
+        }
+      },
+      aggregation =
+      {
+        max_count = 2,
+        remove = true,
+        count_already_playing = true
       }
     },
     ammo_type =
@@ -165,11 +186,11 @@ projectile.action =
     {
       {
         type = "create-entity",
-        entity_name = "explosion"
+        entity_name = name.." Explosion"
       },
       {
         type = "damage",
-        damage = {amount = 12 , type = util.damage_type("scout_car")}
+        damage = {amount = 10 , type = util.damage_type("scout_car")}
       }
     }
   }
@@ -177,7 +198,11 @@ projectile.action =
 projectile.acceleration = 0
 projectile.final_action = nil
 projectile.animation.blend_mode = "additive"
-util.recursive_hack_scale(projectile, 2)
+util.recursive_hack_scale(projectile, 1.5)
+
+local explosion = util.copy(data.raw.explosion.explosion)
+util.recursive_hack_scale(explosion, 0.5)
+explosion.name = name.." Explosion"
 
 
 local item = {
@@ -210,4 +235,4 @@ local recipe = {
 }
 
 
-data:extend{unit, projectile, item, recipe}
+data:extend{unit, projectile, item, recipe, explosion}

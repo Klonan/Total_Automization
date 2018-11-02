@@ -72,4 +72,107 @@ local recipe = {
   result = name
 }
 
-data:extend{machine, item, category, subgroup, recipe}
+local technology_name = names.technologies.circuit_units
+
+local technology_1 = {
+  type = "technology",
+  name = technology_name,
+  localised_name = technology_name,
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = name
+    },
+    {
+      type = "unlock-recipe",
+      recipe = names.units.blaster_bot
+    }
+  },
+  unit =
+  {
+    count = 100,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+    },
+    time = 30
+  },
+  prerequisites = {"automation"},
+  order = "z-a"
+}
+
+local technology_2 = {
+  type = "technology",
+  name = technology_name.."-2",
+  localised_name = technology_name.." 2",
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = names.units.tazer_bot
+    },
+    {
+      type = "unlock-recipe",
+      recipe = names.units.laser_bot
+    }
+  },
+  unit =
+  {
+    count = 200,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {technology_name},
+  order = "z-b",
+  upgrade = true
+}
+
+local technology_3 = {
+  type = "technology",
+  name = technology_name.."-3",
+  localised_name = technology_name.." 3",
+  icon_size = machine.icon_size,
+  icon = machine.icon,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = names.units.plasma_bot
+    }
+  },
+  unit =
+  {
+    count = 500,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+      {"science-pack-3", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {technology_name.."-2"},
+  order = "z-c",
+  upgrade = true
+}
+
+data:extend
+{
+  machine,
+  item,
+  category,
+  subgroup,
+  recipe,
+  technology_1,
+  technology_2,
+  technology_3
+}

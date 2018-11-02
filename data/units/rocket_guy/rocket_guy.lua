@@ -43,7 +43,10 @@ local bot =
     projectile_creation_distance = 0.5,
     sound = {
       variations = {
-        {filename = path.."rocket_guy_shoot.ogg", volume = 1},
+        {
+          filename = "__base__/sound/fight/rocket-launcher.ogg",
+          volume = 1
+        },
       },
       aggregation =
       {
