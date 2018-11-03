@@ -18,3 +18,4 @@ local require = function(str) return require("data/changes/"..str) end
 require("fix_explosions")
 require("collision_masks")
 require("enemies/enemies")
+require("turrets")

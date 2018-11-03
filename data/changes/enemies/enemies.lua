@@ -205,7 +205,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
           {
             type = "area",
             radius = 1,
-            force = "enemy",
+            force = "not-same",
             action_delivery =
             {
               type = "instant",
@@ -359,7 +359,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     cooldown = cooldown,
     cooldown_deviation = 0.2,
     range = range,
-    min_attack_distance = range * 0.9,
+    min_attack_distance = range * 0.8,
     projectile_creation_distance = 1.9,
     warmup = 30,
     ammo_type =
@@ -463,12 +463,16 @@ local make_biter_attack = function(name, damage, cooldown)
             sticker = name.." Sticker"
           },
           {
+            type = "damage",
+            damage = {amount = damage, type = util.damage_type(name)}
+          },
+          {
             type = "nested-result",
             action =
             {
               type = "area",
               radius = 1,
-              force = "enemy",
+              force = "not-same",
               action_delivery =
               {
                 type = "instant",
