@@ -25,7 +25,7 @@ recursive_hack_scale = function(array, scale)
         v.projectile_center[2] = v.projectile_center[2] * scale
       end
       if v.projectile_creation_distance then
-        v.projectile_creation_distance = v.projectile_creation_distance * scale  
+        v.projectile_creation_distance = v.projectile_creation_distance * scale
       end
       recursive_hack_scale(v, scale)
     end
@@ -65,7 +65,7 @@ recursive_hack_make_hr = function(prototype)
     if type(v) == "table" then
       if is_sprite_def(v) and v.hr_version then
         prototype[k] = v.hr_version
-        --v.scale = v.scale * 0.5  
+        --v.scale = v.scale * 0.5
         v.hr_version = nil
       end
       recursive_hack_make_hr(v)
@@ -73,6 +73,14 @@ recursive_hack_make_hr = function(prototype)
   end
 end
 util.recursive_hack_make_hr = recursive_hack_make_hr
+
+util.scale_box = function(box, scale)
+  box[1][1] = box[1][1] * scale
+  box[1][2] = box[1][2] * scale
+  box[2][1] = box[2][1] * scale
+  box[2][2] = box[2][2] * scale
+  return box
+end
 
 util.scale_boxes = function(prototype, scale)
   for k, v in pairs {"collision_box", "selection_box"} do
@@ -104,7 +112,7 @@ util.add_flag = function(prototype, flag)
 end
 
 util.base_player = function()
-  
+
   local player = util.table.deepcopy(data.raw.player.player or error("Wat man cmon why"))
   player.ticks_to_keep_gun = SU(600)
   player.ticks_to_keep_aiming_direction = SU(100)
@@ -118,7 +126,7 @@ util.path = function(str)
 end
 
 util.empty_sound = function()
-  return 
+  return
   {
     filename = util.path("data/tf_util/empty-sound.ogg"),
     volume = 0
@@ -166,7 +174,7 @@ util.base_ammo = function(name)
     name = name,
     localised_name = name,
     type = "ammo",
-    stack_size = 1, 
+    stack_size = 1,
     magazine_size = 1,
     flags = {}
   }
