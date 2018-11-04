@@ -108,7 +108,7 @@ local set_scout_command = function(unit_data, failure, delay)
     radius = 1,
     pathfind_flags =
     {
-      allow_destroy_friendly_entities = true,
+      allow_destroy_friendly_entities = false,
       cache = true,
       low_priority = true
     }

@@ -155,7 +155,7 @@ big_worm.prepare_range = big_worm_range * 1.1
 
 --Spitters
 
-local make_spitter_attack = function(name, damage, cooldown, range)
+local make_spitter_attack = function(name, damage, cooldown, range, scale)
 
   local projectile = util.copy(data.raw.projectile["acid-projectile-purple"])
   projectile.name = name.." Projectile"
@@ -235,7 +235,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     height = 82,
     frame_count = 16,
     priority = "high",
-    scale = 0.3,
+    scale = 0.3 * scale,
     animation_speed = 1
   }
 
@@ -256,7 +256,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     priority = "high",
     shift = {-0.09, 0.395},
     draw_as_shadow = true,
-    scale = 0.3,
+    scale = 0.3 * scale,
     animation_speed = 1
   }
   local make_shadow = function(scale, speed)
@@ -410,29 +410,27 @@ end
 
 local small_spitter = data.raw.unit["small-spitter"]
 local animation = small_spitter.attack_parameters.animation
-small_spitter.attack_parameters = make_spitter_attack(small_spitter.name, 2, 60, 18)
+small_spitter.attack_parameters = make_spitter_attack(small_spitter.name, 2, 60, 18, 0.5)
 small_spitter.attack_parameters.animation = animation
 
 
 local medium_spitter = data.raw.unit["medium-spitter"]
 local animation = medium_spitter.attack_parameters.animation
-medium_spitter.attack_parameters = make_spitter_attack(medium_spitter.name, 4, 60, 20)
+medium_spitter.attack_parameters = make_spitter_attack(medium_spitter.name, 4, 60, 20, 0.75)
 medium_spitter.attack_parameters.animation = animation
 
 
 local big_spitter = data.raw.unit["big-spitter"]
 local animation = big_spitter.attack_parameters.animation
-big_spitter.attack_parameters = make_spitter_attack(big_spitter.name, 8, 60, 22)
+big_spitter.attack_parameters = make_spitter_attack(big_spitter.name, 8, 60, 22, 1)
 big_spitter.attack_parameters.animation = animation
 
 local behemoth_spitter = data.raw.unit["behemoth-spitter"]
 local animation = behemoth_spitter.attack_parameters.animation
-behemoth_spitter.attack_parameters = make_spitter_attack(behemoth_spitter.name, 15, 60, 24)
+behemoth_spitter.attack_parameters = make_spitter_attack(behemoth_spitter.name, 15, 60, 24, 1)
 behemoth_spitter.attack_parameters.animation = animation
 
 local make_biter_attack = function(name, damage, cooldown)
-
-
 
   local sticker = util.copy(data.raw.sticker["fire-sticker"])
   sticker.name = name.." Sticker"
@@ -456,15 +454,18 @@ local make_biter_attack = function(name, damage, cooldown)
       action_delivery =
       {
         type = "instant",
+        target_effects =
+        {
+          {
+            type = "damage",
+            damage = {amount = damage, type = util.damage_type(name)}
+          }
+        },
         source_effects =
         {
           {
             type = "create-sticker",
             sticker = name.." Sticker"
-          },
-          {
-            type = "damage",
-            damage = {amount = damage, type = util.damage_type(name)}
           },
           {
             type = "nested-result",
@@ -536,8 +537,8 @@ behemoth_biter.attack_parameters.animation = animation
 behemoth_biter.movement_speed = behemoth_biter.movement_speed * 1.5
 
 local biter_spawner = data.raw["unit-spawner"]["biter-spawner"]
-biter_spawner.max_count_of_owned_units = biter_spawner.max_count_of_owned_units * 8
-biter_spawner.max_friends_around_to_spawn = biter_spawner.max_friends_around_to_spawn * 8
+biter_spawner.max_count_of_owned_units = biter_spawner.max_count_of_owned_units * 4
+biter_spawner.max_friends_around_to_spawn = biter_spawner.max_friends_around_to_spawn * 4
 biter_spawner.collision_box = util.scale_box(biter_spawner.collision_box, 0.8)
 table.insert(biter_spawner.flags, "placeable-off-grid")
 biter_spawner.max_health = biter_spawner.max_health * 1.5
@@ -545,8 +546,8 @@ biter_spawner.spawning_cooldown[1] = biter_spawner.spawning_cooldown[1] * 4
 biter_spawner.spawning_cooldown[2] = biter_spawner.spawning_cooldown[2] * 4
 
 local spitter_spawner = data.raw["unit-spawner"]["spitter-spawner"]
-spitter_spawner.max_count_of_owned_units = spitter_spawner.max_count_of_owned_units * 8
-spitter_spawner.max_friends_around_to_spawn = spitter_spawner.max_friends_around_to_spawn * 8
+spitter_spawner.max_count_of_owned_units = spitter_spawner.max_count_of_owned_units * 4
+spitter_spawner.max_friends_around_to_spawn = spitter_spawner.max_friends_around_to_spawn * 4
 spitter_spawner.collision_box = util.scale_box(spitter_spawner.collision_box, 1)
 table.insert(spitter_spawner.flags, "placeable-off-grid")
 spitter_spawner.max_health = spitter_spawner.max_health * 1.5
