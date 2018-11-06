@@ -170,7 +170,8 @@ data.entities =
   sell_chest = "Trade Chest Sell",
   buy_chest = "Trade Chest Buy",
   damage_indicator_text = "Damage Indicator Text",
-  logistic_beacon = "Logistic Beacon"
+  logistic_beacon = "Logistic Beacon",
+  construction_drone = "Construction Drone"
 }
 
 data.deployers =
