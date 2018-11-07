@@ -80,21 +80,12 @@ local get_path = function(start, goal, cells)
   return nil -- no valid path
 end
 
-local get_closest_cell = function(entity, cells)
+local get_closest_cell = function(entity)
   local surface = entity.surface
   local force = entity.force
-  local entities
-  if cells then
-    entities = {}
-    for k, cell in pairs (cells) do
-      entities[k] = cell.owner
-    end
-  else
-    entities = surface.find_entities_filtered{type = "roboport", force = force}
-  end
-  local closest = surface.get_closest(entity.position, entities)
+  local closest = surface.get_closest(entity.position, surface.find_entities_filtered{type = "roboport", force = force})
   if closest then
-    closest.surface.create_entity{name = "explosion", position = closest.position}
+    --closest.surface.create_entity{name = "explosion", position = closest.position}
     return closest.logistic_cell
   end
 end
@@ -119,35 +110,42 @@ local set_drone_command = function(unit, destination_entity)
   if not (unit and unit.valid) then return end
   local destination_cell = get_closest_cell(destination_entity)
   if not destination_cell then return end
-  local cells = destination_cell.logistic_network.cells
-  local starting_cell = get_closest_cell(unit, cells)
-  if not (starting_cell and destination_cell) then return end
+  local destination_network = destination_cell.logistic_network
+  local cells = destination_network.cells
+  local starting_cell = destination_network.find_cell_closest_to(unit.position)
+  if not starting_cell then return end
+
   local path = get_path(starting_cell, destination_cell, cells)
+
   if not path then game.print("No path for drone command") end
 
-  local biter = unit.surface.create_entity{name = "SMG Guy", force = unit.force, position = {unit.position.x + 3, unit.position.y}}
+  --local biter = unit.surface.create_entity{name = names, force = unit.force, position = {unit.position.x + 3, unit.position.y}}
   local commands = {}
+  local command_type = defines.command.go_to_location
+  local radius = unit.get_radius()
   for k, cell in pairs (path) do
     local command =
     {
-      type = defines.command.go_to_location,
+      type = command_type,
       destination_entity = cell.owner,
-      radius = cell.construction_radius
+      radius = math.max(cell.construction_radius, cell.logistic_radius)+ radius
     }
     table.insert(commands, command)
   end
   table.insert(commands,
   {
-    type = defines.command.go_to_location,
+    type = command_type,
     destination_entity = destination_entity,
-    radius = 4
+    radius = destination_entity.get_radius() + radius
   })
-  biter.set_command
-  {
-    type = defines.command.compound,
-    commands = commands,
-    structure_type = defines.compound_command.return_last
-  }
+  if unit.type == "unit" then
+    unit.set_command
+    {
+      type = defines.command.compound,
+      commands = commands,
+      structure_type = defines.compound_command.return_last
+    }
+  end
 
 end
 
