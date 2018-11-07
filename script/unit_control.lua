@@ -85,19 +85,19 @@ local set_scout_command = function(unit_data, failure, delay)
       index = random(#uncharted_chunks)
       chunk = uncharted_chunks[index]
       remove(uncharted_chunks, index)
-      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 0, 4)
     elseif not failure and #non_visible_chunks > 0 then
       index = random(#non_visible_chunks)
       chunk = non_visible_chunks[index]
       remove(non_visible_chunks, index)
-      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 0, 4)
     elseif #visible_chunks > 0 then
       index = random(#visible_chunks)
       chunk = visible_chunks[index]
       remove(visible_chunks, index)
-      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 32, 4)
+      tile_destination = find_non_colliding_position(name, {(chunk.x * 32) + random(32), (chunk.y * 32) + random(32)}, 0, 4)
     else
-      tile_destination = find_non_colliding_position(name, force.get_spawn_position(surface), 32, 4)
+      tile_destination = find_non_colliding_position(name, force.get_spawn_position(surface), 0, 4)
     end
   until tile_destination
   unit.set_command
@@ -528,11 +528,11 @@ local make_move_command = function(param)
         local destination = {position.x + x, position.y + y}
         --log(entity.unit_number.." = "..serpent.line(destination))
         local unit = (entity.type == "unit")
-        local destination = find(entity.name, destination, 16, 1) or entity.position
+        local destination = find(entity.name, destination, 0, 0.5) or entity.position
         local command = {
           command_type = next_command_type.move,
           type = type, distraction = distraction,
-          radius = 0.2,
+          radius = 0.5,
           destination = destination,
           speed = speed,
           pathfind_flags =
@@ -636,10 +636,10 @@ local make_patrol_command = function(param)
       if entity then
         local unit = (entity.type == "unit")
         local unit_data = data.units[entity.unit_number]
-        local next_destination = find(entity.name, {position.x + x, position.y + y}, 16, 4) or entity.position
+        local next_destination = find(entity.name, {position.x + x, position.y + y}, 0, 0.5) or entity.position
         local patrol_command = find_patrol_comand(unit_data.command_queue)
         if patrol_command and append then
-          table.insert(patrol_command.destinations, next_destination)
+          insert(patrol_command.destinations, next_destination)
         else
           command =
           {
@@ -657,7 +657,7 @@ local make_patrol_command = function(param)
           end
         end
         if append and not patrol_command then
-          table.insert(unit_data.command_queue, command)
+          insert(unit_data.command_queue, command)
           if unit_data.idle and unit then
             process_command_queue(unit_data)
           end
@@ -873,8 +873,8 @@ process_command_queue = function(unit_data, result)
     entity.set_command
     {
       type = defines.command.go_to_location,
-      destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 16, 4) or entity.position,
-      radius = 0.2
+      destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 0, 0.5) or entity.position,
+      radius = 0.5
     }
     return
   end
