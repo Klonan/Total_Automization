@@ -108,7 +108,7 @@ local set_scout_command = function(unit_data, failure, delay)
     radius = 1,
     pathfind_flags =
     {
-      allow_destroy_friendly_entities = true,
+      allow_destroy_friendly_entities = false,
       cache = true,
       low_priority = true
     }
@@ -486,8 +486,11 @@ local get_offset = function(entities)
   local min = math.min
   for name, prototype in pairs (map) do
     small = max(small, rad(prototype.selection_box) * 2)
-    speed = min(speed, prototype.speed)
+    if prototype.type == "unit" then
+      speed = min(speed, prototype.speed)
+    end
   end
+  if speed == math.huge then speed = nil end
   return small, math.ceil((small * (table_size(entities) -1) ^ 0.5)), speed
 end
 

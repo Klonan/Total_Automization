@@ -26,7 +26,7 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
       type = "area",
       --collision_mode = "distance-from-center",
       radius = 1.5,
-      force = "not-same",
+      force = "enemy",
       action_delivery =
       {
         type = "instant",
@@ -34,7 +34,7 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
         {
           {
             type = "damage",
-            damage = { amount = 3, type = "acid" }
+            damage = { amount = damage, type = util.damage_type(name) }
           }
         }
       }
@@ -43,7 +43,7 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
   stream.particle = particle_gfx.animation
   stream.particle.scale = 1.5
   stream.particle_buffer_size = 100
-  stream.particle_spawn_interval = 2
+  stream.particle_spawn_interval = 0.5
   stream.particle_spawn_timeout = duration or 30
   stream.particle_vertical_acceleration = 0.981 / 60
   stream.particle_horizontal_speed = 0.6
@@ -57,9 +57,9 @@ local make_worm_attack = function(name, range, damage, duration, cooldown)
   --stream.particle.tint = {r = 0.5, g = 0, b = 1}
   stream.spine_animation = nil
   stream.smoke_sources = nil
-  stream.target_position_deviation = 2
+  stream.target_position_deviation = 4
 
-  local splash = 
+  local splash =
   {
     type = "explosion",
     name = name.." Splash",
@@ -137,25 +137,25 @@ end
 
 local small_worm = data.raw.turret["small-worm-turret"]
 local small_worm_range = 50
-small_worm.attack_parameters = make_worm_attack(small_worm.name, small_worm_range, 5, 30, 100)
+small_worm.attack_parameters = make_worm_attack(small_worm.name, small_worm_range, 6, 30, 60)
 small_worm.range = small_worm_range
-small_worm.prepare_range = small_worm_range * 1.05
+small_worm.prepare_range = small_worm_range * 1.1
 
 local medium_worm = data.raw.turret["medium-worm-turret"]
 local medium_worm_range = 55
-medium_worm.attack_parameters = make_worm_attack(medium_worm.name, medium_worm_range, 15, 30, 120)
+medium_worm.attack_parameters = make_worm_attack(medium_worm.name, medium_worm_range, 8, 30, 70)
 medium_worm.range = medium_worm_range
-medium_worm.prepare_range = medium_worm_range * 1.05
+medium_worm.prepare_range = medium_worm_range * 1.1
 
 local big_worm = data.raw.turret["big-worm-turret"]
 local big_worm_range = 60
-big_worm.attack_parameters = make_worm_attack(big_worm.name, big_worm_range, 25, 30, 180)
+big_worm.attack_parameters = make_worm_attack(big_worm.name, big_worm_range, 10, 30, 80)
 big_worm.range = big_worm_range
-big_worm.prepare_range = big_worm_range * 1.05
+big_worm.prepare_range = big_worm_range * 1.1
 
 --Spitters
 
-local make_spitter_attack = function(name, damage, cooldown, range)
+local make_spitter_attack = function(name, damage, cooldown, range, scale)
 
   local projectile = util.copy(data.raw.projectile["acid-projectile-purple"])
   projectile.name = name.." Projectile"
@@ -164,7 +164,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
   projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
   projectile.acceleration = 0
   projectile.rotatable = true
-  projectile.range = range * 1.05
+  projectile.range = range * 1.1
   projectile.action =
   {
     type = "direct",
@@ -200,18 +200,34 @@ local make_spitter_attack = function(name, damage, cooldown, range)
           }
         },
         {
-          type = "damage",
-          damage = {amount = 3, type = util.damage_type(name)}
-        },
-        {
-          type = "create-sticker",
-          sticker = name.." Sticker"
+          type = "nested-result",
+          action =
+          {
+            type = "area",
+            radius = 1,
+            force = "not-same",
+            action_delivery =
+            {
+              type = "instant",
+              target_effects =
+              {
+                {
+                  type = "damage",
+                  damage = { amount = damage, type = util.damage_type(name) }
+                },
+                {
+                  type = "create-sticker",
+                  sticker = name.." Sticker"
+                }
+              }
+            }
+          }
         }
       }
     }
   }
 
-  local animation = 
+  local animation =
   {
     filename = path.."spitter_projectile.png",
     line_length = 4,
@@ -219,7 +235,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     height = 82,
     frame_count = 16,
     priority = "high",
-    scale = 0.3,
+    scale = 0.3 * scale,
     animation_speed = 1
   }
 
@@ -229,7 +245,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     data.animation_speed = (data.animation_speed or 1) * speed
     return data
   end
-  
+
   local shadow =
   {
     filename = path.."spitter_projectile_shadow.png",
@@ -240,7 +256,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     priority = "high",
     shift = {-0.09, 0.395},
     draw_as_shadow = true,
-    scale = 0.3,
+    scale = 0.3 * scale,
     animation_speed = 1
   }
   local make_shadow = function(scale, speed)
@@ -249,7 +265,7 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     data.animation_speed = (data.animation_speed or 1) * speed
     return data
   end
-  
+
   projectile.animation =
   {
     make_animation(0.6, 1),
@@ -274,15 +290,15 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     make_shadow(0.95, 0.65),
     make_shadow(1, 0.6),
   }
-  
+
   local sticker = util.copy(data.raw.sticker["slowdown-sticker"])
   sticker.name = name.." Sticker"
-  
+
   sticker.duration_in_ticks = 60
-  sticker.target_movement_modifier = 0.9
+  sticker.target_movement_modifier = 0.75
   sticker.damage_per_tick = nil --{type = util.damage_type(name), amount = 1}
-  sticker.stickers_per_square_meter = 15
-  sticker.animation = 
+  sticker.stickers_per_square_meter = 5
+  sticker.animation =
   {
     filename = path.."spitter_splash.png",
     priority = "extra-high",
@@ -295,8 +311,8 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     run_mode = "forward-then-backward",
     scale = 1
   }
-  
-  local animation = 
+
+  local animation =
   {
     filename = path.."spitter_splash.png",
     priority = "extra-high",
@@ -308,15 +324,15 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     animation_speed = 0.35,
     scale = 1
   }
-  
+
   local make_animation = function(scale, speed)
     local data = util.copy(animation)
     data.scale = (data.scale or 1) * scale
     data.animation_speed = (data.animation_speed or 1) * speed
     return data
   end
-  
-  local splash = 
+
+  local splash =
   {
     type = "explosion",
     name = name.." Splash",
@@ -332,9 +348,9 @@ local make_spitter_attack = function(name, damage, cooldown, range)
       make_animation(0.5, 1.0),
     }
   }
-  
 
-  local attack_parameters = 
+
+  local attack_parameters =
   {
     animation = animation,
     sound = sound,
@@ -343,14 +359,14 @@ local make_spitter_attack = function(name, damage, cooldown, range)
     cooldown = cooldown,
     cooldown_deviation = 0.2,
     range = range,
-    min_attack_distance = range * 0.9,
+    min_attack_distance = range * 0.8,
     projectile_creation_distance = 1.9,
     warmup = 30,
     ammo_type =
     {
       category = util.ammo_category(name),
       target_type = "entity",
-      action = 
+      action =
       {
         type = "direct",
         action_delivery =
@@ -394,22 +410,146 @@ end
 
 local small_spitter = data.raw.unit["small-spitter"]
 local animation = small_spitter.attack_parameters.animation
-small_spitter.attack_parameters = make_spitter_attack(small_spitter.name, 2, 60, 30)
+small_spitter.attack_parameters = make_spitter_attack(small_spitter.name, 2, 60, 18, 0.5)
 small_spitter.attack_parameters.animation = animation
 
 
 local medium_spitter = data.raw.unit["medium-spitter"]
 local animation = medium_spitter.attack_parameters.animation
-medium_spitter.attack_parameters = make_spitter_attack(medium_spitter.name, 4, 60, 30)
+medium_spitter.attack_parameters = make_spitter_attack(medium_spitter.name, 4, 60, 20, 0.75)
 medium_spitter.attack_parameters.animation = animation
 
 
 local big_spitter = data.raw.unit["big-spitter"]
 local animation = big_spitter.attack_parameters.animation
-big_spitter.attack_parameters = make_spitter_attack(big_spitter.name, 8, 60, 30)
+big_spitter.attack_parameters = make_spitter_attack(big_spitter.name, 8, 60, 22, 1)
 big_spitter.attack_parameters.animation = animation
 
 local behemoth_spitter = data.raw.unit["behemoth-spitter"]
 local animation = behemoth_spitter.attack_parameters.animation
-behemoth_spitter.attack_parameters = make_spitter_attack(behemoth_spitter.name, 15, 60, 30)
+behemoth_spitter.attack_parameters = make_spitter_attack(behemoth_spitter.name, 15, 60, 24, 1)
 behemoth_spitter.attack_parameters.animation = animation
+
+local make_biter_attack = function(name, damage, cooldown)
+
+  local sticker = util.copy(data.raw.sticker["fire-sticker"])
+  sticker.name = name.." Sticker"
+  sticker.duration_in_ticks = 2 * 60
+  sticker.target_movement_modifier = 0.5
+  sticker.damage_per_tick = nil
+  sticker.spread_fire_entity = nil
+  sticker.fire_spread_cooldown = 0
+  sticker.fire_spread_radius = 0
+  sticker.animation = util.empty_sprite()
+  sticker.stickers_per_square_meter = 1
+  data:extend{sticker}
+
+  local ammo_type =
+  {
+    category = util.ammo_category(name),
+    target_type = "entity",
+    action =
+    {
+      type = "direct",
+      action_delivery =
+      {
+        type = "instant",
+        target_effects =
+        {
+          {
+            type = "damage",
+            damage = {amount = damage, type = util.damage_type(name)}
+          }
+        },
+        source_effects =
+        {
+          {
+            type = "create-sticker",
+            sticker = name.." Sticker"
+          },
+          {
+            type = "nested-result",
+            action =
+            {
+              type = "area",
+              radius = 1,
+              force = "not-same",
+              action_delivery =
+              {
+                type = "instant",
+                target_effects =
+                {
+                  {
+                    type = "damage",
+                    damage = {amount = damage, type = util.damage_type(name)}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  local attack_parameters =
+  {
+    type = "projectile",
+    range = 0.5,
+    cooldown = cooldown,
+    cooldown_deviation = 0.2,
+    ammo_category = util.ammo_category(name),
+    ammo_type = ammo_type
+  }
+  return attack_parameters
+
+end
+
+local small_biter = data.raw.unit["small-biter"]
+local sound = small_biter.attack_parameters.sound
+local animation = small_biter.attack_parameters.animation
+small_biter.attack_parameters = make_biter_attack(small_biter.name, 7, 35)
+small_biter.attack_parameters.sound = sound
+small_biter.attack_parameters.animation = animation
+small_biter.movement_speed = small_biter.movement_speed * 1.5
+
+local medium_biter = data.raw.unit["medium-biter"]
+local sound = medium_biter.attack_parameters.sound
+local animation = medium_biter.attack_parameters.animation
+medium_biter.attack_parameters = make_biter_attack(medium_biter.name, 15, 35)
+medium_biter.attack_parameters.sound = sound
+medium_biter.attack_parameters.animation = animation
+medium_biter.movement_speed = medium_biter.movement_speed * 1.5
+
+local big_biter = data.raw.unit["big-biter"]
+local sound = big_biter.attack_parameters.sound
+local animation = big_biter.attack_parameters.animation
+big_biter.attack_parameters = make_biter_attack(big_biter.name, 30, 35)
+big_biter.attack_parameters.sound = sound
+big_biter.attack_parameters.animation = animation
+big_biter.movement_speed = big_biter.movement_speed * 1.5
+
+local behemoth_biter = data.raw.unit["behemoth-biter"]
+local sound = behemoth_biter.attack_parameters.sound
+local animation = behemoth_biter.attack_parameters.animation
+behemoth_biter.attack_parameters = make_biter_attack(behemoth_biter.name, 90, 35)
+behemoth_biter.attack_parameters.sound = sound
+behemoth_biter.attack_parameters.animation = animation
+behemoth_biter.movement_speed = behemoth_biter.movement_speed * 1.5
+
+local biter_spawner = data.raw["unit-spawner"]["biter-spawner"]
+biter_spawner.max_count_of_owned_units = biter_spawner.max_count_of_owned_units * 4
+biter_spawner.max_friends_around_to_spawn = biter_spawner.max_friends_around_to_spawn * 4
+biter_spawner.collision_box = util.scale_box(biter_spawner.collision_box, 0.8)
+table.insert(biter_spawner.flags, "placeable-off-grid")
+biter_spawner.max_health = biter_spawner.max_health * 1.5
+biter_spawner.spawning_cooldown[1] = biter_spawner.spawning_cooldown[1] * 4
+biter_spawner.spawning_cooldown[2] = biter_spawner.spawning_cooldown[2] * 4
+
+local spitter_spawner = data.raw["unit-spawner"]["spitter-spawner"]
+spitter_spawner.max_count_of_owned_units = spitter_spawner.max_count_of_owned_units * 4
+spitter_spawner.max_friends_around_to_spawn = spitter_spawner.max_friends_around_to_spawn * 4
+spitter_spawner.collision_box = util.scale_box(spitter_spawner.collision_box, 1)
+table.insert(spitter_spawner.flags, "placeable-off-grid")
+spitter_spawner.max_health = spitter_spawner.max_health * 1.5
+spitter_spawner.spawning_cooldown[1] = spitter_spawner.spawning_cooldown[1] * 4
+spitter_spawner.spawning_cooldown[2] = spitter_spawner.spawning_cooldown[2] * 4

@@ -21,23 +21,26 @@ local on_player_created = function(event)
   player.force = "player"
   --player.insert(names.entities.buy_chest)
   --player.insert(names.entities.sell_chest)
-  player.surface.create_entity{name = "small-spitter", position = {-10, 10}}
-  --if player.character then player.character.destroy() end
   if true then return end
+  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  --if player.character then player.character.destroy() end
 
   --if true then return {} end
   local team1 = {
-    scout_car = 20,
+    --scout_car = 20,
     --beetle = 80,
     --plasma_bot = 1,
     --tazer_bot = 20,
     --blaster_bot = 50
-    --shell_tank = 500,
+    shell_tank = 500,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
-    smg_guy = 30,
+    --smg_guy = 30,
     --rocket_guy = 1000
   }
   local pos = {x = -40, y = 0}
@@ -49,7 +52,7 @@ local on_player_created = function(event)
     end
 
 
-
+    if true then return end
 
   team2 = {
     --beetle = 200,

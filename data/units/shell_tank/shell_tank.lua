@@ -142,7 +142,7 @@ local unit =
           {
             type = "stream",
             stream = name.." Stream",
-            source_offset = {0, -5},          
+            source_offset = {0, -5},
             source_effects =
             {
               type = "create-explosion",
@@ -185,7 +185,7 @@ local unit =
 local particle_gfx = util.copy(data.raw.projectile["cannon-projectile"])
 
 
-local animation = 
+local animation =
 {
   filename = path.."shell_tank_projectile.png",
   line_length = 4,
@@ -216,7 +216,7 @@ local stream = util.copy(data.raw.stream["flamethrower-fire-stream"])
 stream.name = name.." Stream"
 stream.oriented_particle = true
 stream.action =
-{ 
+{
   {
     type = "direct",
     action_delivery =
@@ -277,7 +277,7 @@ stream.action =
       target_effects =
       {
         {
-          type = "damage",  
+          type = "damage",
           damage = {amount = 15 , type = util.damage_type(name)}
         }
       }
@@ -293,7 +293,7 @@ stream.action =
       target_effects =
       {
         {
-          type = "damage",  
+          type = "damage",
           damage = {amount = 15 , type = util.damage_type(name)}
         }
       }
