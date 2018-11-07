@@ -121,8 +121,7 @@ local unit = {
       {filename = path.."construction_drone_12.ogg"},
       {filename = path.."construction_drone_13.ogg"}
     },
-    probability = 1 / (5 * 60),
-    max_sounds_per_type = 3
+    probability = 1 / (3 * 60)
   },
   run_animation = animation,
   destroy_when_commands_fail = false
