@@ -1,5 +1,13 @@
 local max = math.huge
 
+local name = names.entities.construction_drone
+
+local debug = true
+local print = function(string)
+  if not debug then return end
+  game.print(string)
+end
+
 local dist = function(cell_a, cell_b)
   local position1 = cell_a.owner.position
   local position2 = cell_b.owner.position
@@ -106,18 +114,19 @@ local get_nodes = function(unit)
   return nodes
 end
 
-local set_drone_command = function(unit, destination_entity)
+local get_drone_command = function(unit, destination_entity, origin_position)
   if not (unit and unit.valid) then return end
+  local position = origin_position or unit.position
   local destination_cell = get_closest_cell(destination_entity)
   if not destination_cell then return end
   local destination_network = destination_cell.logistic_network
   local cells = destination_network.cells
-  local starting_cell = destination_network.find_cell_closest_to(unit.position)
+  local starting_cell = destination_network.find_cell_closest_to(position)
   if not starting_cell then return end
 
   local path = get_path(starting_cell, destination_cell, cells)
 
-  if not path then game.print("No path for drone command") end
+  if not path then print("No path for drone command") end
 
   --local biter = unit.surface.create_entity{name = names, force = unit.force, position = {unit.position.x + 3, unit.position.y}}
   local commands = {}
@@ -138,14 +147,8 @@ local set_drone_command = function(unit, destination_entity)
     destination_entity = destination_entity,
     radius = destination_entity.get_radius() + radius
   })
-  if unit.type == "unit" then
-    unit.set_command
-    {
-      type = defines.command.compound,
-      commands = commands,
-      structure_type = defines.compound_command.return_last
-    }
-  end
+
+  return commands
 
 end
 
@@ -156,4 +159,71 @@ remote.add_interface("construction_drone",
   end
 })
 
-return {}
+local ghost_built = function(entity)
+  local force = entity.force
+  local surface = entity.surface
+  local position = entity.position
+  local network = surface.find_logistic_networks_by_construction_area(position, force)[1]
+  if not network then
+    print("No network found for drone command on ghost built")
+    return
+  end
+
+  local prototype = game.entity_prototypes[entity.ghost_name]
+  local items = prototype.items_to_place_this
+  local point
+
+  for k, item in pairs(items) do
+    point = network.select_pickup_point({name = item.name, position = position})
+    if point then
+      break
+    end
+  end
+
+  if not point then
+    print("no point with item?")
+    return
+  end
+
+  local chest = point.owner
+
+  local drone = surface.get_closest(chest.position, surface.find_entities_filtered{name = name, force = force})
+
+  if not drone then
+    print("No drones for pickup")
+    return
+  end
+
+  local commands_1 = get_drone_command(drone, chest)
+  local commands_2 = get_drone_command(drone, entity, chest.position)
+  local commands = {}
+  for k, command in pairs (commands_1) do
+    table.insert(commands, command)
+  end
+  for k, command in pairs (commands_2) do
+    table.insert(commands, command)
+  end
+  drone.set_command{
+    type = defines.command.compound,
+    commands = commands,
+    structure_type = defines.compound_command.return_last
+  }
+
+end
+
+local on_built_entity = function(event)
+  local entity = event.created_entity
+  if not (entity and entity.valid) then return end
+  if entity.type == "entity-ghost" then
+    ghost_built(entity)
+  end
+end
+
+local events =
+{
+  [defines.events.on_built_entity] = on_built_entity
+}
+
+
+
+return {on_event = handler(events)}
