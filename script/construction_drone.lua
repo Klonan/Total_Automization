@@ -2,11 +2,22 @@ local max = math.huge
 
 local name = names.entities.construction_drone
 
+local max_checks_per_tick = 6
+
 local debug = true
 local print = function(string)
   if not debug then return end
   game.print(string)
 end
+
+local data =
+{
+  ghosts_to_be_checked = {},
+  ghosts_to_be_checked_again = {},
+  idle_drones = {},
+  active_drones = {},
+  cells = {}
+}
 
 local dist = function(cell_a, cell_b)
   local position1 = cell_a.owner.position
@@ -88,16 +99,6 @@ local get_path = function(start, goal, cells)
   return nil -- no valid path
 end
 
-local get_closest_cell = function(entity)
-  local surface = entity.surface
-  local force = entity.force
-  local closest = surface.get_closest(entity.position, surface.find_entities_filtered{type = "roboport", force = force})
-  if closest then
-    --closest.surface.create_entity{name = "explosion", position = closest.position}
-    return closest.logistic_cell
-  end
-end
-
 local get_nodes = function(unit)
   local networks = unit.force.logistic_networks[unit.surface.name]
   if not networks then return end
@@ -114,10 +115,9 @@ local get_nodes = function(unit)
   return nodes
 end
 
-local get_drone_command = function(unit, destination_entity, origin_position)
+local get_drone_command = function(unit, destination_entity, origin_position, destination_cell)
   if not (unit and unit.valid) then return end
   local position = origin_position or unit.position
-  local destination_cell = get_closest_cell(destination_entity)
   if not destination_cell then return end
   local destination_network = destination_cell.logistic_network
   local cells = destination_network.cells
@@ -159,43 +159,75 @@ remote.add_interface("construction_drone",
   end
 })
 
-local ghost_built = function(entity)
+local get_point = function(items, networks)
+  for k, network in pairs (networks) do
+    local select = network.select_pickup_point
+    for k, item in pairs(items) do
+      point = select({name = item.name, position = position})
+      if point then
+        return point
+      end
+    end
+  end
+end
+
+local validate = function(entities)
+  for k, entity in pairs (entities) do
+    if not entity.valid then
+      entities[k] = nil
+    end
+  end
+end
+
+local get_idle_drones = function(surface, force)
+  local drones = data.idle_drones[force.name]
+  if drones then
+    validate(drones)
+    --print("Returning cached drone list: "..game.tick)
+    return drones
+  end
+
+  local drones = {}
+  print("making drone table again? "..game.tick)
+  for k, entity in pairs (surface.find_entities_filtered{name = name, force = force}) do
+    drones[entity.unit_number] = entity
+  end
+
+  data.idle_drones[force.name] = drones
+  data.active_drones[force.name] = {}
+  return drones
+end
+
+local check_ghost = function(entity)
+  if not (entity and entity.valid) then return end
   local force = entity.force
   local surface = entity.surface
   local position = entity.position
-  local network = surface.find_logistic_networks_by_construction_area(position, force)[1]
-  if not network then
-    print("No network found for drone command on ghost built")
-    return
-  end
 
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local prototype = game.entity_prototypes[entity.ghost_name]
-  local items = prototype.items_to_place_this
-  local point
-
-  for k, item in pairs(items) do
-    point = network.select_pickup_point({name = item.name, position = position})
-    if point then
-      break
-    end
-  end
-
+  local point = get_point(prototype.items_to_place_this, networks)
+    
   if not point then
     print("no point with item?")
     return
   end
 
   local chest = point.owner
+  local drones = get_idle_drones(surface, force)
 
-  local drone = surface.get_closest(chest.position, surface.find_entities_filtered{name = name, force = force})
+  local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
     print("No drones for pickup")
     return
   end
 
-  local commands_1 = get_drone_command(drone, chest)
-  local commands_2 = get_drone_command(drone, entity, chest.position)
+  local origin_cell = point.logistic_network.find_cell_closest_to(point.owner.position)
+  local destination_cell = point.logistic_network.find_cell_closest_to(entity.position)
+
+  local commands_1 = get_drone_command(drone, chest, drone.position, origin_cell)
+  local commands_2 = get_drone_command(drone, entity, chest.position, destination_cell)
   local commands = {}
   for k, command in pairs (commands_1) do
     table.insert(commands, command)
@@ -208,22 +240,74 @@ local ghost_built = function(entity)
     commands = commands,
     structure_type = defines.compound_command.return_last
   }
+  data.idle_drones[force.name][drone.unit_number] = nil
+  data.active_drones[force.name][drone.unit_number] = drone
+  data.ghosts_to_be_checked[entity.unit_number] = nil
+  data.ghosts_to_be_checked_again[entity.unit_number] = nil
 
 end
+
+local ghost_type = "entity-ghost"
 
 local on_built_entity = function(event)
   local entity = event.created_entity
   if not (entity and entity.valid) then return end
-  if entity.type == "entity-ghost" then
-    ghost_built(entity)
+  if entity.type == ghost_type then
+    data.ghosts_to_be_checked[entity.unit_number] = entity
+    return
+  end
+  if entity.name == name then
+    data.drones[entity.force.name][entity.unit_number] = entity
   end
 end
 
+local on_tick = function(event)
+  local ghosts = data.ghosts_to_be_checked
+  local ghosts_again = data.ghosts_to_be_checked_again
+  local remaining_checks = max_checks_per_tick
+  for k = 1, remaining_checks do
+    local key, ghost = next(ghosts)
+    if key then
+      remaining_checks = remaining_checks - 1
+      ghosts[key] = nil
+      if ghost.valid then
+        ghosts_again[key] = ghost
+        check_ghost(ghost)
+      end
+    else
+      break
+    end
+  end
+
+  if remaining_checks == 0 then return end
+  --print("Checking normal ghosts again")
+  for k = 1, remaining_checks do
+    local key, ghost = next(ghosts_again)
+    if key then
+      remaining_checks = remaining_checks - 1
+      if ghost.valid then 
+        check_ghost(ghost)
+      else
+        ghosts[key] = nil
+      end
+    else
+      break
+    end
+  end
+
+end
+
+local lib = {}
+
 local events =
 {
-  [defines.events.on_built_entity] = on_built_entity
+  [defines.events.on_built_entity] = on_built_entity,
+  [defines.events.on_tick] = on_tick
 }
 
+lib.on_event = handler(events)
+lib.on_load = function()
+  data = global.construction_drone or data
+end
 
-
-return {on_event = handler(events)}
+return lib
