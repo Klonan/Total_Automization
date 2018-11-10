@@ -11,7 +11,15 @@ local drone_pathfind_flags =
   low_priority = false
 }
 
-local debug = false
+local drone_orders =
+{
+  pickup = 1,
+  construct = 2,
+  dropoff = 3,
+  deconstruct = 4
+}
+
+local debug = true
 local print = function(string)
   if not debug then return end
   game.print(string)
@@ -23,7 +31,8 @@ local data =
   ghosts_to_be_checked_again = {},
   idle_drones = {},
   cells = {},
-  drone_commands = {}
+  drone_commands = {},
+  targets = {}
 }
 
 local dist = function(cell_a, cell_b)
@@ -190,14 +199,6 @@ local get_idle_drones = function(surface, force)
   return drones
 end
 
-
-local drone_orders =
-{
-  pickup = 1,
-  construct = 2
-}
-
-
 local check_ghost = function(entity)
   if not (entity and entity.valid) then return end
   local force = entity.force
@@ -253,6 +254,7 @@ local check_ghost = function(entity)
   data.idle_drones[force.name][drone.unit_number] = nil
   data.ghosts_to_be_checked[entity.unit_number] = nil
   data.ghosts_to_be_checked_again[entity.unit_number] = nil
+  data.targets[entity.unit_number] = drone_data
 
 end
 
@@ -310,14 +312,58 @@ local on_tick = function(event)
   data.ghost_check_index = index
 end
 
+local cancel_drone_order = function(drone_data, on_removed)
+  local drone = drone_data.entity
+  if not (drone and drone.valid) then return end
+  local unit_number = drone.unit_number
+
+  print("Drone command cancelled "..unit_number.." - "..game.tick)
+
+  local target = drone_data.target
+  if target and target.valid then
+    data.targets[target.unit_number] = nil
+    if target.name == "entity-ghost" then
+      data.ghosts_to_be_checked_again[target.unit_number] = target
+    end
+  end
+
+  local stack = drone_data.held_stack
+  if stack then
+    --TODO, make him go put it in a chest manually...
+    drone_data.network.insert(stack)
+    print("Had stolen an item, so I put it back into the logistic network :)")
+  end
+
+  data.drone_commands[unit_number] = nil
+
+  if not on_removed then
+    data.idle_drones[drone.force.name][unit_number] = drone
+  end
+
+end
+
 local process_pickup_command = function(drone_data)
   print("Procesing pickup command")
+
   local drone = drone_data.entity
   if not (drone and drone.valid) then
     print("Drone not valid on pickup command process")
     return
   end
+
+  local target = drone_data.target
+  if not (target and target.valid) then
+    cancel_drone_order(drone_data)
+    return
+  end
+
   local chest = drone_data.pickup.chest
+  if not (chest and chest.valid) then
+    print("Chest for pickup was not valid")
+    cancel_drone_order(drone_data)
+    return
+  end
+
   if not in_range(chest, drone) then
     drone.set_command({
       type = defines.command.go_to_location,
@@ -327,15 +373,12 @@ local process_pickup_command = function(drone_data)
     })
     return
   end
-  print("Pickip chest in range, picking up item")
+
+  print("Pickup chest in range, picking up item")
   local stack = drone_data.pickup.stack
-  if not (chest and chest.valid) then
-    print("Chest for pickup was not valid")
-    return
-  end
   chest.remove_item(stack)
+  drone_data.held_stack = stack
   local network = drone_data.network
-  local target = drone_data.target
 
   local path = get_drone_path(drone, network, target)
 
@@ -362,7 +405,7 @@ end
 local process_contruct_command = function(drone_data)
   local target = drone_data.target
   if not (target and target.valid) then
-    print("Contruction target not valid... oh well")
+    cancel_drone_order(drone_data)
     return
   end
   local drone = drone_data.entity
@@ -427,11 +470,50 @@ local process_drone_command = function(drone_data, result)
     return
   end
 
+  if drone_data.order == drone_orders.dropoff then
+    process_dropoff_command(drone_data)
+    return
+  end
+
+  if drone_data.order == drone_orders.deconstruct then
+    process_deconstruct_command(drone_data)
+    return
+  end
+
 end
 
 local on_ai_command_completed = function(event)
   drone = data.drone_commands[event.unit_number]
   if drone then process_drone_command(drone, event.result) end
+end
+
+local on_entity_removed = function(event)
+  print("On removed event fired - "..game.tick)
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  local unit_number = entity.unit_number
+  if not unit_number then return end
+
+  if entity.name == name then
+    data.idle_drones[entity.force.name][unit_number] = nil
+    local drone_data = data.drone_orders[unit_number]
+    if drone_data then
+      cancel_drone_order(drone_data, true)
+    end
+    return
+  end
+
+  if entity.name == "entity-ghost" then
+    data.ghosts_to_be_checked_again[unit_number] = nil
+    data.ghosts_to_be_checked[unit_number] = nil
+    local drone_data = data.targets[unit_number]
+    data.targets[unit_number] = nil
+    if drone_data then
+      cancel_drone_order(drone_data)
+    end
+    return
+  end
+
 end
 
 local lib = {}
@@ -440,7 +522,10 @@ local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_tick] = on_tick,
-  [defines.events.on_ai_command_completed] = on_ai_command_completed
+  [defines.events.on_ai_command_completed] = on_ai_command_completed,
+  [defines.events.on_entity_died] = on_entity_removed,
+  [defines.events.on_robot_mined_entity] = on_entity_removed,
+  [defines.events.on_player_mined_entity] = on_entity_removed,
 }
 
 lib.on_event = handler(events)
