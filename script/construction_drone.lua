@@ -11,7 +11,7 @@ local drone_pathfind_flags =
   low_priority = false
 }
 
-local debug = true
+local debug = false
 local print = function(string)
   if not debug then return end
   game.print(string)
@@ -361,7 +361,7 @@ end
 
 local process_contruct_command = function(drone_data)
   local target = drone_data.target
-  if not target and target.valid then
+  if not (target and target.valid) then
     print("Contruction target not valid... oh well")
     return
   end
