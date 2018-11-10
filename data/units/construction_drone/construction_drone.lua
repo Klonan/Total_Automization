@@ -1,6 +1,8 @@
 local path = util.path("data/units/construction_drone/")
 local name = names.entities.construction_drone
 
+local scale = 0.5
+
 local animation =
 {
   layers =
@@ -12,8 +14,8 @@ local animation =
       frame_count = 2,
       axially_symmetrical = false,
       direction_count = 32,
-      shift = util.by_pixel(0.0, -14),
-      scale = 0.5,
+      shift = util.by_pixel(0.0 * scale, -14 * scale),
+      scale = 0.5 * scale,
       stripes =
       {
         {
@@ -35,9 +37,9 @@ local animation =
       frame_count = 2,
       axially_symmetrical = false,
       direction_count = 32,
-      shift = util.by_pixel(15.5, -0.5),
+      shift = util.by_pixel(15.5 * scale, -0.5 * scale),
       draw_as_shadow = true,
-      scale = 0.5,
+      scale = 0.5 * scale,
       stripes = util.multiplystripes(2,
       {
         {
@@ -57,14 +59,14 @@ local unit = {
   icon = path.."construction_drone_icon.png",
   icon_size = 64,
   flags = {"placeable-player", "placeable-enemy", "placeable-off-grid"},
-  map_color = {r = 0, g = 0.365, b = 0.58, a = 1},
+  map_color = {r = 0, g = 1, b = 1, a = 1},
   max_health = 15,
   order = "b-b-a",
   subgroup="enemies",
   has_belt_immunity = true,
   can_open_gates = true,
-  collision_box = {{-0.2, -0.2}, {0.2, 0.2}},
-  selection_box = {{-0.4, -0.7}, {0.7, 0.4}},
+  collision_box = {{-0.1, -0.1}, {0.1, 0.1}},
+  selection_box = {{-0.3, -0.5}, {0.3, 0.2}},
   attack_parameters =
   {
     type = "projectile",
@@ -95,7 +97,7 @@ local unit = {
     animation = animation
   },
   vision_distance = 5,
-  movement_speed = 0.12,
+  movement_speed = 0.16,
   distance_per_frame = 0.1,
   pollution_to_join_attack = 20000000,
   distraction_cooldown = 30000000,
@@ -124,7 +126,8 @@ local unit = {
     probability = 1 / (3 * 60)
   },
   run_animation = animation,
-  destroy_when_commands_fail = false
+  destroy_when_commands_fail = false,
+  minable = {name = name, mining_time = 1}
 }
 
 

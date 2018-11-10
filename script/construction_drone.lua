@@ -4,7 +4,14 @@ local name = names.entities.construction_drone
 
 local max_checks_per_tick = 6
 
-local debug = false
+local drone_pathfind_flags =
+{
+  allow_destroy_friendly_entities = false,
+  cache = false,
+  low_priority = false
+}
+
+local debug = true
 local print = function(string)
   if not debug then return end
   game.print(string)
@@ -30,7 +37,7 @@ local in_range = function(entity_1, entity_2)
   local position1 = entity_1.position
   local position2 = entity_2.position
   local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
-  return distance <= (entity_1.get_radius() + entity_2.get_radius())
+  return distance <= (entity_1.get_radius() + entity_2.get_radius()) + 1
 
 end
 
@@ -226,7 +233,8 @@ local check_ghost = function(entity)
     drone.set_command({
       type = defines.command.go_to_location,
       destination_entity = cell.owner,
-      radius = cell.construction_radius
+      radius = cell.construction_radius,
+      pathfind_flags = drone_pathfind_flags
     })
   else
     path = nil
@@ -314,7 +322,8 @@ local process_pickup_command = function(drone_data)
     drone.set_command({
       type = defines.command.go_to_location,
       destination_entity = chest,
-      radius = chest.get_radius() + drone.get_radius()
+      radius = chest.get_radius() + drone.get_radius() + 0.5,
+      pathfind_flags = drone_pathfind_flags
     })
     return
   end
@@ -337,7 +346,8 @@ local process_pickup_command = function(drone_data)
     drone.set_command({
       type = defines.command.go_to_location,
       destination_entity = cell.owner,
-      radius = cell.construction_radius
+      radius = cell.construction_radius,
+      pathfind_flags = drone_pathfind_flags
     })
   else
     path = nil
@@ -364,7 +374,8 @@ local process_contruct_command = function(drone_data)
     drone.set_command({
       type = defines.command.go_to_location,
       destination_entity = target,
-      radius = target.get_radius() + drone.get_radius()
+      radius = target.get_radius() + drone.get_radius(),
+      pathfind_flags = drone_pathfind_flags
     })
     return
   end
@@ -373,9 +384,21 @@ local process_contruct_command = function(drone_data)
 end
 
 
-local process_drone_command = function(drone_data)
+local process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
-  print("Drone AI command complete, processing queue "..game.tick.." - "..drone.unit_number)
+  print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
+
+  if (result == defines.behavior_result.fail) then
+    --Something is really fucky!
+    local r = 3
+    drone.set_command({
+      type = defines.command.go_to_location,
+      destination = {drone.position.x + (math.random(-r, r)), drone.position.y + (math.random(-r, r))},
+      radius = drone.get_radius(),
+      pathfind_flags = drone_pathfind_flags
+    })
+    return
+  end
 
   if drone_data.path then
     local cell = drone_data.path[1]
@@ -384,7 +407,8 @@ local process_drone_command = function(drone_data)
       drone.set_command({
         type = defines.command.go_to_location,
         destination_entity = cell.owner,
-        radius = cell.construction_radius
+        radius = cell.construction_radius,
+        pathfind_flags = drone_pathfind_flags
       })
       return
     else
@@ -407,7 +431,7 @@ end
 
 local on_ai_command_completed = function(event)
   drone = data.drone_commands[event.unit_number]
-  if drone then process_drone_command(drone) end
+  if drone then process_drone_command(drone, event.result) end
 end
 
 local lib = {}
