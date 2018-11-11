@@ -96,7 +96,7 @@ local unit = {
     sound = nil,
     animation = animation
   },
-  vision_distance = 5,
+  vision_distance = 0,
   movement_speed = 0.16,
   distance_per_frame = 0.1,
   pollution_to_join_attack = 20000000,

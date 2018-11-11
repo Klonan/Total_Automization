@@ -19,7 +19,7 @@ local drone_orders =
   upgrade = 4
 }
 
-local debug = true
+local debug = false
 local print = function(string)
   if not debug then return end
   log(string)
@@ -322,10 +322,11 @@ local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
   local force = deconstruct.force
 
-  if not (entity and entity.valid) then return end
-  if not (force and force.valid) then return end
+  if not (entity and entity.valid) then return true end
+  --entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
+  if not (force and force.valid) then return true end
 
-  if not entity.to_be_deconstructed(force) then return end
+  if not entity.to_be_deconstructed(force) then return true end
 
   local surface = entity.surface
 
@@ -356,6 +357,7 @@ local check_deconstruction = function(deconstruct)
   }
 
   data.drone_commands[drone.unit_number] = drone_data
+  data.idle_drones[drone.force.name][drone.unit_number] = nil
   process_drone_command(drone_data)
 
   return true --If we send a drone, return true
@@ -543,6 +545,7 @@ local process_dropoff_command = function(drone_data)
   remove_drone_sticker(drone_data)
   drone_data.held_stack = nil
   drone_data.dropoff = nil
+  data.idle_drones[drone.force.name][drone.unit_number] = drone
 
   return process_drone_command(drone_data)
 end
