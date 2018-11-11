@@ -20,7 +20,7 @@ local drone_orders =
   request_proxy = "fuck man"
 }
 
-local debug = false
+local debug = true
 local print = function(string)
   if not debug then return end
   log(string)
@@ -34,7 +34,6 @@ local data =
   deconstructs_to_be_checked = {},
   deconstructs_to_be_checked_again = {},
   idle_drones = {},
-  cells = {},
   drone_commands = {},
   targets = {}
 }
@@ -267,10 +266,11 @@ local set_drone_idle = function(drone)
   if not (drone and drone.valid) then return end
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
+  data.idle_drones[drone.force.name][drone.unit_number] = drone
 
-  if drone_data then
-    remove_drone_sticker(drone_data)
-  end
+  if not drone_data then return end
+
+  remove_drone_sticker(drone_data)
   local network = get_or_find_network(drone_data)
   if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
@@ -281,7 +281,6 @@ local set_drone_idle = function(drone)
     }
   end
 
-  data.idle_drones[drone.force.name][drone.unit_number] = drone
 end
 
 local process_drone_command
