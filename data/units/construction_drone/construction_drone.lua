@@ -164,3 +164,47 @@ data:extend
   item,
   recipe
 }
+
+--Sticker time!
+
+local background = "__core__/graphics/entity-info-dark-background.png"
+
+for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
+  for name, prototype in pairs (data.raw[item_type]) do
+    if prototype.icon then
+      local sticker =
+      {
+        type = "sticker",
+        name = prototype.name.." Drone Sticker",
+        flags = {},
+        animation =
+        {
+          layers =
+          {
+            {
+              filename = background,
+              width = 53,
+              height = 53,
+              scale = (prototype.icon_size / 32) / 2,
+              frame_count = 1
+            },
+            {
+              filename = prototype.icon,
+              priority = "extra-high",
+              width = prototype.icon_size,
+              height = prototype.icon_size,
+              scale = 0.5,
+              frame_count = 1,
+              animation_speed = 1
+            }
+          }
+        },
+        duration_in_ticks = 2 ^ 31,
+        target_movement_modifier = 1,
+        force_visibility = "same",
+        single_particle = true
+      }
+      data:extend{sticker}
+    end
+  end
+end
