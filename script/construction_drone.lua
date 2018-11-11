@@ -49,7 +49,7 @@ local in_range = function(entity_1, entity_2, extra)
   local position1 = entity_1.position
   local position2 = entity_2.position
   local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
-  return distance <= (entity_1.get_radius() + entity_2.get_radius()) + (extra or 0.5)
+  return distance <= (entity_1.get_radius() + entity_2.get_radius()) + (extra or 1)
 
 end
 
@@ -204,17 +204,60 @@ end
 
 local remove_drone_sticker
 
+local get_or_find_network = function(drone_data)
+  local network = drone_data.network
+  if network and network.valid then return network end
+
+  local drone = drone_data.entity
+  local surface = drone.surface
+  local force = drone.force
+  local position = drone.position
+  local networks = force.logistic_networks[surface.name]
+  local owners = {}
+  for k, network in pairs (networks) do
+    local cell = network.find_cell_closest_to(position)
+    if cell then table.insert(owners, cell.owner) end
+  end
+  local closest = surface.get_closest(position, owners)
+  if closest then
+    network = closest.logistic_cell.logistic_network
+  end
+  drone_data.network = network
+  return network
+end
+
+local get_target_position = function(unit, target)
+  local radius
+  if target.type == "entity-ghost" then
+    radius = game.entity_prototypes[target.ghost_name].radius
+  else
+    radius = target.get_radius()
+  end
+  radius = math.max(radius, 1)
+
+  local origin = target.position
+  local position = unit.position
+  local direction =
+  {
+    x = origin.x - position.x
+    y = origin.y - position.y
+  }
+
+
+end
+
 local set_drone_idle = function(drone)
   if not (drone and drone.valid) then return end
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
 
   remove_drone_sticker(drone_data)
-  if drone_data.network then
-    local destination_cell = drone_data.network.find_cell_closest_to(drone.position)
+  local network = get_or_find_network(drone_data)
+  if network then
+    local destination_cell = network.find_cell_closest_to(drone.position)
     drone.set_command{
       type = defines.command.go_to_location,
-      destination_entity = destination_cell.owner,
+      destination = get_target_position(drone, destination_cell.owner),
       radius = math.max(destination_cell.logistic_radius, drone.get_radius() + destination_cell.owner.get_radius())
     }
   end
@@ -435,34 +478,34 @@ local cancel_drone_order = function(drone_data, on_removed)
 
   local stack = drone_data.held_stack
   if stack then
-    --TODO, make him go put it in a chest manually...
-    drone_data.network.insert(stack)
-    print("Had stolen an item, so I put it back into the logistic network :)")
+    drone_data.dropoff = {stack = stack}
+    return process_drone_command(drone_data)
   end
 
   data.drone_commands[unit_number] = nil
 
   if not on_removed then
-    data.idle_drones[drone.force.name][unit_number] = drone
+    set_drone_idle(drone)
   end
 
 end
 
 local move_to_logistic_target = function(drone_data, target, extra)
-  local network = drone_data.network
+  local network = get_or_find_network(drone_data)
+  if not network then return end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
     drone.set_command({
       type = defines.command.go_to_location,
-      destination_entity = target,
-      radius = target.get_radius() + drone.get_radius() + (extra or 0.5),
+      destination = target.position,
+      radius = target.get_radius() + drone.get_radius() + (extra or 1),
       pathfind_flags = drone_pathfind_flags
     })
     return
   end
 
-  drone_data.path = get_drone_path(drone, drone_data.network, target)
+  drone_data.path = get_drone_path(drone, network, target)
   return process_drone_command(drone_data)
 end
 
@@ -554,6 +597,27 @@ local process_dropoff_command = function(drone_data)
   set_drone_idle(drone)
 end
 
+local unit_move_away = function(unit, target)
+  local r = 5 * (target.get_radius() + unit.get_radius())
+  local position = {}
+  if unit.position.x > target.position.x then
+    position.x = unit.position.x + r
+  else
+    position.x = unit.position.x - r
+  end
+  if unit.position.y > target.position.y then
+    position.y = unit.position.y + r
+  else
+    position.y = unit.position.y - r
+  end
+  unit.set_command
+  {
+    type = defines.command.go_to_location,
+    destination = position,
+    radius = 1
+  }
+end
+
 local process_contruct_command = function(drone_data)
   print("Processing construct command")
   local target = drone_data.target
@@ -566,12 +630,24 @@ local process_contruct_command = function(drone_data)
     print("oh the entity isnt valid, oh well")
     return
   end
-  if not in_range(target, drone, 1) then
-    return move_to_logistic_target(drone_data, target, 1)
+  if not in_range(target, drone, 2) then
+    return move_to_logistic_target(drone_data, target, 2)
   end
+
   if not target.revive() then
-    return process_drone_command(drone_data, defines.behavior_result.fail)
+    unit_move_away(drone, target)
+    --Some idiot might be in the way too...
+    local prototype = game.entity_prototypes[target.ghost_name]
+    if prototype then
+      local radius = prototype.radius * 1.5
+      local area = {{target.position.x - radius, target.position.y - radius},{target.position.x + radius, target.position.y + radius}}
+      for k, unit in pairs (target.surface.find_entities_filtered{type = "unit", area = area}) do
+        unit_move_away(unit, target)
+      end
+    end
+    return
   end
+
   set_drone_idle(drone)
 end
 
@@ -584,7 +660,7 @@ local drone_follow_path = function(drone_data)
     table.remove(path, 1)
     drone.set_command({
       type = defines.command.go_to_location,
-      destination_entity = cell.owner,
+      destination = cell.owner.position,
       radius = cell.construction_radius,
       pathfind_flags = drone_pathfind_flags
     })
@@ -603,7 +679,7 @@ local process_failed_command = function(drone_data)
     local drone = drone_data.entity
     if not drone and drone.valid then return end
     --Something is really fucky!
-    if drone_data.fail_count > 10 then
+    if drone.unit_number % 60 == game.tick % 60 then
       local position = drone.surface.find_non_colliding_position(drone.name, {randish(drone.position.x, 0.5), randish(drone.position.y, 0.5)} , 0, 1)
       drone.teleport(position)
       drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof"}
@@ -622,7 +698,7 @@ end
 local process_deconstruct_command = function(drone_data)
 
   local target = drone_data.target
-  if not target and target.valid then
+  if not (target and target.valid) then
     cancel_drone_order(drone_data)
     return
   end
@@ -667,13 +743,9 @@ process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
 
-  --[[if (result == defines.behavior_result.fail) then
-    drone_data.fail_count = (drone_data.fail_count or 0) + 1
-    if drone_data.fail_count > 5 then
-      process_failed_command(drone_data)
-      return
-    end
-  end]]
+  if (result == defines.behavior_result.fail) then
+    process_failed_command(drone_data)
+  end
 
   if drone_data.path then
     drone_follow_path(drone_data)

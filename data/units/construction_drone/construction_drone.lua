@@ -190,7 +190,7 @@ for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
               filename = background,
               width = 53,
               height = 53,
-              scale = (prototype.icon_size / 32) / 2,
+              scale = 0.5,
               frame_count = 1
             },
             {
@@ -198,7 +198,7 @@ for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
               priority = "extra-high",
               width = prototype.icon_size,
               height = prototype.icon_size,
-              scale = (prototype.icon_size / 32) / 2,
+              scale = (32 / prototype.icon_size) / 2,
               frame_count = 1,
               animation_speed = 1
             }
