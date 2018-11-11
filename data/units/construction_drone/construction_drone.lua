@@ -96,7 +96,7 @@ local unit = {
     sound = nil,
     animation = animation
   },
-  vision_distance = 0,
+  vision_distance = 40,
   movement_speed = 0.16,
   distance_per_frame = 0.1,
   pollution_to_join_attack = 20000000,
@@ -126,8 +126,13 @@ local unit = {
     probability = 1 / (3 * 60)
   },
   run_animation = animation,
-  destroy_when_commands_fail = false,
-  minable = {name = name, mining_time = 1}
+  minable = {name = name, mining_time = 1},
+  ai_settings =
+  {
+    destroy_when_commands_fail = false,
+    allow_try_return_to_spawner = false,
+    do_separation = false
+  }
 }
 
 
