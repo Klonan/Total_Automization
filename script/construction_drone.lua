@@ -373,7 +373,15 @@ local move_to_logistic_target = function(drone_data, target, extra)
   return process_drone_command(drone_data)
 end
 
+local remove_drone_sticker = function(drone_data)
+  local sticker = drone_data.sticker
+  if sticker and sticker.valid then
+    sticker.destroy()
+  end
+end
+
 local add_drone_sticker = function(drone_data, item_name)
+  remove_drone_sticker(drone_data)
   local sticker_name = item_name.." Drone Sticker"
   if not game.entity_prototypes[sticker_name] then return end
   local drone = drone_data.entity
@@ -385,10 +393,6 @@ local add_drone_sticker = function(drone_data, item_name)
     target = drone,
     force = drone.force
   }
-
-end
-
-local remove_drone_sticker = function(drone_data)
 
 end
 
@@ -451,9 +455,7 @@ local process_dropoff_command = function(drone_data)
     return
   end
   chest.insert(stack)
-  if drone_data.held_stack.sticker and drone_data.held_stack.sticker.valid then
-    drone_data.held_stack.sticker.destroy()
-  end
+  remove_drone_sticker(drone_data)
   drone_data.held_stack = nil
   drone_data.dropoff = nil
 
@@ -478,11 +480,7 @@ local process_contruct_command = function(drone_data)
   if not target.revive() then
     return process_drone_command(drone_data, defines.behavior_result.fail)
   end
-  if drone_data.held_stack then
-    if drone_data.held_stack.sticker and drone_data.held_stack.sticker.valid then
-      drone_data.held_stack.sticker.destroy()
-    end
-  end
+  remove_drone_sticker(drone_data)
   data.idle_drones[drone.force.name][drone.unit_number] = drone
 end
 
@@ -505,23 +503,36 @@ local drone_follow_path = function(drone_data)
   return process_drone_command(drone_data)
 end
 
+local random = math.random
+local randish = function(value, variance)
+  return value + ((random() - 0.5) * variance * 2)
+end
+
+local process_failed_command = function(drone_data)
+    drone_data.fail_count = (drone_data.fail_count or 0) + 1
+    local drone = drone_data.entity
+    if not drone and drone.valid then return end
+    --Something is really fucky!
+    local position = drone.surface.find_non_colliding_position(drone.name, {randish(drone.position.x, 0.5), randish(drone.position.y, 0.5)} , 0, 1)
+    drone.teleport(position)
+    local r = 3
+    drone.set_command({
+      type = defines.command.go_to_location,
+      destination = {randish(drone.position.x, r), randish(drone.position.y, r)},
+      radius = drone.get_radius(),
+      pathfind_flags = drone_pathfind_flags
+    })
+    drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof"}
+    return
+end
+
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
 
   if (result == defines.behavior_result.fail) then
-    --drone_data.fail_count = (drone_data.fail_count or 0) + 1
-    --Something is really fucky!
-    local r = 3
-    drone.set_command({
-      type = defines.command.go_to_location,
-      destination = {drone.position.x + (math.random(-r, r)), drone.position.y + (math.random(-r, r))},
-      radius = drone.get_radius(),
-      pathfind_flags = drone_pathfind_flags
-    })
-    drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof"}
-    return
+    return process_failed_command(drone_data)
   end
 
   if drone_data.path then
