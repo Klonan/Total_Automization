@@ -30,6 +30,8 @@ local data =
 {
   ghosts_to_be_checked = {},
   ghosts_to_be_checked_again = {},
+  deconstructs_to_be_checked = {},
+  deconstructs_to_be_checked_again = {},
   idle_drones = {},
   cells = {},
   drone_commands = {},
@@ -195,7 +197,7 @@ local get_idle_drones = function(surface, force)
   for k, entity in pairs (surface.find_entities_filtered{name = name, force = force}) do
     drones[entity.unit_number] = entity
   end
-
+  --TODO, make this support multiple surfaces properly...
   data.idle_drones[force.name] = drones
   return drones
 end
@@ -304,7 +306,7 @@ local check_ghost_lists = function()
       if ghost.valid then
         check_ghost(ghost)
       else
-        ghosts[key] = nil
+        ghosts_again[key] = nil
       end
     else
       break
@@ -314,13 +316,98 @@ local check_ghost_lists = function()
 
 end
 
-local check_deconstruction_list = function()
+local process_drone_command
+
+local check_deconstruction = function(deconstruct)
+  local entity = deconstruct.entity
+  local force = deconstruct.force
+
+  if not (entity and entity.valid) then return end
+  if not (force and force.valid) then return end
+
+  if not entity.to_be_deconstructed(force) then return end
+
+  local surface = entity.surface
+
+  local mineable_properties = entity.prototype.mineable_properties
+  if not mineable_properties.minable then
+    print("Why are you marked for deconstruction if I cant mine you?")
+    return
+  end
+  local product = mineable_properties.products[1] --Ehhhhh, well... fuck it...
+
+  local key, network = next(surface.find_logistic_networks_by_construction_area(entity.position, force))
+  if not key then
+    print("He is outside of any of our construction areas...")
+    return
+  end
+
+  local drone = surface.get_closest(entity.position, get_idle_drones(surface, force))
+  if not drone then
+    return
+  end
+
+  local drone_data =
+  {
+    order = drone_orders.deconstruct,
+    network = network,
+    entity = drone,
+    target = entity
+  }
+
+  data.drone_commands[drone.unit_number] = drone_data
+  process_drone_command(drone_data)
+
+  return true --If we send a drone, return true
+end
+
+local insert = table.insert
+local check_deconstruction_lists = function()
+
+  local decs = data.deconstructs_to_be_checked
+  local decs_again = data.deconstructs_to_be_checked_again
+  local remaining_checks = max_checks_per_tick
+  for k = 1, remaining_checks do
+    local key, deconstruct = next(decs)
+    if key then
+      remaining_checks = remaining_checks - 1
+      decs[key] = nil
+      if deconstruct.entity.valid then
+        if not check_deconstruction(deconstruct) then
+          insert(data.deconstructs_to_be_checked_again, deconstruct)
+        end
+      end
+    else
+      break
+    end
+  end
+
+  if remaining_checks == 0 then return end
+  --print("checking things to deconstruct")
+  local index = data.deconstruction_check_index
+  for k = 1, remaining_checks do
+    local key, deconstruct = next(decs_again, index)
+    index = key
+    if key then
+      remaining_checks = remaining_checks - 1
+      if deconstruct.entity.valid then
+        if check_deconstruction(deconstruct) then
+          decs_again[key] = nil
+        end
+      else
+        decs_again[key] = nil
+      end
+    else
+      break
+    end
+  end
+  data.deconstruction_check_index = index
 
 end
 
 local on_tick = function(event)
   check_ghost_lists()
-  check_deconstruction_list()
+  check_deconstruction_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -352,8 +439,6 @@ local cancel_drone_order = function(drone_data, on_removed)
   end
 
 end
-
-local process_drone_command
 
 local move_to_logistic_target = function(drone_data, target, extra)
   local network = drone_data.network
@@ -509,7 +594,7 @@ local randish = function(value, variance)
 end
 
 local process_failed_command = function(drone_data)
-    drone_data.fail_count = (drone_data.fail_count or 0) + 1
+    --drone_data.fail_count = (drone_data.fail_count or 0) + 1
     local drone = drone_data.entity
     if not drone and drone.valid then return end
     --Something is really fucky!
@@ -524,6 +609,57 @@ local process_failed_command = function(drone_data)
     })
     drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof"}
     return
+end
+
+local process_deconstruct_command = function(drone_data)
+
+  local target = drone_data.target
+  if not target and target.valid then
+    cancel_drone_order(drone_data)
+    return
+  end
+
+  local drone = drone_data.entity
+
+  if not in_range(drone, target) then
+    return move_to_logistic_target(drone_data, target)
+  end
+
+  local product = target.prototype.mineable_properties.products[1]
+
+  target.destroy()
+  drone_data.order = nil
+
+  if not product then
+    data.drone_commands[drone.unit_number] = nil
+    data.idle_drones[drone.force.name][drone.unit_number] = drone
+    print("Should't really happen though...")
+    return
+  end
+
+
+  local stack =
+  {
+    name = product.name,
+    count = product.amount or (math.random() * (product.amount_max - product.amount_min) + product.amount_min)
+  }
+
+  local drop_point = drone_data.network.select_drop_point({stack = stack})
+
+  if drop_point then
+    drone_data.dropoff =
+    {
+      chest = drop_point.owner,
+      stack = stack
+    }
+    drone_data.held_stack = stack
+  else
+    print("Idk what to do with it...")
+  end
+
+
+  add_drone_sticker(drone_data, stack.name)
+  return process_drone_command(drone_data)
 end
 
 
@@ -595,6 +731,12 @@ local on_entity_removed = function(event)
   end
 
 end
+local insert = table.insert
+local on_marked_for_deconstruction = function(event)
+  local force = event.force or game.players[event.player_index].force
+  if not force then return end
+  insert(data.deconstructs_to_be_checked, {entity = event.entity, force = force})
+end
 
 local lib = {}
 
@@ -606,6 +748,7 @@ local events =
   [defines.events.on_entity_died] = on_entity_removed,
   [defines.events.on_robot_mined_entity] = on_entity_removed,
   [defines.events.on_player_mined_entity] = on_entity_removed,
+  [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction,
 }
 
 lib.on_event = handler(events)
