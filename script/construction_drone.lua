@@ -863,4 +863,8 @@ lib.on_load = function()
   data = global.construction_drone or data
 end
 
+lib.on_init = function()
+  global.construction_drone = global.construction_drone or data
+end
+
 return lib
