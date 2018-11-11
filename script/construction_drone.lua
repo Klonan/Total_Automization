@@ -16,7 +16,8 @@ local drone_orders =
   construct = 1,
   deconstruct = 2,
   repair = 3,
-  upgrade = 4
+  upgrade = 4,
+  request_proxy = "fuck man"
 }
 
 local debug = false
