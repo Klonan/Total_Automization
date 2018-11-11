@@ -44,12 +44,20 @@ local dist = function(cell_a, cell_b)
   return ((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))
 end
 
+local get_radius = function(entity)
+  if entity.type == "entity-ghost" then
+    return game.entity_prototypes[entity.ghost_name].radius
+  else
+    return entity.get_radius()
+  end
+end
+
 local in_range = function(entity_1, entity_2, extra)
 
   local position1 = entity_1.position
   local position2 = entity_2.position
   local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
-  return distance <= (entity_1.get_radius() + entity_2.get_radius()) + (extra or 1)
+  return distance <= (get_radius(entity_1) + (get_radius(entity_2) * 2)) + (extra or 1)
 
 end
 
@@ -226,23 +234,31 @@ local get_or_find_network = function(drone_data)
   return network
 end
 
-local get_target_position = function(unit, target)
-  local radius
-  if target.type == "entity-ghost" then
-    radius = game.entity_prototypes[target.ghost_name].radius
-  else
-    radius = target.get_radius()
-  end
-  radius = math.max(radius, 1)
+local normalise = function(vector)
+  local x = vector.x
+  local y = vector.y
+  local v = (((x * x) + (y * y)) ^ 0.5)
+  --error(serpent.block{x, y, v})
+  return {x = x/v, y = y/v}
+end
 
-  local origin = target.position
-  local position = unit.position
+local get_target_position = function(unit, target)
+  local radius = get_radius(target)
+  radius = math.max(radius, 1)
+  radius = radius + unit.get_radius()
+
+  local origin = unit.position
+  local position = target.position
   local direction =
   {
-    x = origin.x - position.x
+    x = origin.x - position.x,
     y = origin.y - position.y
   }
-
+  local offset = normalise(direction)
+  local target_position = {position.x + (radius * offset.x), position.y + (radius * offset.y)}
+  --error(serpent.block{unit = origin, target = position, offset = offset, radius = radius, final_position = target_position})
+  target_position = unit.surface.find_non_colliding_position(unit.name, target_position, 0, 0.1) or target_position
+  return target_position
 
 end
 
@@ -251,7 +267,9 @@ local set_drone_idle = function(drone)
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
 
-  remove_drone_sticker(drone_data)
+  if drone_data then
+    remove_drone_sticker(drone_data)
+  end
   local network = get_or_find_network(drone_data)
   if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
@@ -498,8 +516,8 @@ local move_to_logistic_target = function(drone_data, target, extra)
   if cell.is_in_construction_range(drone.position) then
     drone.set_command({
       type = defines.command.go_to_location,
-      destination = target.position,
-      radius = target.get_radius() + drone.get_radius() + (extra or 1),
+      destination = get_target_position(drone, target),
+      radius = drone.get_radius(),
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -598,7 +616,8 @@ local process_dropoff_command = function(drone_data)
 end
 
 local unit_move_away = function(unit, target)
-  local r = 5 * (target.get_radius() + unit.get_radius())
+  local radius = get_radius(target)
+  local r = (radius + unit.get_radius()) * (1 + (math.random() * 4))
   local position = {}
   if unit.position.x > target.position.x then
     position.x = unit.position.x + r
@@ -636,15 +655,14 @@ local process_contruct_command = function(drone_data)
 
   if not target.revive() then
     unit_move_away(drone, target)
-    --Some idiot might be in the way too...
-    local prototype = game.entity_prototypes[target.ghost_name]
-    if prototype then
-      local radius = prototype.radius * 1.5
+    print("Some idiot might be in the way too ("..drone.unit_number.." - "..game.tick..")")
+      local radius = get_radius(target) * 2
       local area = {{target.position.x - radius, target.position.y - radius},{target.position.x + radius, target.position.y + radius}}
       for k, unit in pairs (target.surface.find_entities_filtered{type = "unit", area = area}) do
+
+        print("Telling idiot to MOVE IT ("..drone.unit_number.." - "..game.tick..")")
         unit_move_away(unit, target)
       end
-    end
     return
   end
 
@@ -660,8 +678,8 @@ local drone_follow_path = function(drone_data)
     table.remove(path, 1)
     drone.set_command({
       type = defines.command.go_to_location,
-      destination = cell.owner.position,
-      radius = cell.construction_radius,
+      destination = get_target_position(drone, cell.owner),
+      radius = math.max(cell.construction_radius, cell.logistic_radius) * 0.5,
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -679,20 +697,20 @@ local process_failed_command = function(drone_data)
     local drone = drone_data.entity
     if not drone and drone.valid then return end
     --Something is really fucky!
-    if drone.unit_number % 60 == game.tick % 60 then
+    if game.tick % 137 == 0 then
       local position = drone.surface.find_non_colliding_position(drone.name, {randish(drone.position.x, 0.5), randish(drone.position.y, 0.5)} , 0, 1)
       drone.teleport(position)
       drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof"}
     end
 
-    local r = 3
+    --[[local r = 3
     drone.set_command({
       type = defines.command.go_to_location,
       destination = {randish(drone.position.x, r), randish(drone.position.y, r)},
       radius = drone.get_radius(),
       pathfind_flags = drone_pathfind_flags
     })
-    return
+    return]]
 end
 
 local process_deconstruct_command = function(drone_data)
@@ -743,35 +761,46 @@ process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
 
+  local print = function(string)
+    print(string.. "("..drone.unit_number.." - "..game.tick..")")
+  end
+
   if (result == defines.behavior_result.fail) then
+    print("Fail")
     process_failed_command(drone_data)
   end
 
   if drone_data.path then
+    print("Path")
     drone_follow_path(drone_data)
     return
   end
 
   if drone_data.pickup then
+    print("Pickup")
     process_pickup_command(drone_data)
     return
   end
 
   if drone_data.dropoff then
+    print("Dropoff")
     process_dropoff_command(drone_data)
     return
   end
 
   if drone_data.order == drone_orders.construct then
+    print("Construct")
     process_contruct_command(drone_data)
     return
   end
 
   if drone_data.order == drone_orders.deconstruct then
+    print("Deconstruct")
     process_deconstruct_command(drone_data)
     return
   end
 
+  print("Nothin")
   set_drone_idle(drone)
 end
 
