@@ -1,7 +1,7 @@
 local path = util.path("data/units/construction_drone/")
 local name = names.entities.construction_drone
 
-local scale = 0.5
+local scale = 2/3
 
 local animation =
 {
@@ -65,8 +65,8 @@ local unit = {
   subgroup="enemies",
   has_belt_immunity = true,
   can_open_gates = true,
-  collision_box = {{-0.1, -0.1}, {0.1, 0.1}},
-  selection_box = {{-0.3, -0.5}, {0.3, 0.2}},
+  collision_box = {{-0.2 * scale, -0.2 * scale}, {0.2 * scale, 0.2 * scale}},
+  selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
     type = "projectile",
@@ -96,7 +96,7 @@ local unit = {
     sound = nil,
     animation = animation
   },
-  vision_distance = 40,
+  vision_distance = 10,
   movement_speed = 0.16,
   distance_per_frame = 0.1,
   pollution_to_join_attack = 20000000,

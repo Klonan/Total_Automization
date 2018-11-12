@@ -20,12 +20,6 @@ local drone_orders =
   request_proxy = "fuck man"
 }
 
-local debug = true
-local print = function(string)
-  if not debug then return end
-  log(string)
-  game.print(string)
-end
 
 local data =
 {
@@ -35,8 +29,15 @@ local data =
   deconstructs_to_be_checked_again = {},
   idle_drones = {},
   drone_commands = {},
-  targets = {}
+  targets = {},
+  debug = false
 }
+
+local print = function(string)
+  if not data.debug then return end
+  log(string)
+  game.print(string)
+end
 
 local dist = function(cell_a, cell_b)
   local position1 = cell_a.owner.position
@@ -167,8 +168,8 @@ end
 
 remote.add_interface("construction_drone",
 {
-  set_drone_command = function(unit, end_position)
-    set_drone_command(unit, end_position)
+  set_debug = function(bool)
+    data.debug = bool
   end
 })
 
@@ -596,6 +597,7 @@ local process_dropoff_command = function(drone_data)
     if not point then
       print("really is nowhere to put it... TODO poop it on the ground...")
       remove_drone_sticker(drone_data)
+      return
     end
     chest = point.owner
     drone_data.dropoff.chest = chest
@@ -843,6 +845,7 @@ local on_marked_for_deconstruction = function(event)
   if not force then return end
   insert(data.deconstructs_to_be_checked, {entity = event.entity, force = force})
 end
+
 
 local lib = {}
 
