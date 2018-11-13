@@ -1,5 +1,5 @@
 local max = math.huge
-
+local insert = table.insert
 local name = names.entities.construction_drone
 
 local max_checks_per_tick = 6
@@ -17,7 +17,7 @@ local drone_orders =
   deconstruct = 2,
   repair = 3,
   upgrade = 4,
-  request_proxy = "fuck man"
+  request_proxy = 5
 }
 
 
@@ -27,6 +27,8 @@ local data =
   ghosts_to_be_checked_again = {},
   deconstructs_to_be_checked = {},
   deconstructs_to_be_checked_again = {},
+  repair_to_be_checked = {},
+  repair_to_be_checked_again = {},
   idle_drones = {},
   drone_commands = {},
   targets = {},
@@ -75,7 +77,6 @@ local lowest_f_score = function(set, f_score)
   return bestcell
 end
 
-local insert = table.insert
 local unwind_path
 unwind_path = function(flat_path, map, current_cell)
   local index = current_cell.owner.unit_number
@@ -134,22 +135,6 @@ local get_path = function(start, goal, cells)
 
   end
   return nil -- no valid path
-end
-
-local get_nodes = function(unit)
-  local networks = unit.force.logistic_networks[unit.surface.name]
-  if not networks then return end
-  local nodes = {}
-  for k, network in pairs (networks) do
-    local cells = network.cells
-    for k, cell in pairs (cells) do
-      if not cell.mobile then
-        table.insert(nodes, cell)
-      end
-    end
-  end
-  --game.print(serpent.block(nodes))
-  return nodes
 end
 
 local get_drone_path = function(unit, logistic_network, target)
@@ -334,7 +319,7 @@ end
 local ghost_type = "entity-ghost"
 
 local on_built_entity = function(event)
-  local entity = event.created_entity
+  local entity = event.created_entity or event.ghost
   if not (entity and entity.valid) then return end
   if entity.type == ghost_type then
     data.ghosts_to_be_checked[entity.unit_number] = entity
@@ -342,8 +327,9 @@ local on_built_entity = function(event)
   end
   if entity.name == name then
     local force = entity.force.name
+    print("Adding idle drone")
     data.idle_drones[force] = data.idle_drones[force] or {}
-    data.idle_drones[entity.force.name][entity.unit_number] = entity
+    data.idle_drones[force][entity.unit_number] = entity
   end
 end
 
@@ -431,7 +417,6 @@ local check_deconstruction = function(deconstruct)
   return true --If we send a drone, return true
 end
 
-local insert = table.insert
 local check_deconstruction_lists = function()
 
   local decs = data.deconstructs_to_be_checked
@@ -475,9 +460,107 @@ local check_deconstruction_lists = function()
 
 end
 
+local check_repair = function(entity)
+  if not (entity and entity.valid) then return true end
+  print("Checking repair of an entity: "..entity.name)
+  local health = entity.get_health_ratio()
+  if not (health and health < 1) then return true end
+  local surface = entity.surface
+  local force = entity.force
+  local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
+  local repair_items = {}
+  local repair_item
+  for name, item in pairs (game.item_prototypes) do
+    if item.type == "repair-tool" then
+      repair_items[name] = item
+    end
+  end
+  local pickup_target
+  for k, network in pairs (networks) do
+    for name, item in pairs (repair_items) do
+      if network.get_item_count(name) > 0 then
+        pickup_target = network.select_pickup_point({name = name})
+        if pickup_target then
+          repair_item = item
+          break
+        end
+      end
+    end
+    if pickup_target then break end
+  end
+  if not pickup_target then
+    print("No pickup target for any repair pack.")
+    return
+  end
+
+  local chest = pickup_target.owner
+  local drones = get_idle_drones(surface, force)
+  print(serpent.line(drones))
+  local drone = surface.get_closest(chest.position, drones)
+
+  if not drone then
+    print("No drone for repair.")
+    return
+  end 
+
+  data.idle_drones[drone.force.name][drone.unit_number] = nil
+
+
+  local drone_data =
+  {
+    type = drone_orders.repair,
+    pickup = {chest = chest, stack = {name = repair_item.name, count = 1}},
+    network = pickup_target.logistic_network,
+    target = entity,
+    entity = drone
+  }
+  data.drone_commands[drone.unit_number] = drone_data
+
+  process_drone_command(drone_data)
+  return true
+end
+
+local check_repair_lists = function()
+
+  local repair = data.repair_to_be_checked
+  local repair_again = data.repair_to_be_checked_again
+  local remaining_checks = max_checks_per_tick
+  for k = 1, remaining_checks do
+    local key, entity = next(repair)
+    if key then
+      remaining_checks = remaining_checks - 1
+      repair[key] = nil
+      if not check_repair(entity) then
+        insert(repair_again, entity)
+      end
+    else
+      break
+    end
+  end
+
+  if remaining_checks == 0 then return end
+  --print("checking things to deconstruct")
+  local index = data.repair_check_index
+  for k = 1, remaining_checks do
+    local key, entity = next(repair_again, index)
+    index = key
+    if key then
+      remaining_checks = remaining_checks - 1
+      if check_repair(entity) then
+        repair_again[key] = nil
+      end
+    else
+      break
+    end
+  end
+  data.repair_check_index = index
+
+end
+
 local on_tick = function(event)
   check_ghost_lists()
   check_deconstruction_lists()
+  check_repair_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -758,6 +841,10 @@ local process_deconstruct_command = function(drone_data)
   return process_drone_command(drone_data)
 end
 
+local process_repair_command = function(drone_data)
+  error("TODO...")
+end
+
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
@@ -802,6 +889,12 @@ process_drone_command = function(drone_data, result)
     return
   end
 
+  if drone_data.order == drone_orders.repair then
+    print("Repair")
+    process_repair_command(drone_data)
+    return
+  end
+
   print("Nothin")
   set_drone_idle(drone)
 end
@@ -812,15 +905,15 @@ local on_ai_command_completed = function(event)
 end
 
 local on_entity_removed = function(event)
-  print("On removed event fired - "..game.tick)
-  local entity = event.entity
+  local entity = event.entity or event.ghost
+  print("On removed event fired: "..entity.name.." - "..game.tick)
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
   if not unit_number then return end
 
   if entity.name == name then
     data.idle_drones[entity.force.name][unit_number] = nil
-    local drone_data = data.drone_orders[unit_number]
+    local drone_data = data.drone_commands[unit_number]
     if drone_data then
       cancel_drone_order(drone_data, true)
     end
@@ -839,13 +932,16 @@ local on_entity_removed = function(event)
   end
 
 end
-local insert = table.insert
 local on_marked_for_deconstruction = function(event)
   local force = event.force or game.players[event.player_index].force
   if not force then return end
   insert(data.deconstructs_to_be_checked, {entity = event.entity, force = force})
 end
 
+local on_entity_damaged = function(event)
+  local entity = event.entity
+  insert(data.repair_to_be_checked, entity)
+end
 
 local lib = {}
 
@@ -858,11 +954,15 @@ local events =
   [defines.events.on_robot_mined_entity] = on_entity_removed,
   [defines.events.on_player_mined_entity] = on_entity_removed,
   [defines.events.on_marked_for_deconstruction] = on_marked_for_deconstruction,
+  [defines.events.on_pre_ghost_deconstructed] = on_entity_removed,
+  [defines.events.on_post_entity_died] = on_built_entity,
+  [defines.events.on_entity_damaged] = on_entity_damaged,
 }
 
 lib.on_event = handler(events)
 lib.on_load = function()
   data = global.construction_drone or data
+  global.construction_drone = data
 end
 
 lib.on_init = function()

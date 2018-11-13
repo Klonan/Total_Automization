@@ -1,4 +1,4 @@
-local name = names.entities.damage_indicator_text
+local name = "flying-text"
 local on_entity_damaged = function(event)
   local entity = event.entity
   if not (entity and entity.valid) then return end
