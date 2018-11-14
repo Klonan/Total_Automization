@@ -176,7 +176,7 @@ local background = "__core__/graphics/entity-info-dark-background.png"
 
 local shift = {0, -0.3}
 
-for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
+for k, item_type in pairs({"item", "ammo", "gun", "tool", "repair-tool"}) do
   for name, prototype in pairs (data.raw[item_type]) do
     if prototype.icon then
       local sticker =

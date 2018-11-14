@@ -60,7 +60,7 @@ local in_range = function(entity_1, entity_2, extra)
   local position1 = entity_1.position
   local position2 = entity_2.position
   local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
-  return distance <= (get_radius(entity_1) + (get_radius(entity_2) * 2)) + (extra or 1)
+  return distance <= (get_radius(entity_1) + (get_radius(entity_2))) + (extra or 1)
 
 end
 
@@ -501,14 +501,14 @@ local check_repair = function(entity)
   if not drone then
     print("No drone for repair.")
     return
-  end 
+  end
 
   data.idle_drones[drone.force.name][drone.unit_number] = nil
 
 
   local drone_data =
   {
-    type = drone_orders.repair,
+    order = drone_orders.repair,
     pickup = {chest = chest, stack = {name = repair_item.name, count = 1}},
     network = pickup_target.logistic_network,
     target = entity,
@@ -578,8 +578,8 @@ local cancel_drone_order = function(drone_data, on_removed)
     if target.type == "entity-ghost" then
       data.ghosts_to_be_checked_again[target.unit_number] = target
     end
-    if drone_data.type = drone_commands.repair then
-      insert(data.repair_again, target)
+    if drone_data.order == drone_orders.repair then
+      insert(data.repair_to_be_checked_again, target)
     end
   end
 
@@ -626,7 +626,10 @@ end
 local add_drone_sticker = function(drone_data, item_name)
   remove_drone_sticker(drone_data)
   local sticker_name = item_name.." Drone Sticker"
-  if not game.entity_prototypes[sticker_name] then return end
+  if not game.entity_prototypes[sticker_name] then
+    print("No sticker with name sticker_name")
+    return
+  end
   local drone = drone_data.entity
 
   drone_data.sticker = drone.surface.create_entity
@@ -642,12 +645,6 @@ end
 local process_pickup_command = function(drone_data)
   print("Procesing pickup command")
 
-  local drone = drone_data.entity
-  if not (drone and drone.valid) then
-    print("Drone not valid on pickup command process")
-    return
-  end
-
   local chest = drone_data.pickup.chest
   if not (chest and chest.valid) then
     print("Chest for pickup was not valid")
@@ -655,15 +652,38 @@ local process_pickup_command = function(drone_data)
     return
   end
 
-  if not in_range(chest, drone) then
+  if not in_range(chest, drone_data.entity) then
     return move_to_logistic_target(drone_data, chest)
   end
 
   print("Pickup chest in range, picking up item")
   local stack = drone_data.pickup.stack
+  local inventory
+  local type = chest.type
+
+  --Hmm, I think in the future, things like furnace and stuff for deconstructing etc.
+  if type == "logistic-container" or type == "container" then
+    inventory = chest.get_inventory(defines.inventory.chest)
+  elseif type == "roboport" then
+    inventory = chest.get_inventory(defines.inventory.robot_repair)
+  end
+
+  local chest_stack = inventory.find_item_stack(stack.name)
+  if not chest_stack then
+    print("The chest didn't have the item we want... jog on...")
+    drone_data.pickup.chest = nil
+    return process_drone_command(drone_data)
+  end
+  local new_stack =
+  {
+    name = stack.name,
+    count = stack.count,
+    durability = chest_stack.durability
+  }
   chest.remove_item(stack)
-  drone_data.held_stack = stack
-  add_drone_sticker(drone_data, stack.name)
+  drone_data.held_stack = new_stack
+
+  add_drone_sticker(drone_data, new_stack.name)
 
   drone_data.pickup = nil
 
@@ -674,17 +694,15 @@ local process_dropoff_command = function(drone_data)
   print("Procesing dropoff command")
 
   local drone = drone_data.entity
-  if not (drone and drone.valid) then
-    print("Drone not valid on pickup command process")
-    return
-  end
 
   local chest = drone_data.dropoff.chest
   if not (chest and chest.valid) then
     local point = drone_data.network.select_drop_point{stack = drone_data.dropoff.stack}
     if not point then
-      print("really is nowhere to put it... TODO poop it on the ground...")
-      remove_drone_sticker(drone_data)
+      print("really is nowhere to put it... so i will poop it...")
+      local stack = drone.surface.create_entity{name = "item-on-ground", position = drone.position, stack = drone_data.held_stack}
+      drone_data.held_stack = nil
+      set_drone_idle(drone)
       return
     end
     chest = point.owner
@@ -804,7 +822,7 @@ local process_failed_command = function(drone_data)
 end
 
 local process_deconstruct_command = function(drone_data)
-
+  print("Processing deconstruct command")
   local target = drone_data.target
   if not (target and target.valid) then
     cancel_drone_order(drone_data)
@@ -816,6 +834,9 @@ local process_deconstruct_command = function(drone_data)
   if not in_range(drone, target) then
     return move_to_logistic_target(drone_data, target)
   end
+
+  --TODO Don't deconstruct if we have no where to put the results
+  --TODO Deconstructing chests etc. should work like base gaem....
 
   local product = target.prototype.mineable_properties.products[1]
 
@@ -847,18 +868,77 @@ local process_deconstruct_command = function(drone_data)
 end
 
 local process_repair_command = function(drone_data)
+  print("Processing repair command")
   local target = drone_data.target
   if not (target and target.valid) then
     cancel_drone_order(drone_data)
     return
   end
-  error("WIP")
+
+  if target.get_health_ratio() == 1 then
+    print("Target is fine... give up on healing him")
+    drone_data.target = nil
+    if drone_data.held_stack then
+      drone_data.dropoff = {stack = drone_data.held_stack}
+      return process_drone_command(drone_data)
+    end
+    return cancel_drone_order(drone_data)
+  end
+
+  local drone = drone_data.entity
+
+  if not in_range(drone, target) then
+    return move_to_logistic_target(drone_data, target)
+  end
+
+  local stack = drone_data.held_stack
+  if stack.durability <= 0 then
+    error("NO, CHECK DURABILITY WHEN YOU DRAIN IT LAZY BOI")
+  end
+
+  local health = target.health
+  local repair_speed = game.item_prototypes[stack.name].speed
+  if not repair_speed then
+    print("WTF, maybe some migration?")
+    drone_data.dropoff = {stack = stack}
+    return process_drone_command(drone_data)
+  end
+
+  target.health = target.health + repair_speed
+  stack.durability = stack.durability - repair_speed
+  if stack.durability <= 0 then
+    print("Stack expired, going to pikcup a new one")
+    stack.durability = nil
+    drone_data.pickup = {stack = stack}
+    drone_data.held_stack = nil
+    remove_drone_sticker(drone_data)
+    return process_drone_command(drone_data)
+  end
+
+  if target.get_health_ratio() == 1 then
+    print("Job done, matey is all repaired")
+    drone_data.dropoff = {stack = stack}
+    drone_data.target = nil
+    return process_drone_command(drone_data)
+  end
+
+  --oof, this might be a bit heavy... maybe we can do is every n ticks? maybe later...
+  drone.set_command{
+    type = defines.command.stop,
+    ticks_to_wait = 1,
+    distraction = defines.distraction.by_damage
+  }
+
 end
 
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
+
+  if not (drone and drone.valid) then
+    error("Drone entity not valid when processing its own command!")
+  end
 
   local print = function(string)
     print(string.. "("..drone.unit_number.." - "..game.tick..")")
