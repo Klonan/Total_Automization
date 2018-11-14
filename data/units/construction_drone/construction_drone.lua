@@ -174,6 +174,8 @@ data:extend
 
 local background = "__core__/graphics/entity-info-dark-background.png"
 
+local shift = {0, -0.3}
+
 for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
   for name, prototype in pairs (data.raw[item_type]) do
     if prototype.icon then
@@ -191,7 +193,8 @@ for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
               width = 53,
               height = 53,
               scale = 0.5,
-              frame_count = 1
+              frame_count = 1,
+              shift = shift
             },
             {
               filename = prototype.icon,
@@ -200,7 +203,8 @@ for k, item_type in pairs({"item", "ammo", "gun", "tool"}) do
               height = prototype.icon_size,
               scale = (32 / prototype.icon_size) / 2,
               frame_count = 1,
-              animation_speed = 1
+              animation_speed = 1,
+              shift = shift
             }
           }
         },

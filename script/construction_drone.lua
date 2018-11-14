@@ -572,9 +572,14 @@ local cancel_drone_order = function(drone_data, on_removed)
 
   local target = drone_data.target
   if target and target.valid then
-    data.targets[target.unit_number] = nil
-    if target.name == "entity-ghost" then
+    if target.unit_number then
+      data.targets[target.unit_number] = nil
+    end
+    if target.type == "entity-ghost" then
       data.ghosts_to_be_checked_again[target.unit_number] = target
+    end
+    if drone_data.type = drone_commands.repair then
+      insert(data.repair_again, target)
     end
   end
 
@@ -842,7 +847,12 @@ local process_deconstruct_command = function(drone_data)
 end
 
 local process_repair_command = function(drone_data)
-  error("TODO...")
+  local target = drone_data.target
+  if not (target and target.valid) then
+    cancel_drone_order(drone_data)
+    return
+  end
+  error("WIP")
 end
 
 
