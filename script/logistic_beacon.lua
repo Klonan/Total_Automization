@@ -1,16 +1,16 @@
+error("Not used, don't use me.")
 local name = names.entities.logistic_beacon
 
 local data =
 {
-  chests = {}
+  beacons = {}
 }
 
 local beacon_built = function(entity)
-  game.print("helo")
   local chest = entity.surface.create_entity{name = name.." Chest", position = entity.position, force = entity.force}
-  chest.minable = false
-  chest.destructible = false
-  data.chests[entity.unit_number] = chest
+  entity.minable = false
+  entity.destructible = false
+  data.beacons[chest.unit_number] = entity
 end
 
 local on_built = function(event)
@@ -26,9 +26,9 @@ local on_entity_removed = function(event)
   if not (entity and entity.valid) then return end
   local unit_number = entity.unit_number
   if not unit_number then return end
-  local chest = data.chests[unit_number]
-  if not (chest and chest.valid) then return end
-  chest.destroy()
+  local beacon = data.beacons[unit_number]
+  if not (beacon and beacon.valid) then return end
+  beacon.destroy()
 end
 
 local events =

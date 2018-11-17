@@ -4,6 +4,8 @@ local path = util.path("data/entities/logistic_beacon/")
 local beacon = util.copy(data.raw["roboport"]["roboport"])
 beacon.name = name
 beacon.localised_name = name
+beacon.icon = path.."logistic_beacon_icon.png"
+beacon.icon_size = 150
 beacon.energy_source =
 {
   type = "void",
@@ -21,10 +23,10 @@ beacon.charge_approach_distance = 0
 beacon.robot_slots_count = 0
 beacon.material_slots_count = 0
 beacon.stationing_offset = {0, 0}
-beacon.charging_offsets = {{0, -1}}
+beacon.charging_offsets = {}
 beacon.order = name
 beacon.collision_box = {{-0.8, -0.8}, {0.8, 0.8}}
-beacon.selection_box = {{-1, -1}, {1, 0.1}}
+beacon.selection_box = {{-1, -1}, {1, 1}}
 beacon.base_animation =
 {
   layers =
@@ -47,22 +49,6 @@ beacon.base_patch = util.empty_sprite()
 beacon.door_animation_up = util.empty_sprite()
 beacon.door_animation_down = util.empty_sprite()
 beacon.minable.result = name
---beacon.recharging_animation = util.empty_sprite()
-
-
-local chest = util.copy(data.raw["logistic-container"]["logistic-chest-storage"])
-chest.name = name.." Chest"
-chest.localised_name = name.." Chest"
-chest.collision_box = {{-0.8, -0.8}, {0.8, 0.8}}
-chest.selection_box = {{-1, 0.1}, {1, 1}}
-chest.collision_mask = {"doodad-layer"}
-chest.order = "noob"
-chest.inventory_size = 99
-chest.picture = util.empty_sprite()
-chest.minable = nil
-chest.max_health = 1
-chest.flags = {"hide-alt-info", "not-deconstructable"}
-
 
 local item = util.copy(data.raw.item.roboport)
 item.name = name
@@ -89,6 +75,5 @@ data:extend
 {
   beacon,
   item,
-  chest,
   recipe
 }

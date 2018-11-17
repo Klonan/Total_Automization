@@ -29,11 +29,17 @@ local data =
   deconstructs_to_be_checked_again = {},
   repair_to_be_checked = {},
   repair_to_be_checked_again = {},
+  upgrade_to_be_checked = {},
+  upgrade_to_be_checked_again = {},
   idle_drones = {},
   drone_commands = {},
   targets = {},
   debug = false
 }
+
+local get_drone_radius = function()
+  return 1
+end
 
 local print = function(string)
   if not data.debug then return end
@@ -60,7 +66,7 @@ local in_range = function(entity_1, entity_2, extra)
   local position1 = entity_1.position
   local position2 = entity_2.position
   local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
-  return distance <= (get_radius(entity_1) + (get_radius(entity_2))) + (extra or 1)
+  return distance <= (get_radius(entity_1) + (get_radius(entity_2))) + (extra or 2)
 
 end
 
@@ -234,8 +240,8 @@ end
 
 local get_target_position = function(unit, target)
   local radius = get_radius(target)
-  radius = math.max(radius, 1)
-  radius = radius + unit.get_radius()
+  --radius = math.max(radius, 1)
+  --radius = radius + unit.get_radius()
 
   local origin = unit.position
   local position = target.position
@@ -254,6 +260,7 @@ end
 
 local set_drone_idle = function(drone)
   if not (drone and drone.valid) then return end
+  print("Setting drone idle")
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
   data.idle_drones[drone.force.name][drone.unit_number] = drone
@@ -269,7 +276,7 @@ local set_drone_idle = function(drone)
     drone.set_command{
       type = defines.command.go_to_location,
       destination = get_target_position(drone, destination_cell.owner),
-      radius = math.max(destination_cell.logistic_radius, drone.get_radius() + destination_cell.owner.get_radius())
+      radius = math.max(destination_cell.logistic_radius, get_drone_radius() + destination_cell.owner.get_radius())
     }
   end
 
@@ -278,7 +285,7 @@ end
 local process_drone_command
 
 local check_ghost = function(entity)
-  if not (entity and entity.valid) then return end
+  if not (entity and entity.valid) then return true end
   local force = entity.force
   local surface = entity.surface
   local position = entity.position
@@ -315,11 +322,9 @@ local check_ghost = function(entity)
 
   data.drone_commands[drone.unit_number] = drone_data
   data.idle_drones[force.name][drone.unit_number] = nil
-  data.ghosts_to_be_checked[entity.unit_number] = nil
-  data.ghosts_to_be_checked_again[entity.unit_number] = nil
   data.targets[entity.unit_number] = drone_data
-
-  return process_drone_command(drone_data)
+  process_drone_command(drone_data)
+  return true
 end
 
 local ghost_type = "entity-ghost"
@@ -348,9 +353,8 @@ local check_ghost_lists = function()
     if key then
       remaining_checks = remaining_checks - 1
       ghosts[key] = nil
-      if ghost.valid then
+      if not check_ghost(ghost) then
         ghosts_again[key] = ghost
-        check_ghost(ghost)
       end
     else
       break
@@ -365,9 +369,7 @@ local check_ghost_lists = function()
     index = key
     if key then
       remaining_checks = remaining_checks - 1
-      if ghost.valid then
-        check_ghost(ghost)
-      else
+      if check_ghost(ghost) then
         ghosts_again[key] = nil
       end
     else
@@ -375,6 +377,94 @@ local check_ghost_lists = function()
     end
   end
   data.ghost_check_index = index
+
+end
+
+local check_upgrade = function(upgrade_data)
+  local entity = upgrade_data.entity
+  if not (entity and entity.valid) then return true end
+  if not entity.to_be_upgraded() then return true end
+
+  local target_prototype = upgrade_data.target
+  if not target_prototype then
+    print("Maybe some migration?")
+    return true
+  end
+
+  local surface = entity.surface
+  local force = entity.force
+
+  local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
+  local point, item = get_point(target_prototype.items_to_place_this, networks)
+  if not point then return end
+
+  if not point then
+    print("no point with item?")
+    return
+  end
+
+  local chest = point.owner
+  local drones = get_idle_drones(surface, force)
+
+  local drone = surface.get_closest(chest.position, drones)
+
+  if not drone then
+    print("No drones for pickup")
+    return
+  end
+
+  local network = point.logistic_network
+
+  local drone_data =
+  {
+    entity = drone,
+    order = drone_orders.upgrade,
+    pickup = {chest = chest, stack = item},
+    network = network,
+    target = entity,
+    target_prototype = target_prototype
+  }
+
+  data.drone_commands[drone.unit_number] = drone_data
+  data.idle_drones[force.name][drone.unit_number] = nil
+  data.targets[entity.unit_number] = drone_data
+  process_drone_command(drone_data)
+  return true
+end
+
+local check_upgrade_lists = function()
+  local upgrade = data.upgrade_to_be_checked
+  local upgrade_again = data.upgrade_to_be_checked_again
+  local remaining_checks = max_checks_per_tick
+  for k = 1, remaining_checks do
+    local key, upgrade_data = next(upgrade)
+    if key then
+      remaining_checks = remaining_checks - 1
+      upgrade[key] = nil
+      if not check_upgrade(upgrade_data) then
+        upgrade_again[key] = upgrade_data
+      end
+    else
+      break
+    end
+  end
+
+  if remaining_checks == 0 then return end
+  --print("Checking normal ghosts again")
+  local index = data.upgrade_check_index
+  for k = 1, remaining_checks do
+    local key, upgrade_data = next(upgrade_again, index)
+    index = key
+    if key then
+      remaining_checks = remaining_checks - 1
+      if check_upgrade(upgrade_data) then
+        upgrade_again[key] = nil
+      end
+    else
+      break
+    end
+  end
+  data.upgrade_check_index = index
 
 end
 
@@ -604,6 +694,7 @@ local on_tick = function(event)
   check_ghost_lists()
   check_deconstruction_lists()
   check_repair_lists()
+  check_upgrade_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -648,7 +739,7 @@ local stack_from_product = function(product)
   }
 end
 
-local move_to_logistic_target = function(drone_data, target, extra)
+local move_to_logistic_target = function(drone_data, target)
   local network = get_or_find_network(drone_data)
   if not network then return end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
@@ -657,7 +748,7 @@ local move_to_logistic_target = function(drone_data, target, extra)
     drone.set_command({
       type = defines.command.go_to_location,
       destination = get_target_position(drone, target),
-      radius = drone.get_radius(),
+      radius = get_drone_radius() * 2,
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -703,7 +794,8 @@ local process_pickup_command = function(drone_data)
     return
   end
 
-  if not in_range(chest, drone_data.entity) then
+  if not in_range(chest, drone_data.entity, 3) then
+    print("Not in range: "..drone_data.entity.unit_number.." - "..game.tick)
     return move_to_logistic_target(drone_data, chest)
   end
 
@@ -774,7 +866,12 @@ local process_dropoff_command = function(drone_data)
     print("We didn't have a stack anyway, why are we dropping it off??")
     return
   end
-  chest.insert(stack)
+  local count = stack.count
+  stack.count = stack.count - chest.insert(stack)
+  if stack.count > 0 then
+    drone_data.dropoff.chest = nil
+    return process_drone_command(drone_data)
+  end
   if drone_data.extra_inventory then
     local key, product = next(drone_data.extra_inventory)
     if not key then drone_data.extra_inventory = nil end
@@ -782,7 +879,7 @@ local process_dropoff_command = function(drone_data)
       local stack = stack_from_product(product)
       drone_data.held_stack = stack
       drone_data.dropoff = {stack = stack}
-      add_drone_sticker(drone_data)
+      add_drone_sticker(drone_data, stack.name)
       return process_drone_command(drone_data)
     end
   end
@@ -812,6 +909,7 @@ local unit_move_away = function(unit, target, multiplier)
     destination = position,
     radius = 1
   }
+  unit.speed = unit.prototype.speed
 end
 
 local process_contruct_command = function(drone_data)
@@ -826,8 +924,8 @@ local process_contruct_command = function(drone_data)
     print("oh the entity isnt valid, oh well")
     return
   end
-  if not in_range(target, drone, 2) then
-    return move_to_logistic_target(drone_data, target, 2)
+  if not in_range(target, drone) then
+    return move_to_logistic_target(drone_data, target)
   end
 
   if not target.revive() then
@@ -881,7 +979,7 @@ local drone_follow_path = function(drone_data)
     drone.set_command({
       type = defines.command.go_to_location,
       destination = new_position,
-      radius = last and 2 or math.max(current_cell.construction_radius, current_cell.logistic_radius),
+      radius = last and r or math.max(current_cell.construction_radius, current_cell.logistic_radius),
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -909,7 +1007,7 @@ local process_failed_command = function(drone_data)
     drone.set_command({
       type = defines.command.go_to_location,
       destination = {randish(drone.position.x, r), randish(drone.position.y, r)},
-      radius = drone.get_radius(),
+      radius = get_drone_radius(),
       pathfind_flags = drone_pathfind_flags
     })
     return]]
@@ -1024,6 +1122,46 @@ local process_repair_command = function(drone_data)
 
 end
 
+local process_upgrade_command = function(drone_data)
+  print("Processing upgrade command")
+
+  local target = drone_data.target
+  if not (target and target.valid and target.to_be_upgraded()) then
+    cancel_drone_order(drone_data)
+    return
+  end
+
+  local drone = drone_data.entity
+
+  if not in_range(target, drone) then
+    return move_to_logistic_target(drone_data, target)
+  end
+
+  local surface = drone.surface
+  local prototype = drone_data.target_prototype
+  local original_name = target.name
+  local upgraded = surface.create_entity
+  {
+    name = prototype.name,
+    position = target.position,
+    direction = target.direction,
+    fast_replace = true,
+    force = target.force,
+    spill = false
+  }
+  if not upgraded then error("Shouldn't happen, upgrade failed when creating entity... let me know!") return end
+  local products = game.entity_prototypes[original_name].mineable_properties.products
+  local product = products[1]
+  if product then
+    local stack = stack_from_product(product)
+    drone_data.held_stack = stack
+    drone_data.dropoff = {stack = stack}
+    drone_data.order = nil
+    add_drone_sticker(drone_data, stack.name)
+    return process_drone_command(drone_data)
+  end
+end
+
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
@@ -1076,6 +1214,12 @@ process_drone_command = function(drone_data, result)
   if drone_data.order == drone_orders.repair then
     print("Repair")
     process_repair_command(drone_data)
+    return
+  end
+
+  if drone_data.order == drone_orders.upgrade then
+    print("Upgrade")
+    process_upgrade_command(drone_data)
     return
   end
 
@@ -1140,6 +1284,13 @@ local shoo = function(event)
   player.surface.play_sound{path = "shoo", position = player.position}
 end
 
+local on_marked_for_upgrade = function(event)
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  local upgrade_data = {entity = entity, target = event.target}
+  data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
+end
+
 local lib = {}
 
 local events =
@@ -1154,6 +1305,7 @@ local events =
   [defines.events.on_pre_ghost_deconstructed] = on_entity_removed,
   [defines.events.on_post_entity_died] = on_built_entity,
   [defines.events.on_entity_damaged] = on_entity_damaged,
+  [defines.events.on_marked_for_upgrade] = on_marked_for_upgrade,
   [names.hotkeys.shoo]  = shoo
 }
 
@@ -1165,6 +1317,12 @@ end
 
 lib.on_init = function()
   global.construction_drone = global.construction_drone or data
+  data.ghosts_to_be_checked_again = {}
+  for k, surface in pairs (game.surfaces) do
+    for k, ghost in pairs (surface.find_entities_filtered{type = "entity-ghost"}) do
+      insert(data.ghosts_to_be_checked_again, ghost)
+    end
+  end
 end
 
 return lib

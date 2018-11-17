@@ -66,7 +66,7 @@ local unit = {
   has_belt_immunity = true,
   can_open_gates = true,
   affected_by_tiles = true, --not merged
-  collision_box = {{-0.2 * scale, -0.2 * scale}, {0.2 * scale, 0.2 * scale}},
+  collision_box = {{-0.01 * scale, -0.01 * scale}, {0.01 * scale, 0.01 * scale}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
@@ -185,7 +185,7 @@ local background = "__core__/graphics/entity-info-dark-background.png"
 
 local shift = {0, -0.3}
 
-for k, item_type in pairs({"item", "ammo", "gun", "tool", "repair-tool"}) do
+for k, item_type in pairs({"item", "ammo", "gun", "tool", "repair-tool", "rail-planner"}) do
   for name, prototype in pairs (data.raw[item_type]) do
     if prototype.icon then
       local sticker =
