@@ -158,6 +158,10 @@ remote.add_interface("construction_drone",
   end
 })
 
+local get_drone_capacity = function(force)
+  return 4
+end
+
 local get_point = function(items, networks)
   for k, network in pairs (networks) do
     local select = network.select_pickup_point
@@ -253,6 +257,8 @@ local set_drone_idle = function(drone)
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
   data.idle_drones[drone.force.name][drone.unit_number] = drone
+
+  drone.speed = math.random() * drone.speed
 
   if not drone_data then return end
 
@@ -372,6 +378,25 @@ local check_ghost_lists = function()
 
 end
 
+local rip_inventory = function(inventory, list)
+  if inventory.is_empty() then return end
+  for name, count in pairs (inventory.get_contents()) do
+    list[name] = (list[name] or 0) + count
+  end
+end
+
+local contents = function(entity)
+  local contents = {}
+  for k = 1, 10 do
+    local inventory = entity.get_inventory(k)
+    if inventory then
+      rip_inventory(inventory, contents)
+    end
+  end
+  print("Contents are safe!")
+  return contents
+end
+
 local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
   local force = deconstruct.force
@@ -397,24 +422,42 @@ local check_deconstruction = function(deconstruct)
     return
   end
 
-  local drone = surface.get_closest(entity.position, get_idle_drones(surface, force))
-  if not drone then
-    return
+  --local drop_point = network.select_drop_point({product})
+  --if not drop_point then
+  --  print("No where to drop what we would deconstruct, so don't deconstruct him yet... figure it out later")
+  --end
+
+  local capacity = get_drone_capacity(force)
+  local total_contents = contents(entity)
+  local sum = 0
+  for name, count in pairs (total_contents) do
+    sum = sum + count
   end
+  sum = math.ceil(sum / capacity)
+  local send = math.min(sum, 10)
+  send = math.max(send, 1)
 
-  local drone_data =
-  {
-    order = drone_orders.deconstruct,
-    network = network,
-    entity = drone,
-    target = entity
-  }
+  for k = 1, send do
+    local drone = surface.get_closest(entity.position, get_idle_drones(surface, force))
+    if not drone then
+      return
+    end
 
-  data.drone_commands[drone.unit_number] = drone_data
-  data.idle_drones[drone.force.name][drone.unit_number] = nil
-  process_drone_command(drone_data)
+    local drone_data =
+    {
+      order = drone_orders.deconstruct,
+      network = network,
+      entity = drone,
+      target = entity
+    }
 
-  return true --If we send a drone, return true
+    data.drone_commands[drone.unit_number] = drone_data
+    data.idle_drones[drone.force.name][drone.unit_number] = nil
+    process_drone_command(drone_data)
+  end
+  if send >= sum then
+    return true --If we send a drone, return true
+  end
 end
 
 local check_deconstruction_lists = function()
@@ -597,6 +640,14 @@ local cancel_drone_order = function(drone_data, on_removed)
 
 end
 
+local stack_from_product = function(product)
+  return
+  {
+    name = product.name,
+    count = product.amount or (math.random() * (product.amount_max - product.amount_min) + product.amount_min)
+  }
+end
+
 local move_to_logistic_target = function(drone_data, target, extra)
   local network = get_or_find_network(drone_data)
   if not network then return end
@@ -696,13 +747,17 @@ local process_dropoff_command = function(drone_data)
   local drone = drone_data.entity
 
   local chest = drone_data.dropoff.chest
+
   if not (chest and chest.valid) then
-    local point = drone_data.network.select_drop_point{stack = drone_data.dropoff.stack}
+    local network = get_or_find_network(drone_data)
+    if not network then return end
+    local point = network.select_drop_point{stack = drone_data.dropoff.stack}
     if not point then
-      print("really is nowhere to put it... so i will poop it...")
-      local stack = drone.surface.create_entity{name = "item-on-ground", position = drone.position, stack = drone_data.held_stack}
-      drone_data.held_stack = nil
-      set_drone_idle(drone)
+      print("really is nowhere to put it... so just sit and wait...")
+      drone.set_command{
+        type = defines.command.stop,
+        ticks_to_wait = math.random(600, 1200)
+      }
       return
     end
     chest = point.owner
@@ -720,12 +775,26 @@ local process_dropoff_command = function(drone_data)
     return
   end
   chest.insert(stack)
+  if drone_data.extra_inventory then
+    local key, product = next(drone_data.extra_inventory)
+    if not key then drone_data.extra_inventory = nil end
+    if product then
+      local stack = stack_from_product(product)
+      drone_data.held_stack = stack
+      drone_data.dropoff = {stack = stack}
+      add_drone_sticker(drone_data)
+      return process_drone_command(drone_data)
+    end
+  end
+
   set_drone_idle(drone)
 end
 
-local unit_move_away = function(unit, target)
+local unit_move_away = function(unit, target, multiplier)
+  local multiplier = multiplier or 1
   local radius = get_radius(target)
   local r = (radius + unit.get_radius()) * (1 + (math.random() * 4))
+  r = r * multiplier
   local position = {}
   if unit.position.x > target.position.x then
     position.x = unit.position.x + r
@@ -783,11 +852,16 @@ local drone_follow_path = function(drone_data)
   local drone = drone_data.entity
   local cell = path[1]
   if cell and cell.valid then
-    table.remove(path, 1)
+    if cell.is_in_construction_range(drone.position) then
+      table.remove(path, 1)
+      cell = path[1]
+    end
+  end
+  if cell and cell.valid then
     drone.set_command({
       type = defines.command.go_to_location,
-      destination = get_target_position(drone, cell.owner),
-      radius = math.max(cell.construction_radius, cell.logistic_radius) * 0.5,
+      destination = cell.owner,
+      radius = math.max(cell.construction_radius, cell.logistic_radius),
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -835,27 +909,26 @@ local process_deconstruct_command = function(drone_data)
     return move_to_logistic_target(drone_data, target)
   end
 
-  --TODO Don't deconstruct if we have no where to put the results
-  --TODO Deconstructing chests etc. should work like base gaem....
-
-  local product = target.prototype.mineable_properties.products[1]
-
-  target.destroy()
-  drone_data.order = nil
-
-  if not product then
-    data.drone_commands[drone.unit_number] = nil
-    data.idle_drones[drone.force.name][drone.unit_number] = drone
-    print("Should't really happen though...")
-    return
+  local remaining_contents = contents(target)
+  local stack
+  local name, count = next(remaining_contents)
+  if name then
+    print("Target has contents, lets just pick up them for now")
+    count = math.min(count, get_drone_capacity(drone.force))
+    stack = {name = name, count = count}
+    target.remove_item(stack)
+  else
+    print("Target says he has no contents")
+    local products = target.prototype.mineable_properties.products
+    local product = products[1]
+    stack = stack_from_product(product)
+    target.destroy()
+    drone_data.order = nil
+    table.remove(products, 1)
+    if next(products) then
+      drone_data.extra_inventory = products
+    end
   end
-
-
-  local stack =
-  {
-    name = product.name,
-    count = product.amount or (math.random() * (product.amount_max - product.amount_min) + product.amount_min)
-  }
 
   drone_data.dropoff =
   {
@@ -934,6 +1007,7 @@ end
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
+  drone.speed = (((math.random() / 10) - 0.1) + 1) * drone.prototype.speed
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
 
   if not (drone and drone.valid) then
@@ -1033,6 +1107,19 @@ local on_entity_damaged = function(event)
   insert(data.repair_to_be_checked, entity)
 end
 
+local shoo = function(event)
+  local player = game.players[event.player_index]
+  if not (player and player.valid) then return end
+  local radius = 16
+  local target = player.selected or player.character
+  local position = target.position
+  local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
+  for k, unit in pairs(player.surface.find_entities_filtered{area = area, name = name, force = player.force}) do
+    unit_move_away(unit, target, 4)
+  end
+  player.surface.play_sound{path = "shoo", position = player.position}
+end
+
 local lib = {}
 
 local events =
@@ -1047,6 +1134,7 @@ local events =
   [defines.events.on_pre_ghost_deconstructed] = on_entity_removed,
   [defines.events.on_post_entity_died] = on_built_entity,
   [defines.events.on_entity_damaged] = on_entity_damaged,
+  [names.hotkeys.shoo]  = shoo
 }
 
 lib.on_event = handler(events)

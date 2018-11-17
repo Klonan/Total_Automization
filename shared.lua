@@ -106,8 +106,9 @@ data.class_names =
 data.hotkeys =
 {
   change_class = "Change class",
-  unit_move = "Move unit",
-  suicide = "Suicide"
+  --unit_move = "Move unit",
+  suicide = "Suicide",
+  shoo = "Shoo!"
 }
 
 data.unit_tools =

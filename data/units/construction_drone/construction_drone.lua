@@ -65,6 +65,7 @@ local unit = {
   subgroup="enemies",
   has_belt_immunity = true,
   can_open_gates = true,
+  affected_by_tiles = true, --not merged
   collision_box = {{-0.2 * scale, -0.2 * scale}, {0.2 * scale, 0.2 * scale}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
@@ -163,11 +164,19 @@ local recipe = {
   result = name
 }
 
+local shoo =
+{
+  type = "sound",
+  name = "shoo",
+  filename = path.."shoo.ogg"
+}
+
 data:extend
 {
   unit,
   item,
-  recipe
+  recipe,
+  shoo
 }
 
 --Sticker time!

@@ -25,4 +25,20 @@ local become_an_hero =
   key_sequence = "DELETE",
   consuming = "game-only"
 }
-data:extend{change_class, move_unit, become_an_hero}
+
+local shoo =
+{
+  type = "custom-input",
+  name = hotkeys.shoo,
+  localised_names = hotkeys.shoo,
+  key_sequence = "SHIFT + ]",
+  consuming = "game-only"
+}
+
+data:extend
+{
+  change_class,
+  --move_unit,
+  become_an_hero,
+  shoo
+}

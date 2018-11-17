@@ -11,13 +11,6 @@ handler = require("script/event_handler")
 names = require("shared")
 util = require("script/script_util")
 
-local hotkeys = names.hotkeys
-for k, name in pairs (hotkeys) do
-  local event_name = script.generate_event_name()
-  defines.events[name] = event_name
-  script.on_event(name, function(event) script.raise_event(event_name, event) end)
-end
-
 --error(serpent.block(defines.events))
 
 local libs = {
@@ -56,11 +49,18 @@ end
 local register_all_events = function()
   --hack(?)
   local last_event = script.generate_event_name()
+  log("LAST: "..last_event)
   local all_events = {}
   for k = 0, last_event do
     all_events[k] = k
   end
   script.on_event(all_events, on_event)
+
+  local hotkeys = names.hotkeys
+  for k, name in pairs (hotkeys) do
+    script.on_event(name, function(event) event.name = name on_event(event) end)
+  end
+
 end
 
 local on_init = function()
