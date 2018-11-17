@@ -850,18 +850,38 @@ local drone_follow_path = function(drone_data)
   print("I am following path")
   local path = drone_data.path
   local drone = drone_data.entity
-  local cell = path[1]
-  if cell and cell.valid then
-    if cell.is_in_construction_range(drone.position) then
+  local current_cell = path[1]
+  if current_cell and current_cell.valid then
+    if current_cell.is_in_construction_range(drone.position) then
       table.remove(path, 1)
-      cell = path[1]
+    else
+      drone.set_command({
+        type = defines.command.go_to_location,
+        destination_entity = current_cell.owner,
+        radius = math.max(current_cell.construction_radius, current_cell.logistic_radius),
+        pathfind_flags = drone_pathfind_flags
+      })
+      return
     end
   end
-  if cell and cell.valid then
+  local next_cell = path[1]
+  if next_cell and next_cell.valid then
+    local last = path[2]
+    local current = current_cell.owner.position
+    local origin = drone.position
+    local next = next_cell.owner.position
+    local dx = current.x - origin.x
+    local dy = current.y - origin.y
+    local r = math.max(current_cell.construction_radius, current_cell.logistic_radius) / 2
+    if dx < -r then dx = -r end
+    if dx > r then dx = r end
+    if dy < -r then dy = -r end
+    if dy > r then dy = r end
+    local new_position = drone.surface.find_non_colliding_position(drone.name, {x = next.x - dx, y = next.y - dy}, 0, 2)
     drone.set_command({
       type = defines.command.go_to_location,
-      destination = cell.owner,
-      radius = math.max(cell.construction_radius, cell.logistic_radius),
+      destination = new_position,
+      radius = last and 2 or math.max(current_cell.construction_radius, current_cell.logistic_radius),
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -1112,7 +1132,7 @@ local shoo = function(event)
   if not (player and player.valid) then return end
   local radius = 16
   local target = player.selected or player.character
-  local position = target.position
+  local position = target and target.position or player.position
   local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
   for k, unit in pairs(player.surface.find_entities_filtered{area = area, name = name, force = player.force}) do
     unit_move_away(unit, target, 4)

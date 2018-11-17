@@ -24,8 +24,8 @@ beacon.stationing_offset = {0, 0}
 beacon.charging_offsets = {{0, -1}}
 beacon.order = name
 beacon.collision_box = {{-0.8, -0.8}, {0.8, 0.8}}
-beacon.selection_box = {{-1, -1}, {1, 1}}
-beacon.base_animation = 
+beacon.selection_box = {{-1, -1}, {1, 0.1}}
+beacon.base_animation =
 {
   layers =
   {
@@ -46,7 +46,7 @@ beacon.base = util.empty_sprite()
 beacon.base_patch = util.empty_sprite()
 beacon.door_animation_up = util.empty_sprite()
 beacon.door_animation_down = util.empty_sprite()
-beacon.minable.name = name
+beacon.minable.result = name
 --beacon.recharging_animation = util.empty_sprite()
 
 
@@ -54,7 +54,7 @@ local chest = util.copy(data.raw["logistic-container"]["logistic-chest-storage"]
 chest.name = name.." Chest"
 chest.localised_name = name.." Chest"
 chest.collision_box = {{-0.8, -0.8}, {0.8, 0.8}}
-chest.selection_box = {{-1, -1}, {1, 1}}
+chest.selection_box = {{-1, 0.1}, {1, 1}}
 chest.collision_mask = {"doodad-layer"}
 chest.order = "noob"
 chest.inventory_size = 99
@@ -71,14 +71,24 @@ item.place_result = name
 item.icon = path.."logistic_beacon_icon.png"
 item.icon_size = 150
 
-data:extend(
+local recipe = {
+  type = "recipe",
+  name = name,
+  localised_name = name,
+  category = data.raw.recipe["roboport"].category,
+  enabled = true,
+  ingredients =
   {
-    beacon,
-    item,
-    chest
-  }
-)
+    {"iron-plate", 1},
+  },
+  energy_required = 1,
+  result = name
+}
 
-
-
-
+data:extend
+{
+  beacon,
+  item,
+  chest,
+  recipe
+}
