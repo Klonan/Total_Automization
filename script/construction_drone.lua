@@ -31,6 +31,7 @@ local data =
   repair_to_be_checked_again = {},
   upgrade_to_be_checked = {},
   upgrade_to_be_checked_again = {},
+  proxies_to_be_checked = {},
   idle_drones = {},
   drone_commands = {},
   targets = {},
@@ -38,7 +39,7 @@ local data =
 }
 
 local get_drone_radius = function()
-  return 1
+  return 0.2
 end
 
 local print = function(string)
@@ -206,19 +207,6 @@ local get_idle_drones = function(surface, force)
   return drones
 end
 
-local set_drone_order = function(drone, drone_data)
-  data.drone_commands[drone.unit_number] = drone_data
-  data.idle_drones[drone.surface][drone.force.name][drone.unit_number] = nil
-  drone_data.entity = drone
-  local target = drone_data.target
-  if target and target.unit_number then
-    local index = target.unit_number
-    data.targets[index] = data.targets[index] or {}
-    data.targets[index][drone.unit_number] = drone
-  end
-  process_drone_command(drone_data)
-end
-
 local remove_drone_sticker
 
 local get_or_find_network = function(drone_data)
@@ -296,6 +284,19 @@ local set_drone_idle = function(drone)
 end
 
 local process_drone_command
+
+local set_drone_order = function(drone, drone_data)
+  data.drone_commands[drone.unit_number] = drone_data
+  data.idle_drones[drone.force.name][drone.unit_number] = nil
+  drone_data.entity = drone
+  local target = drone_data.target
+  if target and target.unit_number then
+    local index = target.unit_number
+    data.targets[index] = data.targets[index] or {}
+    data.targets[index][drone.unit_number] = drone_data
+  end
+  process_drone_command(drone_data)
+end
 
 local check_ghost = function(entity)
   if not (entity and entity.valid) then return true end
@@ -484,16 +485,16 @@ local check_upgrade_lists = function()
 end
 
 local check_proxy = function(entity)
-  if not (entity and entity.valid) then return true end
+  if not (entity and entity.valid) then print("Prozy not valid") return true end
   local target = entity.proxy_target
-  if not (target and target.valid) then return true end
+  if not (target and target.valid) then print("Proxy target not valid") return true end
 
   local items = entity.item_requests
   local force = entity.force
   local surface = entity.surface
   local capacity = get_drone_capacity(entity.force)
   local drones = get_idle_drones(surface, force)
-  local networks = surface.find_logistic_networks_by_construction_area(entity.position)
+  local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local needed = 0
   local sent = 0
   local position = entity.position
@@ -512,8 +513,9 @@ local check_proxy = function(entity)
         {
           entity = drone,
           order = drone_orders.request_proxy,
-          network = point.network,
-          pickup = {stack = {name = name, count = math.min(count, capacity)}, chest = chest}
+          network = point.logistic_network,
+          pickup = {stack = {name = name, count = math.min(count, capacity)}, chest = chest},
+          target = entity
         }
         set_drone_order(drone, drone_data)
         sent = sent + 1
@@ -535,7 +537,7 @@ local check_proxies_lists = function()
     if key then
       remaining_checks = remaining_checks - 1
       if check_proxy(entity) then
-        upgrade_again[key] = nil
+        proxies[key] = nil
       end
     else
       break
@@ -600,7 +602,7 @@ local check_deconstruction = function(deconstruct)
   for name, count in pairs (total_contents) do
     sum = sum + count
   end
-  sum = math.ceil(sum / capacity)
+  sum = math.ceil(sum / capacity) + 1
   local send = math.min(sum, 10)
   send = math.max(send, 1)
 
@@ -769,6 +771,7 @@ local on_tick = function(event)
   check_deconstruction_lists()
   check_repair_lists()
   check_upgrade_lists()
+  check_proxies_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -1014,8 +1017,8 @@ local process_contruct_command = function(drone_data)
   if not in_range(target, drone) then
     return move_to_logistic_target(drone_data, target)
   end
-
-  if not target.revive() then
+  local success, entity, proxy = target.revive({return_item_request_proxy = true})
+  if not success then
     unit_move_away(drone, target)
     print("Some idiot might be in the way too ("..drone.unit_number.." - "..game.tick..")")
       local radius = get_radius(target) * 2
@@ -1026,6 +1029,10 @@ local process_contruct_command = function(drone_data)
         unit_move_away(unit, target)
       end
     return
+  end
+
+  if proxy and proxy.valid then
+    insert(data.proxies_to_be_checked, proxy)
   end
 
   set_drone_idle(drone)
@@ -1250,13 +1257,14 @@ local process_upgrade_command = function(drone_data)
 end
 
 local process_request_proxy_command = function(drone_data)
-  print("Processing upgrade command")
+  print("Processing request proxy command")
 
   local target = drone_data.target
   if not (target and target.valid) then
     cancel_drone_order(drone_data)
     return
   end
+
   local proxy_target = target.proxy_target
   if not (proxy_target and proxy_target.valid) then
     cancel_drone_order(drone_data)
@@ -1265,16 +1273,38 @@ local process_request_proxy_command = function(drone_data)
 
   local drone = drone_data.entity
 
+  local stack = drone_data.held_stack
+  local requests = target.item_requests
+  if not stack then
+    print("We don't have anything to offer, go pickup something")
+    local name, count = next(requests)
+    drone_data.pickup = {stack = {name = name, count = math.min(count, get_drone_capacity(drone.force))}}
+    return process_drone_command(drone)
+  end
+
+  if not requests[stack.name] then
+    print("Holding something he doesn't want, go put it back")
+    drone_data.dropoff = {stack = drone_data.held_stack}
+    return process_drone_command(drone_data)
+  end
+
   if not in_range(proxy_target, drone) then
     return move_to_logistic_target(drone_data, proxy_target)
   end
 
-  local stack = drone_data.held_stack
-  local requests = target.item_requests
-  if not stack then
-    local name, count = next(requests)
-    drone_data.pickup = {stack = {name = name, count = math.min(count, get_drone_capacity(drone.force))}}
-    return process_drone_command(dron)
+  print("We are in range, and we have what he wants")
+
+  proxy_target.insert(stack)
+  requests[stack.name] = requests[stack.name] - stack.count
+  if requests[stack.name] <= 0 then
+    requests[stack.name] = nil
+  end
+  if not next(requests) then
+    target.destroy()
+    set_drone_idle(drone)
+  else
+    target.item_requests = requests
+    process_drone_command(drone_data)
   end
 
 end
