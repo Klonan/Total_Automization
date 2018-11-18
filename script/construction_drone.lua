@@ -57,6 +57,8 @@ end
 local get_radius = function(entity)
   if entity.type == "entity-ghost" then
     return game.entity_prototypes[entity.ghost_name].radius
+  elseif entity.name == name then
+    return get_drone_radius()
   else
     return entity.get_radius()
   end
@@ -96,7 +98,7 @@ unwind_path = function(flat_path, map, current_cell)
 end
 
 local get_path = function(start, goal, cells)
-
+  print("Starting path find")
   local closed_set = {}
   local open_set = {}
   local came_from = {}
@@ -116,6 +118,7 @@ local get_path = function(start, goal, cells)
     if current == goal then
       local path = unwind_path({}, came_from, goal)
       insert(path, goal)
+      print("A* path find complete")
       return path
     end
 
@@ -372,10 +375,10 @@ local check_ghost_lists = function()
     local key, ghost = next(ghosts)
     if key then
       remaining_checks = remaining_checks - 1
-      ghosts[key] = nil
       if not check_ghost(ghost) then
         ghosts_again[key] = ghost
       end
+      ghosts[key] = nil
     else
       break
     end
@@ -562,7 +565,6 @@ local contents = function(entity)
       rip_inventory(inventory, contents)
     end
   end
-  print("Contents are safe!")
   return contents
 end
 
@@ -583,7 +585,6 @@ local check_deconstruction = function(deconstruct)
     print("Why are you marked for deconstruction if I cant mine you?")
     return
   end
-  local product = mineable_properties.products[1] --Ehhhhh, well... fuck it...
 
   local key, network = next(surface.find_logistic_networks_by_construction_area(entity.position, force))
   if not key then
@@ -669,6 +670,18 @@ local check_deconstruction_lists = function()
 
 end
 
+local get_repair_items = function()
+  if repair_items then return repair_items end
+  --Deliberately not 'local'
+  repair_items = {}
+  for name, item in pairs (game.item_prototypes) do
+    if item.type == "repair-tool" then
+      repair_items[name] = item
+    end
+  end
+  return repair_items
+end
+
 local check_repair = function(entity)
   if not (entity and entity.valid) then return true end
   print("Checking repair of an entity: "..entity.name)
@@ -677,13 +690,8 @@ local check_repair = function(entity)
   local surface = entity.surface
   local force = entity.force
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
-  local repair_items = {}
+  local repair_items = get_repair_items()
   local repair_item
-  for name, item in pairs (game.item_prototypes) do
-    if item.type == "repair-tool" then
-      repair_items[name] = item
-    end
-  end
   local pickup_target
   for k, network in pairs (networks) do
     for name, item in pairs (repair_items) do
@@ -704,7 +712,6 @@ local check_repair = function(entity)
 
   local chest = pickup_target.owner
   local drones = get_idle_drones(surface, force)
-  print(serpent.line(drones))
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -767,10 +774,15 @@ local check_repair_lists = function()
 end
 
 local on_tick = function(event)
+  print("Checking ghosts")
   check_ghost_lists()
+  print("Checking deconstruction")
   check_deconstruction_lists()
+  print("Checking repair")
   check_repair_lists()
+  print("Checking upgrade")
   check_upgrade_lists()
+  print("Checking proxies")
   check_proxies_lists()
 end
 
@@ -1132,14 +1144,23 @@ local process_deconstruct_command = function(drone_data)
   else
     print("Target says he has no contents")
     local products = target.prototype.mineable_properties.products
-    local product = products[1]
-    stack = stack_from_product(product)
-    target.destroy()
-    drone_data.order = nil
-    table.remove(products, 1)
-    if next(products) then
-      drone_data.extra_inventory = products
+    if products then
+      local product = products[1]
+      stack = stack_from_product(product)
+      table.remove(products, 1)
+      if next(products) then
+        drone_data.extra_inventory = products
+      end
+    elseif target.type == "item-entity" then
+      stack = {name = target.stack.name, count = target.stack.count}
     end
+    if not stack then
+      game.print("No stack from deconstruction: "..target.name)
+      set_drone_idle(drone)
+      return
+    end
+    drone_data.order = nil
+    target.destroy()
   end
 
   drone_data.dropoff =
