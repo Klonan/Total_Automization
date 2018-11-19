@@ -155,7 +155,7 @@ local recipe = {
   name = name,
   localised_name = name,
   category = data.raw.recipe["construction-robot"].category,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
     {"iron-plate", 1},
@@ -171,22 +171,34 @@ local shoo =
   filename = path.."shoo.ogg"
 }
 
-data:extend
-{
-  unit,
-  item,
-  recipe,
-  shoo
-}
-
 --Sticker time!
 
 local background = "__core__/graphics/entity-info-dark-background.png"
 
 local shift = {0, -0.3}
 
-for k, item_type in pairs({"item", "ammo", "gun", "tool", "repair-tool", "rail-planner", "module"}) do
-  for name, prototype in pairs (data.raw[item_type]) do
+local item_types =
+{
+  "item",
+  "rail-planner",
+  "item-with-entity-data",
+  "blueprint-item",
+  "upgrade-item",
+  "deconstruction-item",
+  "ammo",
+  "gun",
+  "tool",
+  "repair-tool",
+  "copy-paste-tool",
+  "module",
+  "armor",
+  "item-with-inventory",
+  "item-with-label",
+  "item-with-tags"
+}
+
+for k, item_type in pairs(item_types) do
+  for name, prototype in pairs (data.raw[item_type] or {}) do
     if prototype.icon then
       local sticker =
       {
@@ -226,3 +238,144 @@ for k, item_type in pairs({"item", "ammo", "gun", "tool", "repair-tool", "rail-p
     end
   end
 end
+
+local simple_storage_chest_name = names.entities.simple_storage_chest
+local simple_storage_chest = util.copy(data.raw["logistic-container"]["logistic-chest-storage"])
+simple_storage_chest.name =simple_storage_chest_name
+simple_storage_chest.localised_name = simple_storage_chest_name
+simple_storage_chest.inventory_size = 19
+simple_storage_chest.picture =
+{
+  filename = path.."simple-storage-chest.png",
+  priority = "extra-high",
+  width = 48,
+  height = 34,
+  shift = {0.1875, 0}
+}
+
+local simple_storage_chest_item = {
+  type = "item",
+  name = simple_storage_chest_name,
+  localised_name = simple_storage_chest_name,
+  icon = path.."simple-storage-chest.png",
+  icon_size = 32,
+  flags = {},
+  subgroup = data.raw.item["logistic-chest-storage"].subgroup,
+  order = "c-"..simple_storage_chest_name,
+  stack_size= 50,
+  place_result = simple_storage_chest_name
+}
+
+local simple_storage_chest_recipe = {
+  type = "recipe",
+  name = simple_storage_chest_name,
+  localised_name = simple_storage_chest_name,
+  category = data.raw.recipe["logistic-chest-storage"].category,
+  enabled = false,
+  ingredients =
+  {
+    {"iron-chest", 1},
+    {"electronic-circuit", 5},
+  },
+  energy_required = 0.5,
+  result = simple_storage_chest_name
+}
+
+local simple_provider_chest_name = names.entities.simple_provider_chest
+local simple_provider_chest = util.copy(data.raw["logistic-container"]["logistic-chest-passive-provider"])
+simple_provider_chest.name = simple_provider_chest_name
+simple_provider_chest.localised_name = simple_provider_chest_name
+simple_provider_chest.inventory_size = 19
+simple_provider_chest.picture =
+{
+  filename = path.."simple-provider-chest.png",
+  priority = "extra-high",
+  width = 48,
+  height = 34,
+  shift = {0.1875, 0}
+}
+
+local simple_provider_chest_item = {
+  type = "item",
+  name = simple_provider_chest_name,
+  localised_name = simple_provider_chest_name,
+  icon = path.."simple-provider-chest.png",
+  icon_size = 32,
+  flags = {},
+  subgroup = data.raw.item["logistic-chest-passive-provider"].subgroup,
+  order = "d-"..simple_provider_chest_name,
+  stack_size= 50,
+  place_result = simple_provider_chest_name
+}
+
+local simple_provider_chest_recipe = {
+  type = "recipe",
+  name = simple_provider_chest_name,
+  localised_name = simple_provider_chest_name,
+  category = data.raw.recipe["logistic-chest-passive-provider"].category,
+  enabled = false,
+  ingredients =
+  {
+    {"iron-chest", 1},
+    {"electronic-circuit", 5},
+  },
+  energy_required = 0.5,
+  result = simple_provider_chest_name
+}
+
+
+local technology_name = names.technologies.construction_drone_system
+local technology = {
+  type = "technology",
+  name = technology_name,
+  localised_name = technology_name,
+  icon = path.."construction_drone_technology.png",
+  icon_size = 150,
+  effects =
+  {
+    {
+      type = "unlock-recipe",
+      recipe = name
+    },
+    {
+      type = "unlock-recipe",
+      recipe = names.entities.logistic_beacon
+    },
+    {
+      type = "unlock-recipe",
+      recipe = simple_storage_chest_name
+    },
+    {
+      type = "unlock-recipe",
+      recipe = simple_provider_chest_name
+    },
+  },
+  unit =
+  {
+    count = 200,
+    ingredients = {
+      {"science-pack-1", 1},
+      {"science-pack-2", 1},
+    },
+    time = 30
+  },
+  prerequisites = {"automation"},
+  order = "y-a"
+}
+
+
+
+data:extend
+{
+  unit,
+  item,
+  recipe,
+  shoo,
+  technology,
+  simple_provider_chest,
+  simple_provider_chest_item,
+  simple_provider_chest_recipe,
+  simple_storage_chest,
+  simple_storage_chest_item,
+  simple_storage_chest_recipe
+}

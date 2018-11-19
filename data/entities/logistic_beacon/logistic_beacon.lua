@@ -56,16 +56,19 @@ item.localised_name = name
 item.place_result = name
 item.icon = path.."logistic_beacon_icon.png"
 item.icon_size = 150
+item.stack_size = 20
 
 local recipe = {
   type = "recipe",
   name = name,
   localised_name = name,
   category = data.raw.recipe["roboport"].category,
-  enabled = true,
+  enabled = false,
   ingredients =
   {
-    {"iron-plate", 1},
+    {"iron-plate", 15},
+    {"iron-gear-wheel", 5},
+    {"electronic-circuit", 10},
   },
   energy_required = 1,
   result = name

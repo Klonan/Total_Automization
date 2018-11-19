@@ -147,7 +147,8 @@ data.units =
 data.technologies =
 {
   iron_units = "Iron Units",
-  circuit_units = "Circuit Units"
+  circuit_units = "Circuit Units",
+  construction_drone_system = "Construction Drone System"
 }
 
 data.entities =
@@ -172,7 +173,9 @@ data.entities =
   buy_chest = "Trade Chest Buy",
   damage_indicator_text = "Damage Indicator Text",
   logistic_beacon = "Logistic Beacon",
-  construction_drone = "Construction Drone"
+  construction_drone = "Construction Drone",
+  simple_storage_chest = "Simple Storage Chest",
+  simple_provider_chest = "Simple Provider Chest"
 }
 
 data.deployers =
