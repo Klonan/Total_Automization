@@ -35,6 +35,7 @@ local data =
   idle_drones = {},
   drone_commands = {},
   targets = {},
+  sent_deconstruction = {},
   debug = false
 }
 
@@ -174,11 +175,14 @@ end
 
 local get_point = function(items, networks)
   for k, network in pairs (networks) do
-    local select = network.select_pickup_point
-    for k, item in pairs(items) do
-      point = select({name = item.name, position = position})
-      if point then
-        return point, item
+    --If there are the normal bots in the network, let them do it!
+    if network.available_construction_robots == 0 then
+      local select = network.select_pickup_point
+      for k, item in pairs(items) do
+        point = select({name = item.name, position = position})
+        if point then
+          return point, item
+        end
       end
     end
   end
@@ -312,7 +316,7 @@ local check_ghost = function(entity)
   local point, item = get_point(prototype.items_to_place_this, networks)
 
   if not point then
-    print("no point with item?")
+    print("no eligible point with item?")
     return
   end
 
@@ -330,7 +334,6 @@ local check_ghost = function(entity)
 
   local drone_data =
   {
-    entity = drone,
     order = drone_orders.construct,
     pickup = {chest = chest, stack = item},
     network = network,
@@ -408,7 +411,7 @@ local check_upgrade = function(upgrade_data)
   if not (entity and entity.valid) then return true end
   if not entity.to_be_upgraded() then return true end
 
-  local target_prototype = upgrade_data.target
+  local target_prototype = upgrade_data.upgrade_prototype
   if not target_prototype then
     print("Maybe some migration?")
     return true
@@ -505,8 +508,10 @@ local check_proxy = function(entity)
     needed = needed + 1
     local point
     for k, network in pairs (networks) do
-      point = network.select_pickup_point({name = name, position = position})
-      if point then break end
+      if network.available_construction_robots == 0 then
+        point = network.select_pickup_point({name = name, position = position})
+        if point then break end
+      end
     end
     if point then
       local chest = point.owner
@@ -585,10 +590,15 @@ local check_deconstruction = function(deconstruct)
     print("Why are you marked for deconstruction if I cant mine you?")
     return
   end
-
-  local key, network = next(surface.find_logistic_networks_by_construction_area(entity.position, force))
-  if not key then
-    print("He is outside of any of our construction areas...")
+  local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
+  local any
+  for k, network in pairs (networks) do
+    if network.available_construction_robots == 0 then
+      any = true
+    end
+  end
+  if not any then
+    print("He is outside of any of our eligible construction areas...")
     return
   end
 
@@ -597,34 +607,39 @@ local check_deconstruction = function(deconstruct)
   --  print("No where to drop what we would deconstruct, so don't deconstruct him yet... figure it out later")
   --end
 
+  local unit_number = entity.unit_number
+  local sent = 0
+  if unit_number then
+    local sent = data.sent_deconstruction[unit_number]
+  end
+
   local capacity = get_drone_capacity(force)
   local total_contents = contents(entity)
   local sum = 0
   for name, count in pairs (total_contents) do
     sum = sum + count
   end
-  sum = math.ceil(sum / capacity) + 1
-  local send = math.min(sum, 10)
-  send = math.max(send, 1)
-
-  for k = 1, send do
-    local drone = surface.get_closest(entity.position, get_idle_drones(surface, force))
-    if not drone then
-      return
+  local needed = math.ceil(sum / capacity) + 1
+  needed = needed - sent
+  
+  local drones = get_idle_drones(surface, force)
+  for k = 1, math.min(needed, 10) do
+    local drone = surface.get_closest(entity.position, drones)
+    if drone then
+      local drone_data =
+      {
+        order = drone_orders.deconstruct,
+        network = network,
+        target = entity
+      }
+      set_drone_order(drone, drone_data)
+      sent = sent + 1
     end
-
-    local drone_data =
-    {
-      order = drone_orders.deconstruct,
-      network = network,
-      entity = drone,
-      target = entity
-    }
-    set_drone_order(drone, drone_data)
   end
-  if send >= sum then
-    return true --If we send a drone, return true
+  if unit_number then
+    data.sent_deconstruction[unit_number] = sent
   end
+  return sent >= needed
 end
 
 local check_deconstruction_lists = function()
@@ -795,22 +810,32 @@ local cancel_drone_order = function(drone_data, on_removed)
 
   local target = drone_data.target
   if target and target.valid then
-    if target.unit_number then
-      if data.targets[target.unit_number] then
-        data.targets[target.unit_number][drone.unit_number] = nil
-        if not next(data.targets[target.unit_number]) then
-          data.targets[target.unit_number] = nil
+    local unit_number = target.unit_number
+    if unit_number then
+      if data.targets[unit_number] then
+        data.targets[unit_number][drone.unit_number] = nil
+        if not next(data.targets[unit_number]) then
+          data.targets[unit_number] = nil
         end
       end
     end
     if target.type == "entity-ghost" then
-      data.ghosts_to_be_checked_again[target.unit_number] = target
+      data.ghosts_to_be_checked[unit_number] = target
     end
-    if target.type == "item-request-proxy" then
+    if drone_data.order == drone_orders.request_proxy then
       insert(data.proxies_to_be_checked, target)
     end
     if drone_data.order == drone_orders.repair then
-      insert(data.repair_to_be_checked_again, target)
+      insert(data.repair_to_be_checked, target)
+    end
+    if drone_data.order == drone_orders.upgrade then
+      insert(data.upgrade_to_be_checked, {entity = target, upgrade_prototype = drone_data.upgrade_prototype})
+    end
+    if drone_data.order == drone_orders.deconstruct then
+      insert(data.deconstructs_to_be_checked, target)
+      if unit_number then
+        data.sent_deconstruction[unit_number] = data.sent_deconstruction[unit_number] - 1
+      end
     end
   end
 
@@ -1160,6 +1185,9 @@ local process_deconstruct_command = function(drone_data)
       return
     end
     drone_data.order = nil
+    if target.unit_number then
+      data.sent_deconstruction[target.unit_number] = nil
+    end
     target.destroy()
   end
 
@@ -1463,7 +1491,7 @@ end
 local on_marked_for_upgrade = function(event)
   local entity = event.entity
   if not (entity and entity.valid) then return end
-  local upgrade_data = {entity = entity, target = event.target}
+  local upgrade_data = {entity = entity, upgrade_prototype = event.target}
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
 end
 

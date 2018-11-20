@@ -66,14 +66,14 @@ local unit = {
   has_belt_immunity = true,
   can_open_gates = true,
   affected_by_tiles = true, --not merged
-  collision_box = {{-0.01 * scale, -0.01 * scale}, {0.01 * scale, 0.01 * scale}},
+  collision_box = {{-0.1, -0.1 }, {0.1, 0.1}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
     type = "projectile",
     range = 1.5,
     min_attack_distance = 0.5,
-    cooldown = SU(35),
+    cooldown = SU(60),
     cooldown_deviation = 0.2,
     ammo_category = "melee",
     ammo_type =
@@ -89,7 +89,7 @@ local unit = {
           target_effects =
           {
             type = "damage",
-            damage = { amount = 1, type = util.damage_type(name)}
+            damage = { amount = 10, type = util.damage_type(name)}
           }
         }
       }
@@ -102,8 +102,8 @@ local unit = {
   distance_per_frame = 0.1,
   pollution_to_join_attack = 20000000,
   distraction_cooldown = 30000000,
-  min_pursue_time = 10 * 60,
-  max_pursue_distance = 50,
+  min_pursue_time = 0,
+  max_pursue_distance = 0,
   corpse = nil,
   dying_explosion = "explosion",
   --dying_sound =  make_biter_dying_sounds(0.4),
