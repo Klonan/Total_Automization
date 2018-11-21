@@ -65,8 +65,9 @@ local unit = {
   subgroup="enemies",
   has_belt_immunity = true,
   can_open_gates = true,
+  path_resolution = 0.5,
   affected_by_tiles = true, --not merged
-  collision_box = {{-0.1, -0.1 }, {0.1, 0.1}},
+  collision_box = {{-0.05, -0.05 }, {0.05, 0.05}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {

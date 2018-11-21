@@ -1,5 +1,6 @@
 local max = math.huge
 local insert = table.insert
+local pairs = pairs
 local name = names.entities.construction_drone
 
 local max_checks_per_tick = 6
@@ -194,24 +195,36 @@ local validate = function(entities)
       entities[k] = nil
     end
   end
+  return entities
 end
 
 local get_idle_drones = function(surface, force)
-  local drones = data.idle_drones[force.name]
-  if drones then
-    validate(drones)
-    --print("Returning cached drone list: "..game.tick)
-    return drones
+  local surface_index = surface.name
+  local force_index = force.name
+
+  local surface_drones = data.idle_drones[surface_index]
+  if not surface_drones then
+    surface_drones = {}
+    data.idle_drones[surface_index] = surface_drones
   end
 
-  local drones = {}
-  print("making drone table again? "..game.tick)
-  for k, entity in pairs (surface.find_entities_filtered{name = name, force = force}) do
-    drones[entity.unit_number] = entity
+  local force_drones = surface_drones[force_index]
+  if not force_drones then
+    force_drones = {}
+    surface_drones[force_index] = force_drones
   end
-  --TODO, make this support multiple surfaces properly...
-  data.idle_drones[force.name] = drones
-  return drones
+
+  return validate(force_drones)
+end
+
+local add_idle_drone = function(drone)
+  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  idle_drones[drone.unit_number] = drone
+end
+
+local remove_idle_drone = function(drone)
+  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  idle_drones[drone.unit_number] = nil
 end
 
 local remove_drone_sticker
@@ -271,7 +284,7 @@ local set_drone_idle = function(drone)
   print("Setting drone idle")
   local drone_data = data.drone_commands[drone.unit_number]
   data.drone_commands[drone.unit_number] = nil
-  data.idle_drones[drone.force.name][drone.unit_number] = drone
+  add_idle_drone(drone)
 
   drone.speed = math.random() * drone.speed
 
@@ -293,8 +306,8 @@ end
 local process_drone_command
 
 local set_drone_order = function(drone, drone_data)
+  remove_idle_drone(drone)
   data.drone_commands[drone.unit_number] = drone_data
-  data.idle_drones[drone.force.name][drone.unit_number] = nil
   drone_data.entity = drone
   local target = drone_data.target
   if target and target.unit_number then
@@ -322,7 +335,6 @@ local check_ghost = function(entity)
 
   local chest = point.owner
   local drones = get_idle_drones(surface, force)
-
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -344,30 +356,32 @@ local check_ghost = function(entity)
 end
 
 local ghost_type = "entity-ghost"
+local proxy_type = "item-request-proxy"
 
 local on_built_entity = function(event)
   local entity = event.created_entity or event.ghost
   if not (entity and entity.valid) then return end
+
   if entity.type == ghost_type then
     data.ghosts_to_be_checked[entity.unit_number] = entity
     return
   end
+
   if entity.name == name then
-    local force = entity.force.name
     print("Adding idle drone")
-    data.idle_drones[force] = data.idle_drones[force] or {}
-    data.idle_drones[force][entity.unit_number] = entity
+    add_idle_drone(entity)
     return
   end
 
   local bounding_box = entity.bounding_box or entity.selection_box
-  local proxies = entity.surface.find_entities_filtered{area = bounding_box, type = "item-request-proxy"}
+  local proxies = entity.surface.find_entities_filtered{area = bounding_box, type = proxy_type}
   for k, proxy in pairs (proxies) do
     if proxy.proxy_target == entity then
       table.insert(data.proxies_to_be_checked, proxy)
       break
     end
   end
+
 end
 
 local check_ghost_lists = function()
@@ -431,7 +445,6 @@ local check_upgrade = function(upgrade_data)
 
   local chest = point.owner
   local drones = get_idle_drones(surface, force)
-
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -443,7 +456,6 @@ local check_upgrade = function(upgrade_data)
 
   local drone_data =
   {
-    entity = drone,
     order = drone_orders.upgrade,
     pickup = {chest = chest, stack = item},
     network = network,
@@ -491,7 +503,7 @@ local check_upgrade_lists = function()
 end
 
 local check_proxy = function(entity)
-  if not (entity and entity.valid) then print("Prozy not valid") return true end
+  if not (entity and entity.valid) then print("Proxy not valid") return true end
   local target = entity.proxy_target
   if not (target and target.valid) then print("Proxy target not valid") return true end
 
@@ -519,7 +531,6 @@ local check_proxy = function(entity)
       if drone then
         drone_data =
         {
-          entity = drone,
           order = drone_orders.request_proxy,
           network = point.logistic_network,
           pickup = {stack = {name = name, count = math.min(count, capacity)}, chest = chest},
@@ -1495,6 +1506,20 @@ local on_marked_for_upgrade = function(event)
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
 end
 
+local on_unit_idle = function(event)
+  local entity = event.entity
+  if entity and entity.valid then
+    game.print("Unit now idle!! "..entity.unit_number)
+  end
+end
+
+local on_unit_selected = function(event)
+  local entity = event.entity
+  if entity and entity.valid then
+    game.print("Unit now selected!!! "..entity.unit_number)
+  end
+end
+
 local lib = {}
 
 local events =
@@ -1513,10 +1538,19 @@ local events =
   [names.hotkeys.shoo]  = shoo
 }
 
-lib.on_event = handler(events)
+local register_events = function()
+  if remote.interfaces["unit_control"] then
+    local unit_control_events = remote.call("unit_control", "get_events")
+    events[unit_control_events.on_unit_idle] = on_unit_idle
+    events[unit_control_events.on_unit_selected] = on_unit_selected
+  end
+  lib.on_event = handler(events)
+end
+
 lib.on_load = function()
   data = global.construction_drone or data
   global.construction_drone = data
+  register_events()
 end
 
 lib.on_init = function()
@@ -1526,6 +1560,16 @@ lib.on_init = function()
     for k, ghost in pairs (surface.find_entities_filtered{type = "entity-ghost"}) do
       insert(data.ghosts_to_be_checked_again, ghost)
     end
+  end
+  register_events()
+  if remote.interfaces["unit_control"] then
+    remote.call("unit_control", "register_unit_notification", name)
+  end
+end
+
+lib.on_configuration_changed = function()
+  if remote.interfaces["unit_control"] then
+    remote.call("unit_control", "register_unit_notification", name)
   end
 end
 

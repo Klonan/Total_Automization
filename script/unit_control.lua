@@ -8,6 +8,7 @@ local data =
   open_frames = {},
   units = {},
   indicators = {},
+  unit_notification = {}
 }
 
 local checked_tables = {}
@@ -19,6 +20,12 @@ local next_command_type =
   scout = 3,
   idle = 4,
   attack = 5,
+}
+
+local script_events =
+{
+  on_unit_idle = script.generate_event_name(),
+  on_unit_selected = script.generate_event_name()
 }
 
 local set_scout_command = function(unit_data, failure, delay)
@@ -140,9 +147,21 @@ local clear_indicators = function(unit_data)
   unit_data.indicators = nil
 end
 
+local is_idle = function(unit_number)
+  local unit_data = data.units[unit_number]
+  if not unit_data then return false end
+  if unit_data.idle and not unit_data.player then return true end
+end
+
 local deselect_units = function(unit_data)
   clear_indicators(unit_data)
   unit_data.player = nil
+  local entity = unit_data.entity
+  local unit_number = entity.unit_number
+  data.groups[unit_number] = nil
+  if is_idle(unit_number) and data.unit_notification[entity.name] then
+    script.raise_event(script_events.on_unit_idle, {entity = entity})
+  end
 end
 
 
@@ -443,20 +462,24 @@ local unit_selection = function(event)
     end
     group = {}
   end
-  for k, ent in pairs (entities) do
-    local unit_index = ent.unit_number
+  local map = data.unit_notification
+  for k, entity in pairs (entities) do
+    local unit_index = entity.unit_number
     local unit_data = units[unit_index]
-    deregister_unit(ent)
-    group[unit_index] = ent
+    deregister_unit(entity)
+    group[unit_index] = entity
     units[unit_index] = unit_data or
     {
-      entity = ent,
+      entity = entity,
       command_queue = {},
       idle = true
     }
     units[unit_index].group = group
     units[unit_index].player = index
     add_unit_indicators(units[unit_index])
+    if map[entity.name] then
+      script.raise_event(script_events.on_unit_selected, {entity = entity})
+    end
   end
   data.selected_units[index] = group
   local gui = player.gui.left
@@ -907,10 +930,14 @@ process_command_queue = function(unit_data, result)
 end
 
 local on_ai_command_completed = function(event)
-  local unit = data.units[event.unit_number]
-  if unit then
-    process_command_queue(unit, event.result)
-    add_unit_indicators(unit)
+  local unit_data = data.units[event.unit_number]
+  if unit_data then
+    process_command_queue(unit_data, event.result)
+    add_unit_indicators(unit_data)
+    local entity = unit_data.entity
+    if data.unit_notification[entity.name] and is_idle(entity.unit_number) then
+      script.raise_event(script_events.on_unit_idle, {entity = entity})
+    end
   end
 end
 
@@ -1009,6 +1036,18 @@ local events =
   [defines.events.on_player_changed_force] = on_player_removed,
   [defines.events.on_player_changed_surface] = on_player_removed
 }
+
+remote.add_interface("unit_control", {
+  has_command = function(unit_number)
+    return is_idle(unit_number)
+  end,
+  register_unit_notification = function(entity_name)
+    data.unit_notification[entity_name] = true
+  end,
+  get_events = function()
+    return script_events
+  end
+})
 
 local register_events = function()
   if remote.interfaces["unit_deployment"] then
