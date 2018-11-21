@@ -1506,20 +1506,6 @@ local on_marked_for_upgrade = function(event)
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
 end
 
-local on_unit_idle = function(event)
-  local entity = event.entity
-  if entity and entity.valid then
-    game.print("Unit now idle!! "..entity.unit_number)
-  end
-end
-
-local on_unit_selected = function(event)
-  local entity = event.entity
-  if entity and entity.valid then
-    game.print("Unit now selected!!! "..entity.unit_number)
-  end
-end
-
 local lib = {}
 
 local events =
@@ -1539,11 +1525,6 @@ local events =
 }
 
 local register_events = function()
-  if remote.interfaces["unit_control"] then
-    local unit_control_events = remote.call("unit_control", "get_events")
-    events[unit_control_events.on_unit_idle] = on_unit_idle
-    events[unit_control_events.on_unit_selected] = on_unit_selected
-  end
   lib.on_event = handler(events)
 end
 
@@ -1563,13 +1544,13 @@ lib.on_init = function()
   end
   register_events()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_notification", name)
+    remote.call("unit_control", "register_unit_unselectable", name)
   end
 end
 
 lib.on_configuration_changed = function()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_notification", name)
+    remote.call("unit_control", "register_unit_unselectable", name)
   end
 end
 

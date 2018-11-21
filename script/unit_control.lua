@@ -8,7 +8,7 @@ local data =
   open_frames = {},
   units = {},
   indicators = {},
-  unit_notification = {}
+  unit_unselectable = {}
 }
 
 local checked_tables = {}
@@ -159,9 +159,6 @@ local deselect_units = function(unit_data)
   local entity = unit_data.entity
   local unit_number = entity.unit_number
   data.groups[unit_number] = nil
-  if is_idle(unit_number) and data.unit_notification[entity.name] then
-    script.raise_event(script_events.on_unit_idle, {entity = entity})
-  end
 end
 
 
@@ -462,23 +459,22 @@ local unit_selection = function(event)
     end
     group = {}
   end
-  local map = data.unit_notification
+  local map = data.unit_unselectable
   for k, entity in pairs (entities) do
-    local unit_index = entity.unit_number
-    local unit_data = units[unit_index]
-    deregister_unit(entity)
-    group[unit_index] = entity
-    units[unit_index] = unit_data or
-    {
-      entity = entity,
-      command_queue = {},
-      idle = true
-    }
-    units[unit_index].group = group
-    units[unit_index].player = index
-    add_unit_indicators(units[unit_index])
-    if map[entity.name] then
-      script.raise_event(script_events.on_unit_selected, {entity = entity})
+    if not map[entity.name] then
+      local unit_index = entity.unit_number
+      local unit_data = units[unit_index]
+      deregister_unit(entity)
+      group[unit_index] = entity
+      units[unit_index] = unit_data or
+      {
+        entity = entity,
+        command_queue = {},
+        idle = true
+      }
+      units[unit_index].group = group
+      units[unit_index].player = index
+      add_unit_indicators(units[unit_index])
     end
   end
   data.selected_units[index] = group
@@ -934,10 +930,6 @@ local on_ai_command_completed = function(event)
   if unit_data then
     process_command_queue(unit_data, event.result)
     add_unit_indicators(unit_data)
-    local entity = unit_data.entity
-    if data.unit_notification[entity.name] and is_idle(entity.unit_number) then
-      script.raise_event(script_events.on_unit_idle, {entity = entity})
-    end
   end
 end
 
@@ -1038,14 +1030,8 @@ local events =
 }
 
 remote.add_interface("unit_control", {
-  has_command = function(unit_number)
-    return is_idle(unit_number)
-  end,
-  register_unit_notification = function(entity_name)
-    data.unit_notification[entity_name] = true
-  end,
-  get_events = function()
-    return script_events
+  register_unit_unselectable = function(entity_name)
+    data.unit_unselectable[entity_name] = true
   end
 })
 
