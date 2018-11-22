@@ -1058,7 +1058,7 @@ unit_control.on_init = function()
   game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
   game.map_settings.steering.moving.radius = 0
   game.map_settings.steering.moving.default = 0
-  game.map_settings.max_failed_behavior_count = 2
+  game.map_settings.max_failed_behavior_count = 5
   register_events()
   unit_control.on_event = handler(events)
 end

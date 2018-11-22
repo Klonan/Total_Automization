@@ -1,5 +1,6 @@
 local max = math.huge
 local insert = table.insert
+local remove = table.remove
 local pairs = pairs
 local name = names.entities.construction_drone
 
@@ -18,8 +19,7 @@ local drone_orders =
   deconstruct = 2,
   repair = 3,
   upgrade = 4,
-  request_proxy = 5,
-  relax = 6
+  request_proxy = 5
 }
 
 
@@ -59,7 +59,7 @@ end
 
 local get_radius = function(entity)
   if entity.type == "entity-ghost" then
-    return game.entity_prototypes[entity.ghost_name].radius
+    return game.entity_prototypes[entity.ghost_name].radius + 0.5
   elseif entity.name == name then
     return get_drone_radius()
   else
@@ -200,8 +200,8 @@ local validate = function(entities)
 end
 
 local get_idle_drones = function(surface, force)
-  local surface_index = surface.name
-  local force_index = force.name
+  local surface_index = surface.index
+  local force_index = force.index
 
   local surface_drones = data.idle_drones[surface_index]
   if not surface_drones then
@@ -942,15 +942,19 @@ local process_pickup_command = function(drone_data)
   local stack = drone_data.pickup.stack
   local inventory
   local type = chest.type
+  local chest_stack
+  local stack_name = stack.name
 
-  --Hmm, I think in the future, things like furnace and stuff for deconstructing etc.
-  if type == "logistic-container" or type == "container" then
-    inventory = chest.get_inventory(defines.inventory.chest)
-  elseif type == "roboport" then
-    inventory = chest.get_inventory(defines.inventory.robot_repair)
+  for k = 1, 10 do
+    local inventory = chest.get_inventory(k)
+    if inventory then
+      chest_stack = inventory.find_item_stack(stack_name)
+    else
+      break
+    end
+    if chest_stack then break end
   end
 
-  local chest_stack = inventory.find_item_stack(stack.name)
   if not chest_stack then
     print("The chest didn't have the item we want... jog on...")
     drone_data.pickup.chest = nil
@@ -1019,7 +1023,7 @@ local process_dropoff_command = function(drone_data)
     if not key then
       drone_data.extra_inventory = nil
     else
-      table.remove(drone_data.extra_inventory, key)
+      remove(drone_data.extra_inventory, key)
       local stack = stack_from_product(product)
       if stack then
         drone_data.held_stack = stack
@@ -1101,7 +1105,7 @@ local drone_follow_path = function(drone_data)
   local current_cell = path[1]
   if current_cell and current_cell.valid then
     if current_cell.is_in_construction_range(drone.position) then
-      table.remove(path, 1)
+      remove(path, 1)
     else
       drone.set_command({
         type = defines.command.go_to_location,
@@ -1132,29 +1136,11 @@ local randish = function(value, variance)
 end
 
 local process_failed_command = function(drone_data)
-  print("TODO... figure out what to do in these situations, now that the typical case is under control ;)")
-    local drone = drone_data.entity
-    if not drone and drone.valid then return end
-    drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
-    if true then return end
-    --Something is really fucky!
-    if game.tick % 300 == drone.unit_number % 300 then
-      if drone_data.target then
-        drone.surface.create_entity{name = "flying-text", position = drone_data.target.position, text = "Oof "..drone.unit_number}
-      end
-      --cancel_drone_order(drone_data)
-      --remove_idle_drone(drone)
-      --drone_data =
-      --{
-      --  order = drone_orders.relax,
-      --  entity = drone,
-      --  relax_tick = game.tick + math.random(200, 400)
-      --}
-      --local position = drone.surface.find_non_colliding_position(drone.name, {randish(drone.position.x, 0.5), randish(drone.position.y, 0.5)} , 0, 1)
-      --drone.teleport(position)
-    return
-    end
-
+  local drone = drone_data.entity
+  drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
+  data.drone_commands[drone.unit_number] = nil
+  --We can't get to it or something, give up, don't assign another bot to try either.
+  add_idle_drone(drone)
 end
 
 local process_deconstruct_command = function(drone_data)
@@ -1166,6 +1152,12 @@ local process_deconstruct_command = function(drone_data)
   end
 
   local drone = drone_data.entity
+
+  
+  if not target.to_be_deconstructed(drone.force) then
+    cancel_drone_order(drone_data)
+    return
+  end
 
   if not in_range(drone, target) then
     return move_to_logistic_target(drone_data, target)
@@ -1185,7 +1177,7 @@ local process_deconstruct_command = function(drone_data)
     if products then
       local product = products[1]
       stack = stack_from_product(product)
-      table.remove(products, 1)
+      remove(products, 1)
       if next(products) then
         drone_data.extra_inventory = products
       end
@@ -1309,7 +1301,7 @@ local process_upgrade_command = function(drone_data)
   local products = game.entity_prototypes[original_name].mineable_properties.products
   local key, product = next(products)
   if product then
-    table.remove(products, key)
+    remove(products, key)
     if next(products) then
       drone_data.extra_inventory = products
     end
@@ -1441,16 +1433,6 @@ process_drone_command = function(drone_data, result)
   if drone_data.order == drone_orders.request_proxy then
     print("Request proxy")
     process_request_proxy_command(drone_data)
-    return
-  end
-
-  if drone_data.relax == drone_orders.request_proxy then
-    print("Relaxing... ")
-    if drone_data.relax_tick > game.tick then
-      drone.set_command{type = defines.command.wander, ticks_to_wait = 100}
-      return
-    end
-    set_drone_idle(drone)
     return
   end
 
