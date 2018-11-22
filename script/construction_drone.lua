@@ -574,14 +574,38 @@ local rip_inventory = function(inventory, list)
   end
 end
 
+local belt_connectible_type =
+{
+  ["transport-belt"] = 2,
+  ["underground-belt"] = 2,
+  ["splitter"] = 8,
+  ["loader"] = 2,
+}
+
 local contents = function(entity)
   local contents = {}
+  local get_inventory = entity.get_inventory
   for k = 1, 10 do
-    local inventory = entity.get_inventory(k)
+    local inventory = get_inventory(k)
     if inventory then
       rip_inventory(inventory, contents)
     end
   end
+  local max_line_index = belt_connectible_type[entity.type]
+  if max_line_index then
+    get_transport_line = entity.get_transport_line
+    for k = 1, max_line_index do
+      local transport_line = get_transport_line(k)
+      if transport_line then
+        for name, count in pairs (transport_line.get_contents()) do
+          contents[name] = (contents[name] or 0) + count
+        end
+      else
+        break
+      end
+    end
+  end
+  
   return contents
 end
 
