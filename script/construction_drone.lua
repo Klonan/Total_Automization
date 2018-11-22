@@ -129,19 +129,19 @@ local get_path = function(start, goal, cells)
     open_set[current_index] = nil
     closed_set[current_index] = current
 
-    for k, neighbor in pairs(current.neighbours) do
-      local neighbor_index = neighbor.owner.unit_number
-      if not closed_set[neighbor_index] then
-        local tentative_g_score = g_score[current_index] + dist(current, neighbor)
-        local new_node = not open_set[neighbor_index]
+    for k, neighbour in pairs(current.neighbours) do
+      local neighbour_index = neighbour.owner.unit_number
+      if not closed_set[neighbour_index] then
+        local tentative_g_score = g_score[current_index] + dist(current, neighbour)
+        local new_node = not open_set[neighbour_index]
         if new_node then
-          open_set[neighbor.owner.unit_number] = neighbor
-          f_score[neighbor.owner.unit_number] = max
+          open_set[neighbour.owner.unit_number] = neighbour
+          f_score[neighbour.owner.unit_number] = max
         end
-        if new_node or tentative_g_score < g_score[neighbor_index] then
-          came_from[neighbor_index] = current
-          g_score[neighbor_index] = tentative_g_score
-          f_score[neighbor_index] = g_score[neighbor_index] + dist(neighbor, goal)
+        if new_node or tentative_g_score < g_score[neighbour_index] then
+          came_from[neighbour_index] = current
+          g_score[neighbour_index] = tentative_g_score
+          f_score[neighbour_index] = g_score[neighbour_index] + dist(neighbour, goal)
         end
       end
     end
@@ -454,6 +454,18 @@ local check_upgrade = function(upgrade_data)
   end
 
   local network = point.logistic_network
+  local neighbour
+  local type = entity.type
+  if type == "underground-belt" then
+    game.print("I AM UNDERNEITH")
+    neighbour = entity.neighbours 
+    if neighbour then
+      item.count = item.count * 2
+      local index = neighbour.unit_number
+      data.upgrade_to_be_checked[index] = nil
+      data.upgrade_to_be_checked_again[index] = nil
+    end
+  end
 
   local drone_data =
   {
@@ -461,6 +473,7 @@ local check_upgrade = function(upgrade_data)
     pickup = {chest = chest, stack = item},
     network = network,
     target = entity,
+    upgrade_neighbour = neighbour,
     target_prototype = target_prototype
   }
   set_drone_order(drone, drone_data)
@@ -584,13 +597,17 @@ local belt_connectible_type =
 
 local contents = function(entity)
   local contents = {}
+
   local get_inventory = entity.get_inventory
   for k = 1, 10 do
     local inventory = get_inventory(k)
     if inventory then
       rip_inventory(inventory, contents)
+    else
+      break
     end
   end
+
   local max_line_index = belt_connectible_type[entity.type]
   if max_line_index then
     get_transport_line = entity.get_transport_line
@@ -1312,6 +1329,7 @@ local process_upgrade_command = function(drone_data)
   local surface = drone.surface
   local prototype = drone_data.target_prototype
   local original_name = target.name
+  local entity_type = target.type
   local upgraded = surface.create_entity
   {
     name = prototype.name,
@@ -1319,10 +1337,34 @@ local process_upgrade_command = function(drone_data)
     direction = target.direction,
     fast_replace = true,
     force = target.force,
-    spill = false
+    spill = false,
+    type = entity_type == "underground-belt" and target.belt_to_ground_type or nil
   }
   if not upgraded then error("Shouldn't happen, upgrade failed when creating entity... let me know!") return end
+
+
   local products = game.entity_prototypes[original_name].mineable_properties.products
+
+  
+  local neighbour = drone_data.upgrade_neighbour
+  if neighbour and neighbour.valid then
+    game.print("Upgrading neighbor")
+    local upgraded_neighbour = surface.create_entity
+    {
+      name = prototype.name,
+      position = neighbour.position,
+      direction = neighbour.direction,
+      fast_replace = true,
+      force = neighbour.force,
+      spill = false,
+      type = entity_type == "underground-belt" and neighbour.belt_to_ground_type or nil
+    }
+    local count = #products
+    for k = 1, count do
+      insert(products, products[k])
+    end
+  end
+
   local key, product = next(products)
   if product then
     remove(products, key)
