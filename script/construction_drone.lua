@@ -19,7 +19,8 @@ local drone_orders =
   deconstruct = 2,
   repair = 3,
   upgrade = 4,
-  request_proxy = 5
+  request_proxy = 5,
+  tile_construct = 6
 }
 
 
@@ -34,6 +35,7 @@ local data =
   upgrade_to_be_checked = {},
   upgrade_to_be_checked_again = {},
   proxies_to_be_checked = {},
+  tiles_to_be_checked = {},
   idle_drones = {},
   drone_commands = {},
   targets = {},
@@ -357,14 +359,21 @@ local check_ghost = function(entity)
 end
 
 local ghost_type = "entity-ghost"
+local tile_ghost_type = "tile-ghost"
 local proxy_type = "item-request-proxy"
 
 local on_built_entity = function(event)
   local entity = event.created_entity or event.ghost
   if not (entity and entity.valid) then return end
+  local entity_type = entity.type
 
-  if entity.type == ghost_type then
+  if entity_type == ghost_type then
     data.ghosts_to_be_checked[entity.unit_number] = entity
+    return
+  end
+
+  if entity_type == tile_ghost_type then
+    data.tiles_to_be_checked[entity.unit_number] = entity
     return
   end
 
@@ -837,17 +846,82 @@ local check_repair_lists = function()
 
 end
 
+local check_tile = function(entity)
+  if not (entity and entity.valid) then
+    return true
+  end
+
+  local force = entity.force
+  local surface = entity.surface
+  local position = entity.position
+
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  local tile_prototype = game.tile_prototypes[entity.ghost_name]
+  local point, item = get_point(tile_prototype.items_to_place_this, networks)
+
+  if not point then
+    print("no eligible point with item?")
+    return
+  end
+
+  local chest = point.owner
+  local drones = get_idle_drones(surface, force)
+  local drone = surface.get_closest(chest.position, drones)
+
+  if not drone then
+    print("No drones for pickup")
+    return
+  end
+
+  local network = point.logistic_network
+
+  local drone_data =
+  {
+    order = drone_orders.tile_construct,
+    pickup = {chest = chest, stack = item},
+    network = network,
+    target = entity
+  }
+  set_drone_order(drone, drone_data)
+  return true
+end
+
+
+local check_tile_lists = function()
+  --Being lazy... only 1 list for tiles (also probably fine)
+  local tiles = data.tiles_to_be_checked
+  local remaining_checks = max_checks_per_tick
+
+  local index = data.tile_check_index
+  for k = 1, remaining_checks do
+    local key, entity = next(tiles, index)
+    index = key
+    if key then
+      remaining_checks = remaining_checks - 1
+      if check_tile(entity) then
+        tiles[key] = nil
+      end
+    else
+      break
+    end
+  end
+  data.tile_check_index = index
+
+end
+
 local on_tick = function(event)
-  print("Checking ghosts")
+  --print("Checking ghosts")
   check_ghost_lists()
-  print("Checking deconstruction")
+  --print("Checking deconstruction")
   check_deconstruction_lists()
-  print("Checking repair")
+  --print("Checking repair")
   check_repair_lists()
-  print("Checking upgrade")
+  --print("Checking upgrade")
   check_upgrade_lists()
-  print("Checking proxies")
+  --print("Checking proxies")
   check_proxies_lists()
+
+  check_tile_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -1103,7 +1177,7 @@ local unit_move_away = function(unit, target, multiplier)
   unit.speed = unit.prototype.speed
 end
 
-local process_contruct_command = function(drone_data)
+local process_construct_command = function(drone_data)
   print("Processing construct command")
   local target = drone_data.target
   if not (target and target.valid) then
@@ -1435,6 +1509,50 @@ local process_request_proxy_command = function(drone_data)
 
 end
 
+local process_construct_tile_command = function(drone_data)
+  print("Processing construct tile command")
+  local target = drone_data.target
+  if not (target and target.valid) then
+    cancel_drone_order(drone_data)
+    return
+  end
+
+  local drone = drone_data.entity
+
+  if not in_range(target, drone) then
+    return move_to_logistic_target(drone_data, target)
+  end
+  local position = target.position
+  local surface = target.surface
+  
+  local tile = target.surface.get_tile(position.x, position.y)
+  local current_prototype = tile.prototype
+  local products = current_prototype.mineable_properties.products
+
+  surface.set_tiles({{name = target.ghost_name, position = position}}, true)
+  drone_data.held_stack = nil
+
+  local stack
+  if products then
+    local product = products[1]
+    stack = stack_from_product(product)
+    remove(products, 1)
+    if next(products) then
+      drone_data.extra_inventory = products
+    end
+  end
+  if stack then
+    drone_data.held_stack = stack
+    drone_data.dropoff = {stack = stack}
+    add_drone_sticker(drone_data, stack.name)
+    return process_drone_command(drone_data)
+  end
+  
+  remove_drone_sticker(drone_data)
+  set_drone_idle(drone)
+end
+
+
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
@@ -1474,7 +1592,7 @@ process_drone_command = function(drone_data, result)
 
   if drone_data.order == drone_orders.construct then
     print("Construct")
-    process_contruct_command(drone_data)
+    process_construct_command(drone_data)
     return
   end
 
@@ -1499,6 +1617,12 @@ process_drone_command = function(drone_data, result)
   if drone_data.order == drone_orders.request_proxy then
     print("Request proxy")
     process_request_proxy_command(drone_data)
+    return
+  end
+
+  if drone_data.order == drone_orders.tile_construct then
+    print("Tile Construct")
+    process_construct_tile_command(drone_data)
     return
   end
 
@@ -1572,6 +1696,10 @@ local on_marked_for_upgrade = function(event)
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
 end
 
+local on_player_built_tile = function(event)
+  print("HELLOELELEOELEO??")
+end
+
 local lib = {}
 
 local events =
@@ -1587,6 +1715,7 @@ local events =
   [defines.events.on_post_entity_died] = on_built_entity,
   [defines.events.on_entity_damaged] = on_entity_damaged,
   [defines.events.on_marked_for_upgrade] = on_marked_for_upgrade,
+  [defines.events.on_player_built_tile] = on_player_built_tile,
   [names.hotkeys.shoo]  = shoo
 }
 
