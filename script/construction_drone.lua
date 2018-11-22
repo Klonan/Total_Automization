@@ -177,7 +177,12 @@ local get_drone_capacity = function(force)
   return 4
 end
 
-local get_point = function(items, networks)
+local get_point = function(prototype, entity)
+  local position = entity.position
+  local surface = entity.surface
+  local force = entity.force
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  local items = prototype.items_to_place_this
   for k, network in pairs (networks) do
     --If there are the normal bots in the network, let them do it!
     if network.available_construction_robots == 0 then
@@ -329,7 +334,7 @@ local check_ghost = function(entity)
 
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local prototype = game.entity_prototypes[entity.ghost_name]
-  local point, item = get_point(prototype.items_to_place_this, networks)
+  local point, item = get_point(prototype, entity)
 
   if not point then
     print("no eligible point with item?")
@@ -443,9 +448,7 @@ local check_upgrade = function(upgrade_data)
 
   local surface = entity.surface
   local force = entity.force
-
-  local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
-  local point, item = get_point(target_prototype.items_to_place_this, networks)
+  local point, item = get_point(target_prototype, entity)
   if not point then return end
 
   if not point then
@@ -855,9 +858,8 @@ local check_tile = function(entity)
   local surface = entity.surface
   local position = entity.position
 
-  local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local tile_prototype = game.tile_prototypes[entity.ghost_name]
-  local point, item = get_point(tile_prototype.items_to_place_this, networks)
+  local point, item = get_point(tile_prototype, entity)
 
   if not point then
     print("no eligible point with item?")
