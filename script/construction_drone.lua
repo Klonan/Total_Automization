@@ -1399,8 +1399,15 @@ end
 
 local process_failed_command = function(drone_data)
   local drone = drone_data.entity
-  --drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
-  cancel_drone_order(drone_data)
+
+  --Sometimes they just fail for unrelated reasons, lets give them a few chances
+  drone_data.fail_count = (drone_data.fail_count or 0) + 1
+  if drone_data.fail_count < 10 then
+    drone.set_command{type = defines.command.stop, ticks_to_wait = 6}
+    return
+  end
+  drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
+  --cancel_drone_order(drone_data)
   --We can't get to it or something, give up, don't assign another bot to try either.
 end
 
