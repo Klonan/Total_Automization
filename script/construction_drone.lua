@@ -2,7 +2,12 @@ local max = math.huge
 local insert = table.insert
 local remove = table.remove
 local pairs = pairs
-local name = names.entities.construction_drone
+local drone_name = names.entities.construction_drone
+
+local ghost_type = "entity-ghost"
+local tile_ghost_type = "tile-ghost"
+local proxy_type = "item-request-proxy"
+local tile_deconstruction_proxy = "deconstructible-tile-proxy"
 
 local max_checks_per_tick = 6
 
@@ -20,7 +25,8 @@ local drone_orders =
   repair = 3,
   upgrade = 4,
   request_proxy = 5,
-  tile_construct = 6
+  tile_construct = 6,
+  tile_deconstruction = 7
 }
 
 
@@ -36,11 +42,12 @@ local data =
   upgrade_to_be_checked_again = {},
   proxies_to_be_checked = {},
   tiles_to_be_checked = {},
+  deconstruction_proxies_to_be_checked = {},
   idle_drones = {},
   drone_commands = {},
   targets = {},
   sent_deconstruction = {},
-  debug = false
+  debug = true
 }
 
 local get_drone_radius = function()
@@ -59,14 +66,25 @@ local dist = function(cell_a, cell_b)
   return ((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))
 end
 
+local oofah = (2 ^ 0.5) / 2
+
 local get_radius = function(entity)
-  if entity.type == "entity-ghost" then
-    return game.entity_prototypes[entity.ghost_name].radius + 0.5
-  elseif entity.name == name then
-    return get_drone_radius()
+  local radius
+  local type = entity.type
+  if type == ghost_type then
+    radius = game.entity_prototypes[entity.ghost_name].radius
+  elseif type == tile_deconstruction_proxy then
+    radius = 0
+  elseif entity.name == drone_name then
+    radius = get_drone_radius()
   else
-    return entity.get_radius() + 0.5
+    radius = entity.get_radius()
   end
+
+  if radius < oofah then
+    return oofah
+  end
+  return radius
 end
 
 local in_range = function(entity_1, entity_2, extra)
@@ -363,10 +381,6 @@ local check_ghost = function(entity)
   return true
 end
 
-local ghost_type = "entity-ghost"
-local tile_ghost_type = "tile-ghost"
-local proxy_type = "item-request-proxy"
-
 local on_built_entity = function(event)
   local entity = event.created_entity or event.ghost
   if not (entity and entity.valid) then return end
@@ -382,7 +396,12 @@ local on_built_entity = function(event)
     return
   end
 
-  if entity.name == name then
+  if entity_type == tile_deconstruction_proxy then
+    error("I wish!")
+    return
+  end
+
+  if entity.name == drone_name then
     print("Adding idle drone")
     add_idle_drone(entity)
     return
@@ -392,7 +411,7 @@ local on_built_entity = function(event)
   local proxies = entity.surface.find_entities_filtered{area = bounding_box, type = proxy_type}
   for k, proxy in pairs (proxies) do
     if proxy.proxy_target == entity then
-      table.insert(data.proxies_to_be_checked, proxy)
+      insert(data.proxies_to_be_checked, proxy)
       break
     end
   end
@@ -640,8 +659,9 @@ end
 
 local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
+  game.print(entity.name)
   local force = deconstruct.force
-
+  print("CHEcking somehint??")
   if not (entity and entity.valid) then return true end
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
   if not (force and force.valid) then return true end
@@ -652,6 +672,7 @@ local check_deconstruction = function(deconstruct)
 
   local mineable_properties = entity.prototype.mineable_properties
   if not mineable_properties.minable then
+    game.print("CLIFFS!")
     print("Why are you marked for deconstruction if I cant mine you?")
     return
   end
@@ -660,6 +681,7 @@ local check_deconstruction = function(deconstruct)
   for k, network in pairs (networks) do
     if network.available_construction_robots == 0 then
       any = true
+      break
     end
   end
   if not any then
@@ -708,7 +730,6 @@ local check_deconstruction = function(deconstruct)
 end
 
 local check_deconstruction_lists = function()
-
   local decs = data.deconstructs_to_be_checked
   local decs_again = data.deconstructs_to_be_checked_again
   local remaining_checks = max_checks_per_tick
@@ -747,6 +768,62 @@ local check_deconstruction_lists = function()
     end
   end
   data.deconstruction_check_index = index
+
+end
+
+local check_tile_deconstruction = function(entity)
+
+  if not (entity and entity.valid) then return true end
+
+  local force = entity.force
+  local surface = entity.surface
+  local position = entity.position
+
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  local any
+  for k, network in pairs (networks) do
+    if network.available_construction_robots == 0 then
+      any = true
+      break
+    end
+  end
+
+  if not any then
+    print("He is outside of any of our eligible construction areas...")
+    return
+  end
+
+  local drone = surface.get_closest(position, get_idle_drones(surface, force))
+  if drone then
+    local drone_data =
+    {
+      order = drone_orders.tile_deconstruct,
+      network = network,
+      target = entity
+    }
+    set_drone_order(drone, drone_data)
+    return true
+  end
+
+end
+
+local check_tile_deconstruction_lists = function()
+
+  local decs = data.deconstruction_proxies_to_be_checked
+  local remaining_checks = max_checks_per_tick
+  local index = data.deconstruction_tile_check_index
+  for k = 1, remaining_checks do
+    local key, entity = next(decs, index)
+    index = key
+    if key then
+      if check_tile_deconstruction(entity) then
+        decs[key] = nil
+      end
+    else
+      break
+    end
+  end
+  data.deconstruction_tile_check_index = index
 
 end
 
@@ -924,6 +1001,8 @@ local on_tick = function(event)
   check_proxies_lists()
 
   check_tile_lists()
+
+  check_tile_deconstruction_lists()
 end
 
 local cancel_drone_order = function(drone_data, on_removed)
@@ -1554,7 +1633,50 @@ local process_construct_tile_command = function(drone_data)
   set_drone_idle(drone)
 end
 
+local process_deconstruct_tile_command = function(drone_data)
+  print("Processing deconstruct tile command")
+  local target = drone_data.target
+  if not (target and target.valid) then
+    cancel_drone_order(drone_data)
+    print("Target was not valid...")
+    return
+  end
 
+  local drone = drone_data.entity
+
+  if not in_range(drone, target) then
+    return move_to_logistic_target(drone_data, target)
+  end
+
+  local position = target.position
+  local surface = target.surface
+  local tile = surface.get_tile(position.x, position.y)
+  local current_prototype = tile.prototype
+  local products = current_prototype.mineable_properties.products
+  
+  local hidden = tile.hidden_tile or "out-of-map"
+  surface.set_tiles({{name = hidden, position = position}}, true)
+
+  local stack
+  if products then
+    local product = products[1]
+    stack = stack_from_product(product)
+    remove(products, 1)
+    if next(products) then
+      drone_data.extra_inventory = products
+    end
+  end
+
+  if stack then
+    drone_data.held_stack = stack
+    drone_data.dropoff = {stack = stack}
+    add_drone_sticker(drone_data, stack.name)
+    return process_drone_command(drone_data)
+  end
+
+  print("Shouldn't really happen, but ok...")
+  set_drone_idle(drone)
+end
 
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
@@ -1628,6 +1750,12 @@ process_drone_command = function(drone_data, result)
     return
   end
 
+  if drone_data.order == drone_orders.tile_deconstruct then
+    print("Tile Deconstruct")
+    process_deconstruct_tile_command(drone_data)
+    return
+  end
+
   print("Nothin")
   set_drone_idle(drone)
 end
@@ -1670,7 +1798,14 @@ end
 local on_marked_for_deconstruction = function(event)
   local force = event.force or game.players[event.player_index].force
   if not force then return end
-  insert(data.deconstructs_to_be_checked, {entity = event.entity, force = force})
+  local entity = event.entity
+  if not (entity and entity.valid) then return end
+  local type = entity.type
+  if type == tile_deconstruction_proxy then
+    insert(data.deconstruction_proxies_to_be_checked, entity)
+  else
+    insert(data.deconstructs_to_be_checked, {entity = entity, force = force})
+  end
 end
 
 local on_entity_damaged = function(event)
@@ -1685,7 +1820,7 @@ local shoo = function(event)
   local target = player.selected or player.character
   local position = target and target.position or player.position
   local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
-  for k, unit in pairs(player.surface.find_entities_filtered{area = area, name = name, force = player.force}) do
+  for k, unit in pairs(player.surface.find_entities_filtered{area = area, name = drone_name, force = player.force}) do
     unit_move_away(unit, target, 4)
   end
   player.surface.play_sound{path = "shoo", position = player.position}
@@ -1696,10 +1831,6 @@ local on_marked_for_upgrade = function(event)
   if not (entity and entity.valid) then return end
   local upgrade_data = {entity = entity, upgrade_prototype = event.target}
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
-end
-
-local on_player_built_tile = function(event)
-  print("HELLOELELEOELEO??")
 end
 
 local lib = {}
@@ -1717,7 +1848,6 @@ local events =
   [defines.events.on_post_entity_died] = on_built_entity,
   [defines.events.on_entity_damaged] = on_entity_damaged,
   [defines.events.on_marked_for_upgrade] = on_marked_for_upgrade,
-  [defines.events.on_player_built_tile] = on_player_built_tile,
   [names.hotkeys.shoo]  = shoo
 }
 
@@ -1741,13 +1871,13 @@ lib.on_init = function()
   end
   register_events()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_unselectable", name)
+    remote.call("unit_control", "register_unit_unselectable", drone_name)
   end
 end
 
 lib.on_configuration_changed = function()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_unselectable", name)
+    remote.call("unit_control", "register_unit_unselectable", drone_name)
   end
 end
 
