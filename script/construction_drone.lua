@@ -8,6 +8,7 @@ local ghost_type = "entity-ghost"
 local tile_ghost_type = "tile-ghost"
 local proxy_type = "item-request-proxy"
 local tile_deconstruction_proxy = "deconstructible-tile-proxy"
+local cliff_type = "cliff"
 
 local max_checks_per_tick = 6
 
@@ -26,7 +27,8 @@ local drone_orders =
   upgrade = 4,
   request_proxy = 5,
   tile_construct = 6,
-  tile_deconstruction = 7
+  tile_deconstruct = 7,
+  cliff_deconstruct = 8
 }
 
 
@@ -47,7 +49,7 @@ local data =
   drone_commands = {},
   targets = {},
   sent_deconstruction = {},
-  debug = true
+  debug = false
 }
 
 local get_drone_radius = function()
@@ -75,6 +77,8 @@ local get_radius = function(entity)
     radius = game.entity_prototypes[entity.ghost_name].radius
   elseif type == tile_deconstruction_proxy then
     radius = 0
+  elseif type == cliff_type then
+    radius = entity.get_radius() * 2
   elseif entity.name == drone_name then
     radius = get_drone_radius()
   else
@@ -350,7 +354,6 @@ local check_ghost = function(entity)
   local surface = entity.surface
   local position = entity.position
 
-  local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local prototype = game.entity_prototypes[entity.ghost_name]
   local point, item = get_point(prototype, entity)
 
@@ -489,7 +492,7 @@ local check_upgrade = function(upgrade_data)
   local type = entity.type
   if type == "underground-belt" then
     game.print("I AM UNDERNEITH")
-    neighbour = entity.neighbours 
+    neighbour = entity.neighbours
     if neighbour then
       item.count = item.count * 2
       local index = neighbour.unit_number
@@ -653,26 +656,86 @@ local contents = function(entity)
       end
     end
   end
-  
+
   return contents
+end
+
+local check_cliff_deconstruction = function(deconstruct)
+
+  local entity = deconstruct.entity
+  local force = deconstruct.force
+  local surface = entity.surface
+  local position = entity.position
+
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  local any
+  for k, network in pairs (networks) do
+    if network.available_construction_robots == 0 then
+      any = true
+      break
+    end
+  end
+  if not any then
+    print("He is outside of any of our eligible construction areas...")
+    return
+  end
+
+  local cliff_destroying_item = entity.prototype.cliff_explosive_prototype
+  if not cliff_destroying_item then
+    print("Welp, idk...")
+    return true
+  end
+
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  local point
+  for k, network in pairs (networks) do
+    --If there are the normal bots in the network, let them do it!
+    if network.available_construction_robots == 0 then
+      point = network.select_pickup_point({name = cliff_destroying_item, position = position})
+      if point then
+        break
+      end
+    end
+  end
+  if not point then
+    print("no point with cliff destroying item...")
+    return
+  end
+
+  local chest = point.owner
+
+  local drone = surface.get_closest(chest.position, get_idle_drones(surface, force))
+  if drone then
+    local drone_data =
+    {
+      order = drone_orders.cliff_deconstruct,
+      network = point.logistic_network,
+      target = entity,
+      pickup = {stack = {name = cliff_destroying_item, count = 1}, chest = chest}
+    }
+    set_drone_order(drone, drone_data)
+    return true
+  end
+
 end
 
 local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
-  game.print(entity.name)
   local force = deconstruct.force
-  print("CHEcking somehint??")
   if not (entity and entity.valid) then return true end
   --entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
   if not (force and force.valid) then return true end
 
   if not entity.to_be_deconstructed(force) then return true end
 
+  if entity.type == cliff_type then
+    return check_cliff_deconstruction(deconstruct)
+  end
+
   local surface = entity.surface
 
   local mineable_properties = entity.prototype.mineable_properties
   if not mineable_properties.minable then
-    game.print("CLIFFS!")
     print("Why are you marked for deconstruction if I cant mine you?")
     return
   end
@@ -1014,17 +1077,17 @@ local cancel_drone_order = function(drone_data, on_removed)
 
   local target = drone_data.target
   if target and target.valid then
-    local unit_number = target.unit_number
-    if unit_number then
-      if data.targets[unit_number] then
-        data.targets[unit_number][drone.unit_number] = nil
-        if not next(data.targets[unit_number]) then
-          data.targets[unit_number] = nil
+    local target_unit_number = target.unit_number
+    if target_unit_number then
+      if data.targets[target_unit_number] then
+        data.targets[target_unit_number][unit_number] = nil
+        if not next(data.targets[target_unit_number]) then
+          data.targets[target_unit_number] = nil
         end
       end
     end
-    if target.type == "entity-ghost" then
-      data.ghosts_to_be_checked[unit_number] = target
+    if target.type == ghost_type then
+      data.ghosts_to_be_checked[target_unit_number] = target
     end
     if drone_data.order == drone_orders.request_proxy then
       insert(data.proxies_to_be_checked, target)
@@ -1037,18 +1100,20 @@ local cancel_drone_order = function(drone_data, on_removed)
     end
     if drone_data.order == drone_orders.deconstruct then
       insert(data.deconstructs_to_be_checked, {entity = target, force = drone.force})
-      if unit_number then
-        data.sent_deconstruction[unit_number] = data.sent_deconstruction[unit_number] - 1
+      if target_unit_number then
+        data.sent_deconstruction[target_unit_number] = data.sent_deconstruction[target_unit_number] - 1
       end
     end
   end
 
   drone_data.pickup = nil
   drone_data.path = nil
+  drone_data.dropoff = nil
 
   local stack = drone_data.held_stack
   if stack then
     if not on_removed then
+      print("Holding a stack, gotta go drop it off... "..unit_number)
       drone_data.dropoff = {stack = stack}
       return process_drone_command(drone_data)
     end
@@ -1173,9 +1238,9 @@ local process_pickup_command = function(drone_data)
 end
 
 local process_dropoff_command = function(drone_data)
-  print("Procesing dropoff command")
-
   local drone = drone_data.entity
+  print("Procesing dropoff command. "..drone.unit_number)
+
 
   local chest = drone_data.dropoff.chest
 
@@ -1199,16 +1264,17 @@ local process_dropoff_command = function(drone_data)
     return move_to_logistic_target(drone_data, chest)
   end
 
-  print("Dropoff chest in range, picking up item")
+  print("Dropoff chest in range, dropping item. "..drone.unit_number)
   local stack = drone_data.dropoff.stack
   if not stack then
-    print("We didn't have a stack anyway, why are we dropping it off??")
+    print("We didn't have a stack anyway, why are we dropping it off??. "..drone.unit_number)
     return
   end
 
   local count = math.floor(stack.count)
   if count > 0 then
     stack.count = stack.count - chest.insert(stack)
+    print("Dropped stack into the chest. "..drone.unit_number)
     if stack.count > 0 then
       drone_data.dropoff.chest = nil
       return process_drone_command(drone_data)
@@ -1229,7 +1295,7 @@ local process_dropoff_command = function(drone_data)
       end
     end
   end
-
+  drone_data.held_stack = nil
   set_drone_idle(drone)
 end
 
@@ -1333,10 +1399,9 @@ end
 
 local process_failed_command = function(drone_data)
   local drone = drone_data.entity
-  drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
-  data.drone_commands[drone.unit_number] = nil
+  --drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
+  cancel_drone_order(drone_data)
   --We can't get to it or something, give up, don't assign another bot to try either.
-  add_idle_drone(drone)
 end
 
 local process_deconstruct_command = function(drone_data)
@@ -1349,7 +1414,7 @@ local process_deconstruct_command = function(drone_data)
 
   local drone = drone_data.entity
 
-  
+
   if not target.to_be_deconstructed(drone.force) then
     cancel_drone_order(drone_data)
     return
@@ -1500,7 +1565,7 @@ local process_upgrade_command = function(drone_data)
 
   local products = game.entity_prototypes[original_name].mineable_properties.products
 
-  
+
   local neighbour = drone_data.upgrade_neighbour
   if neighbour and neighbour.valid then
     game.print("Upgrading neighbor")
@@ -1605,7 +1670,7 @@ local process_construct_tile_command = function(drone_data)
   end
   local position = target.position
   local surface = target.surface
-  
+
   local tile = target.surface.get_tile(position.x, position.y)
   local current_prototype = tile.prototype
   local products = current_prototype.mineable_properties.products
@@ -1628,7 +1693,7 @@ local process_construct_tile_command = function(drone_data)
     add_drone_sticker(drone_data, stack.name)
     return process_drone_command(drone_data)
   end
-  
+
   remove_drone_sticker(drone_data)
   set_drone_idle(drone)
 end
@@ -1653,7 +1718,7 @@ local process_deconstruct_tile_command = function(drone_data)
   local tile = surface.get_tile(position.x, position.y)
   local current_prototype = tile.prototype
   local products = current_prototype.mineable_properties.products
-  
+
   local hidden = tile.hidden_tile or "out-of-map"
   surface.set_tiles({{name = hidden, position = position}}, true)
 
@@ -1678,6 +1743,29 @@ local process_deconstruct_tile_command = function(drone_data)
   set_drone_idle(drone)
 end
 
+process_deconstruct_cliff_command = function(drone_data)
+  print("Processing deconstruct cliff command")
+  local target = drone_data.target
+  if not (target and target.valid) then
+    cancel_drone_order(drone_data)
+    print("Target cliff was not valid. ")
+    return
+  end
+
+  local drone = drone_data.entity
+
+  if not in_range(drone, target) then
+    return move_to_logistic_target(drone_data, target)
+  end
+  target.surface.create_entity{name = "ground-explosion", position = util.center(target.bounding_box)}
+  target.destroy()
+  print("Cliff destroyed, heading home bois. ")
+  drone_data.held_stack = nil
+  remove_drone_sticker(drone_data)
+
+  set_drone_idle(drone)
+end
+
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   if not (drone and drone.valid) then
@@ -1694,6 +1782,7 @@ process_drone_command = function(drone_data, result)
   if (result == defines.behavior_result.fail) then
     print("Fail")
     process_failed_command(drone_data)
+    return
   end
 
   if drone_data.path then
@@ -1753,6 +1842,12 @@ process_drone_command = function(drone_data, result)
   if drone_data.order == drone_orders.tile_deconstruct then
     print("Tile Deconstruct")
     process_deconstruct_tile_command(drone_data)
+    return
+  end
+
+  if drone_data.order == drone_orders.cliff_deconstruct then
+    print("Cliff Deconstruct")
+    process_deconstruct_cliff_command(drone_data)
     return
   end
 

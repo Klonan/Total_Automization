@@ -195,7 +195,8 @@ local item_types =
   "armor",
   "item-with-inventory",
   "item-with-label",
-  "item-with-tags"
+  "item-with-tags",
+  "capsule"
 }
 
 for k, item_type in pairs(item_types) do
