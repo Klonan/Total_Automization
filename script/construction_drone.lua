@@ -488,7 +488,7 @@ local check_upgrade = function(upgrade_data)
   local neighbour
   local type = entity.type
   if type == "underground-belt" then
-    game.print("I AM UNDERNEITH")
+    print("I AM UNDERNEITH")
     neighbour = entity.neighbours 
     if neighbour then
       item.count = item.count * 2
@@ -659,7 +659,6 @@ end
 
 local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
-  game.print(entity.name)
   local force = deconstruct.force
   print("CHEcking somehint??")
   if not (entity and entity.valid) then return true end
@@ -672,7 +671,6 @@ local check_deconstruction = function(deconstruct)
 
   local mineable_properties = entity.prototype.mineable_properties
   if not mineable_properties.minable then
-    game.print("CLIFFS!")
     print("Why are you marked for deconstruction if I cant mine you?")
     return
   end
@@ -1381,7 +1379,7 @@ local process_deconstruct_command = function(drone_data)
       stack = {name = target.stack.name, count = target.stack.count}
     end
     if not stack then
-      game.print("No stack from deconstruction: "..target.name)
+      print("No stack from deconstruction: "..target.name)
       set_drone_idle(drone)
       return
     end
@@ -1503,7 +1501,7 @@ local process_upgrade_command = function(drone_data)
   
   local neighbour = drone_data.upgrade_neighbour
   if neighbour and neighbour.valid then
-    game.print("Upgrading neighbor")
+    print("Upgrading neighbor")
     local upgraded_neighbour = surface.create_entity
     {
       name = prototype.name,

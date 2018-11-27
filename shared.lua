@@ -196,4 +196,9 @@ data.sounds =
   ammo_pack_sound = "Ammo Pack Sound"
 }
 
+data.equipment =
+{
+  drone_port = "Personal Drone Port"
+}
+
 return data
