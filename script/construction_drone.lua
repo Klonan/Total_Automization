@@ -206,7 +206,7 @@ local get_point = function(prototype, entity)
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local items = prototype.items_to_place_this
   for k, network in pairs (networks) do
-    --If there are the normal bots in the network, let them do it!
+    --If there are the normal bots in the network, let them handle it!
     if network.available_construction_robots == 0 then
       local select = network.select_pickup_point
       for k, item in pairs(items) do
@@ -662,7 +662,7 @@ local check_cliff_deconstruction = function(deconstruct)
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local point
   for k, network in pairs (networks) do
-    --If there are the normal bots in the network, let them do it!
+    --If there are the normal bots in the network, let them handle it!
     if network.available_construction_robots == 0 then
       point = network.select_pickup_point({name = cliff_destroying_item, position = position})
       if point then
@@ -724,11 +724,6 @@ local check_deconstruction = function(deconstruct)
     print("He is outside of any of our eligible construction areas...")
     return
   end
-
-  --local drop_point = network.select_drop_point({product})
-  --if not drop_point then
-  --  print("No where to drop what we would deconstruct, so don't deconstruct him yet... figure it out later")
-  --end
 
   local unit_number = entity.unit_number
   local sent = 0
@@ -1346,13 +1341,13 @@ local process_construct_command = function(drone_data)
   if not success then
     unit_move_away(drone, target)
     print("Some idiot might be in the way too ("..drone.unit_number.." - "..game.tick..")")
-      local radius = get_radius(target) * 2
-      local area = {{target.position.x - radius, target.position.y - radius},{target.position.x + radius, target.position.y + radius}}
-      for k, unit in pairs (target.surface.find_entities_filtered{type = "unit", area = area}) do
+    local radius = get_radius(target) * 2
+    local area = {{target.position.x - radius, target.position.y - radius},{target.position.x + radius, target.position.y + radius}}
+    for k, unit in pairs (target.surface.find_entities_filtered{type = "unit", area = area}) do
 
-        print("Telling idiot to MOVE IT ("..drone.unit_number.." - "..game.tick..")")
-        unit_move_away(unit, target)
-      end
+      print("Telling idiot to MOVE IT ("..drone.unit_number.." - "..game.tick..")")
+      unit_move_away(unit, target)
+    end
     return
   end
 
@@ -1543,8 +1538,8 @@ local process_repair_command = function(drone_data)
     return process_drone_command(drone_data)
   end
 
-  --oof, this might be a bit heavy... maybe we can do is every n ticks? maybe later...
-    drone_wait(drone_data, 1)
+  --oof, this might be a bit heavy... maybe we can process is every n ticks? maybe later...
+  drone_wait(drone_data, 1)
 end
 
 local process_upgrade_command = function(drone_data)
@@ -1904,6 +1899,7 @@ local on_entity_removed = function(event)
   end
 
 end
+
 local on_marked_for_deconstruction = function(event)
   local force = event.force or game.players[event.player_index].force
   if not force then return end
