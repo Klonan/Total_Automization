@@ -271,7 +271,7 @@ local get_or_find_network = function(drone_data)
   local owners = {}
   for k, network in pairs (networks) do
     local cell = network.find_cell_closest_to(position)
-    if cell then table.insert(owners, cell.owner) end
+    if cell then insert(owners, cell.owner) end
   end
   local closest = surface.get_closest(position, owners)
   if closest then
@@ -279,34 +279,6 @@ local get_or_find_network = function(drone_data)
   end
   drone_data.network = network
   return network
-end
-
-local normalise = function(vector)
-  local x = vector.x
-  local y = vector.y
-  local v = (((x * x) + (y * y)) ^ 0.5)
-  --error(serpent.block{x, y, v})
-  return {x = x/v, y = y/v}
-end
-
-local get_target_position_and_radius = function(unit, target)
-  local radius = get_radius(target)
-  --radius = math.max(radius, 1)
-  --radius = radius + unit.get_radius()
-
-  local origin = unit.position
-  local position = target.position
-  local direction =
-  {
-    x = origin.x - position.x,
-    y = origin.y - position.y
-  }
-  local offset = normalise(direction)
-  local target_position = {position.x + (radius * offset.x), position.y + (radius * offset.y)}
-  --error(serpent.block{unit = origin, target = position, offset = offset, radius = radius, final_position = target_position})
-  target_position = unit.surface.find_non_colliding_position(unit.name, target_position, 0, 0.1) or target_position
-  return target_position
-
 end
 
 local set_drone_idle = function(drone)
@@ -322,12 +294,13 @@ local set_drone_idle = function(drone)
 
   remove_drone_sticker(drone_data)
   local network = get_or_find_network(drone_data)
-  if network then
+  if network and network.valid then
     local destination_cell = network.find_cell_closest_to(drone.position)
+    local owner = destination_cell.owner
     drone.set_command{
       type = defines.command.go_to_location,
-      destination_entity = destination_cell.owner,
-      radius = math.max(destination_cell.logistic_radius, get_drone_radius() + destination_cell.owner.get_radius())
+      destination_entity = owner,
+      radius = math.max(destination_cell.logistic_radius, get_radius(drone) + get_radius(owner))
     }
   end
 
@@ -492,7 +465,7 @@ local check_upgrade = function(upgrade_data)
   local type = entity.type
   if type == "underground-belt" then
     print("I AM UNDERNEITH")
-    neighbour = entity.neighbours 
+    neighbour = entity.neighbours
     if neighbour then
       item.count = item.count * 2
       local index = neighbour.unit_number
@@ -1139,16 +1112,26 @@ local stack_from_product = function(product)
   return stack
 end
 
+local drone_wait = function(drone_data, ticks)
+  local drone = drone_data.entity
+  if not (drone and drone.valid) then return end
+  drone.set_command{
+    type = defines.command.stop,
+    ticks_to_wait = ticks,
+    distraction = defines.distraction.by_damage
+  }
+end
+
 local move_to_logistic_target = function(drone_data, target)
   local network = get_or_find_network(drone_data)
-  if not network then return end
+  if not network then drone_wait(drone_data, 300) end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
     drone.set_command({
       type = defines.command.go_to_location,
       destination_entity = target,
-      radius = get_drone_radius() + get_radius(target),
+      radius = get_radius(drone) + get_radius(target),
       pathfind_flags = drone_pathfind_flags
     })
     return
@@ -1246,14 +1229,16 @@ local process_dropoff_command = function(drone_data)
 
   if not (chest and chest.valid) then
     local network = get_or_find_network(drone_data)
-    if not network then return end
-    local point = network.select_drop_point{stack = drone_data.dropoff.stack}
+    local point
+    if network and network.valid then
+      point = network.select_drop_point{stack = drone_data.dropoff.stack}
+    end
     if not point then
       print("really is nowhere to put it... so just sit and wait...")
-      drone.set_command{
-        type = defines.command.stop,
-        ticks_to_wait = math.random(600, 1200)
-      }
+      for k, player in pairs (drone.force.connected_players) do
+        player.add_alert(drone, defines.alert_type.no_storage)
+      end
+      drone_wait(drone_data, 300)
       return
     end
     chest = point.owner
@@ -1403,12 +1388,19 @@ local process_failed_command = function(drone_data)
   --Sometimes they just fail for unrelated reasons, lets give them a few chances
   drone_data.fail_count = (drone_data.fail_count or 0) + 1
   if drone_data.fail_count < 10 then
-    drone.set_command{type = defines.command.stop, ticks_to_wait = 6}
+    drone_wait(drone_data, 30)
     return
   end
-  drone.surface.create_entity{name = "flying-text", position = drone.position, text = "Oof "..drone.unit_number}
-  --cancel_drone_order(drone_data)
-  --We can't get to it or something, give up, don't assign another bot to try either.
+  drone.surface.create_entity{name = "tutorial-flying-text", position = drone.position, text = "Oof "..drone.unit_number}
+  local target = drone_data.target
+  if target and target.valid then
+    target.surface.create_entity{name = "tutorial-flying-text", position = target.position, text = "Can't reach me "..drone.unit_number}
+  end
+  drone_wait(drone_data, 300)
+  for k, player in pairs (drone.force.connected_players) do
+    player.add_custom_alert(drone, {type = "item", name = drone.name}, "Drone cannot reach target.", true)
+  end
+  --We can't get to it or something, tell the player to come sort it out...
 end
 
 local process_deconstruct_command = function(drone_data)
@@ -1530,12 +1522,7 @@ local process_repair_command = function(drone_data)
   end
 
   --oof, this might be a bit heavy... maybe we can do is every n ticks? maybe later...
-  drone.set_command{
-    type = defines.command.stop,
-    ticks_to_wait = 1,
-    distraction = defines.distraction.by_damage
-  }
-
+    drone_wait(drone_data, 1)
 end
 
 local process_upgrade_command = function(drone_data)
@@ -1778,7 +1765,7 @@ process_drone_command = function(drone_data, result)
   if not (drone and drone.valid) then
     error("Drone entity not valid when processing its own command!")
   end
-  drone.speed = (((math.random() / 10) - 0.1) + 1) * drone.prototype.speed
+  drone.speed = drone.prototype.speed
   print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
 
 

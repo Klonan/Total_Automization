@@ -65,7 +65,7 @@ local unit = {
   subgroup="enemies",
   has_belt_immunity = true,
   can_open_gates = true,
-  path_resolution_modifier = 4,
+  path_resolution_modifier = 1,
   affected_by_tiles = true, --not merged
   collision_box = {{-0.025, -0.00 }, {0.0, 0.025}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
@@ -327,7 +327,7 @@ local simple_provider_chest_recipe = {
 
 local equipment_grid_name = "tiny-equipment-grid"
 for k, armor in pairs (data.raw.armor) do
-  armor.equipment_grid = armor.equipment_grid or equipment_grid_name  
+  armor.equipment_grid = armor.equipment_grid or equipment_grid_name
 end
 
 local equipment_category = {
