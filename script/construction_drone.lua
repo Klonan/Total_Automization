@@ -313,7 +313,7 @@ local set_drone_order = function(drone, drone_data)
   data.drone_commands[drone.unit_number] = drone_data
   drone_data.entity = drone
   local target = drone_data.target
-  if target and target.unit_number then
+  if target and target.valid and target.unit_number then
     local index = target.unit_number
     data.targets[index] = data.targets[index] or {}
     data.targets[index][drone.unit_number] = drone_data
@@ -1100,6 +1100,22 @@ local cancel_drone_order = function(drone_data, on_removed)
 
 end
 
+local clear_target_data = function(unit_number)
+  if not unit_number then return end
+  data.targets[unit_number] = nil
+end
+
+local cancel_target_data = function(unit_number)
+  if not unit_number then return end
+  local drone_datas = data.targets[unit_number]
+  if drone_datas then
+    data.targets[unit_number] = nil
+    for k, drone_data in pairs (drone_datas) do
+      cancel_drone_order(drone_data)
+    end
+  end
+end
+
 local stack_from_product = function(product)
   local count = math.floor(product.amount or (math.random() * (product.amount_max - product.amount_min) + product.amount_min))
   if count < 1 then return end
@@ -1262,7 +1278,8 @@ local process_dropoff_command = function(drone_data)
     print("Dropped stack into the chest. "..drone.unit_number)
     if stack.count > 0 then
       drone_data.dropoff.chest = nil
-      return process_drone_command(drone_data)
+      --So, players always are valid for robot dropping... so wait a while before chasing the player (if not a player network, it will find another chest...)
+      return drone_wait(drone_data, 6)
     end
   end
   if drone_data.extra_inventory then
@@ -1324,6 +1341,7 @@ local process_construct_command = function(drone_data)
   if not in_range(target, drone) then
     return move_to_logistic_target(drone_data, target)
   end
+  local unit_number = target.unit_number
   local success, entity, proxy = target.revive({return_item_request_proxy = true})
   if not success then
     unit_move_away(drone, target)
@@ -1337,6 +1355,8 @@ local process_construct_command = function(drone_data)
       end
     return
   end
+
+  clear_target_data(unit_number)
 
   if proxy and proxy.valid then
     insert(data.proxies_to_be_checked, proxy)
@@ -1450,10 +1470,12 @@ local process_deconstruct_command = function(drone_data)
       return
     end
     drone_data.order = nil
-    if target.unit_number then
-      data.sent_deconstruction[target.unit_number] = nil
-    end
+    local unit_number = target.unit_number
     target.destroy()
+    if unit_number then
+      clear_target_data(unit_number)
+      data.sent_deconstruction[unit_number] = nil
+    end
   end
 
   drone_data.dropoff =
@@ -1544,6 +1566,7 @@ local process_upgrade_command = function(drone_data)
   local prototype = drone_data.target_prototype
   local original_name = target.name
   local entity_type = target.type
+  local unit_number = target.unit_number
   local upgraded = surface.create_entity
   {
     name = prototype.name,
@@ -1555,7 +1578,7 @@ local process_upgrade_command = function(drone_data)
     type = entity_type == "underground-belt" and target.belt_to_ground_type or nil
   }
   if not upgraded then error("Shouldn't happen, upgrade failed when creating entity... let me know!") return end
-
+  clear_target_data(unit_number)
 
   local products = game.entity_prototypes[original_name].mineable_properties.products
 
@@ -1563,6 +1586,7 @@ local process_upgrade_command = function(drone_data)
   local neighbour = drone_data.upgrade_neighbour
   if neighbour and neighbour.valid then
     print("Upgrading neighbor")
+    local neighbor_unit_number = neighbour.unit_number
     local upgraded_neighbour = surface.create_entity
     {
       name = prototype.name,
@@ -1573,6 +1597,7 @@ local process_upgrade_command = function(drone_data)
       spill = false,
       type = entity_type == "underground-belt" and neighbour.belt_to_ground_type or nil
     }
+    clear_target_data(neighbor_unit_number)
     local count = #products
     for k = 1, count do
       insert(products, products[k])
@@ -1861,7 +1886,7 @@ local on_entity_removed = function(event)
   local unit_number = entity.unit_number
   if not unit_number then return end
 
-  if entity.name == name then
+  if entity.name == drone_name then
     remove_idle_drone(entity)
     local drone_data = data.drone_commands[unit_number]
     if drone_data then
@@ -1870,16 +1895,11 @@ local on_entity_removed = function(event)
     return
   end
 
-  if entity.name == "entity-ghost" then
+  cancel_target_data(unit_number)
+
+  if entity.type == ghost_type then
     data.ghosts_to_be_checked_again[unit_number] = nil
     data.ghosts_to_be_checked[unit_number] = nil
-    local drone_datas = data.targets[unit_number]
-    data.targets[unit_number] = nil
-    if drone_datas then
-      for k, drone_data in pairs (drone_datas) do
-        cancel_drone_order(drone_data)
-      end
-    end
     return
   end
 
