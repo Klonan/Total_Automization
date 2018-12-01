@@ -1135,7 +1135,9 @@ end
 
 local move_to_logistic_target = function(drone_data, target)
   local network = get_or_find_network(drone_data)
-  if not network then drone_wait(drone_data, 300) end
+  if not (network and network.valid) then
+    return drone_wait(drone_data, 300)
+  end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
