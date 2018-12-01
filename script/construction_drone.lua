@@ -261,7 +261,9 @@ local remove_drone_sticker
 
 local get_or_find_network = function(drone_data)
   local network = drone_data.network
-  if network and network.valid then return network end
+  if network and network.valid then
+    return network
+  end
 
   local drone = drone_data.entity
   local surface = drone.surface
@@ -274,9 +276,11 @@ local get_or_find_network = function(drone_data)
     if cell then insert(owners, cell.owner) end
   end
   local closest = surface.get_closest(position, owners)
-  if closest then
-    network = closest.logistic_cell.logistic_network
+  if not closest then
+    drone_data.network = nil
+    return
   end
+  network = closest.logistic_cell.logistic_network
   drone_data.network = network
   return network
 end
@@ -294,10 +298,11 @@ local set_drone_idle = function(drone)
 
   remove_drone_sticker(drone_data)
   local network = get_or_find_network(drone_data)
-  if network and network.valid then
+  if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
     local owner = destination_cell.owner
-    drone.set_command{
+    drone.set_command
+    {
       type = defines.command.go_to_location,
       destination_entity = owner,
       radius = math.max(destination_cell.logistic_radius, get_radius(drone) + get_radius(owner))
@@ -670,6 +675,7 @@ local check_cliff_deconstruction = function(deconstruct)
       end
     end
   end
+
   if not point then
     print("no point with cliff destroying item...")
     return
@@ -1020,15 +1026,15 @@ local check_tile_lists = function()
 end
 
 local on_tick = function(event)
-  --print("Checking ghosts")
+
   check_ghost_lists()
-  --print("Checking deconstruction")
+
   check_deconstruction_lists()
-  --print("Checking repair")
+
   check_repair_lists()
-  --print("Checking upgrade")
+
   check_upgrade_lists()
-  --print("Checking proxies")
+
   check_proxies_lists()
 
   check_tile_lists()
@@ -1111,8 +1117,10 @@ local cancel_target_data = function(unit_number)
   end
 end
 
+local floor = math.floor
+local random = math.random
 local stack_from_product = function(product)
-  local count = math.floor(product.amount or (math.random() * (product.amount_max - product.amount_min) + product.amount_min))
+  local count = floor(product.amount or (random() * (product.amount_max - product.amount_min) + product.amount_min))
   if count < 1 then return end
   local stack =
   {
@@ -1126,7 +1134,8 @@ end
 local drone_wait = function(drone_data, ticks)
   local drone = drone_data.entity
   if not (drone and drone.valid) then return end
-  drone.set_command{
+  drone.set_command
+  {
     type = defines.command.stop,
     ticks_to_wait = ticks,
     distraction = defines.distraction.by_damage
@@ -1135,19 +1144,19 @@ end
 
 local move_to_logistic_target = function(drone_data, target)
   local network = get_or_find_network(drone_data)
-  if not (network and network.valid) then
+  if not network then
     return drone_wait(drone_data, 300)
   end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
-    drone.set_command({
+    return drone.set_command
+    {
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = get_radius(drone) + get_radius(target),
       pathfind_flags = drone_pathfind_flags
-    })
-    return
+    }
   end
 
   drone_data.path = get_drone_path(drone, network, target)
@@ -1183,11 +1192,11 @@ end
 local process_pickup_command = function(drone_data)
   print("Procesing pickup command")
 
+  --TODO maybe let this find a chest if the target isn't valid... but, cross network stuff etc?
   local chest = drone_data.pickup.chest
   if not (chest and chest.valid) then
     print("Chest for pickup was not valid")
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   if not in_range(chest, drone_data.entity, 3) then
@@ -1243,7 +1252,7 @@ local process_dropoff_command = function(drone_data)
   if not (chest and chest.valid) then
     local network = get_or_find_network(drone_data)
     local point
-    if network and network.valid then
+    if network then
       point = network.select_drop_point{stack = drone_data.dropoff.stack}
     end
     if not point then
@@ -1251,8 +1260,7 @@ local process_dropoff_command = function(drone_data)
       for k, player in pairs (drone.force.connected_players) do
         player.add_alert(drone, defines.alert_type.no_storage)
       end
-      drone_wait(drone_data, 300)
-      return
+      return drone_wait(drone_data, 300)
     end
     chest = point.owner
     drone_data.dropoff.chest = chest
@@ -1295,15 +1303,14 @@ local process_dropoff_command = function(drone_data)
     end
   end
   drone_data.held_stack = nil
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
 local unit_move_away = function(unit, target, multiplier)
   local multiplier = multiplier or 1
-  local radius = get_radius(target)
-  local r = (radius + unit.get_radius()) * (1 + (math.random() * 4))
+  local r = (get_radius(target) + get_radius(unit)) * (1 + (math.random() * 4))
   r = r * multiplier
-  local position = {}
+  local position = {x = nil, y = nil}
   if unit.position.x > target.position.x then
     position.x = unit.position.x + r
   else
@@ -1314,39 +1321,34 @@ local unit_move_away = function(unit, target, multiplier)
   else
     position.y = unit.position.y - r
   end
+  unit.speed = unit.prototype.speed * (0.95 + (math.random() / 10))
   unit.set_command
   {
     type = defines.command.go_to_location,
     destination = position,
-    radius = 1
+    radius = 2
   }
-  unit.speed = unit.prototype.speed
 end
 
 local process_construct_command = function(drone_data)
   print("Processing construct command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
   local drone = drone_data.entity
-  if not (drone and drone.valid) then
-    print("oh the entity isnt valid, oh well")
-    return
-  end
+
   if not in_range(target, drone) then
     return move_to_logistic_target(drone_data, target)
   end
   local unit_number = target.unit_number
   local success, entity, proxy = target.revive({return_item_request_proxy = true})
   if not success then
-    unit_move_away(drone, target)
+    drone_wait(drone_data, 30)
     print("Some idiot might be in the way too ("..drone.unit_number.." - "..game.tick..")")
-    local radius = get_radius(target) * 2
+    local radius = get_radius(target)
     local area = {{target.position.x - radius, target.position.y - radius},{target.position.x + radius, target.position.y + radius}}
     for k, unit in pairs (target.surface.find_entities_filtered{type = "unit", area = area}) do
-
       print("Telling idiot to MOVE IT ("..drone.unit_number.." - "..game.tick..")")
       unit_move_away(unit, target)
     end
@@ -1359,7 +1361,7 @@ local process_construct_command = function(drone_data)
     insert(data.proxies_to_be_checked, proxy)
   end
 
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
 local drone_follow_path = function(drone_data)
@@ -1367,31 +1369,24 @@ local drone_follow_path = function(drone_data)
   local path = drone_data.path
   local drone = drone_data.entity
   local current_cell = path[1]
-  if current_cell and current_cell.valid then
-    if current_cell.is_in_construction_range(drone.position) then
-      remove(path, 1)
-    else
-      drone.set_command({
-        type = defines.command.go_to_location,
-        destination_entity = current_cell.owner,
-        radius = math.max(current_cell.construction_radius, current_cell.logistic_radius),
-        pathfind_flags = drone_pathfind_flags
-      })
-      return
-    end
+
+  if not (current_cell and current_cell.valid) then
+    drone_data.path = nil
+    return process_drone_command(drone_data)
   end
-  local next_cell = path[1]
-  if next_cell and next_cell.valid then
-    drone.set_command({
-      type = defines.command.go_to_location,
-      destination_entity = current_cell.owner,
-      radius = math.max(current_cell.construction_radius, current_cell.logistic_radius),
-      pathfind_flags = drone_pathfind_flags
-    })
-    return
+
+  if current_cell.is_in_construction_range(drone.position) then
+    remove(path, 1)
+    return process_drone_command(drone_data)
   end
-  drone_data.path = nil
-  return process_drone_command(drone_data)
+
+  return drone.set_command
+  {
+    type = defines.command.go_to_location,
+    destination_entity = current_cell.owner,
+    radius = math.max(current_cell.construction_radius, current_cell.logistic_radius),
+    pathfind_flags = drone_pathfind_flags
+  }
 end
 
 local random = math.random
@@ -1405,35 +1400,33 @@ local process_failed_command = function(drone_data)
   --Sometimes they just fail for unrelated reasons, lets give them a few chances
   drone_data.fail_count = (drone_data.fail_count or 0) + 1
   if drone_data.fail_count < 10 then
-    drone_wait(drone_data, 30)
-    return
+    return drone_wait(drone_data, 30)
   end
+
+  --We can't get to it or something, tell the player to come sort it out...
   drone.surface.create_entity{name = "tutorial-flying-text", position = drone.position, text = "Oof "..drone.unit_number}
   local target = drone_data.target
   if target and target.valid then
     target.surface.create_entity{name = "tutorial-flying-text", position = target.position, text = "Can't reach me "..drone.unit_number}
   end
-  drone_wait(drone_data, 300)
   for k, player in pairs (drone.force.connected_players) do
     player.add_custom_alert(drone, {type = "item", name = drone.name}, "Drone cannot reach target.", true)
   end
-  --We can't get to it or something, tell the player to come sort it out...
+  return drone_wait(drone_data, 300)
 end
 
 local process_deconstruct_command = function(drone_data)
   print("Processing deconstruct command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
 
 
   if not target.to_be_deconstructed(drone.force) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   if not in_range(drone, target) then
@@ -1463,8 +1456,7 @@ local process_deconstruct_command = function(drone_data)
     end
     if not stack then
       print("No stack from deconstruction: "..target.name)
-      set_drone_idle(drone)
-      return
+      return set_drone_idle(drone)
     end
     drone_data.order = nil
     local unit_number = target.unit_number
@@ -1489,8 +1481,7 @@ local process_repair_command = function(drone_data)
   print("Processing repair command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   if target.get_health_ratio() == 1 then
@@ -1541,7 +1532,7 @@ local process_repair_command = function(drone_data)
   end
 
   --oof, this might be a bit heavy... maybe we can process is every n ticks? maybe later...
-  drone_wait(drone_data, 1)
+  return drone_wait(drone_data, 1)
 end
 
 local process_upgrade_command = function(drone_data)
@@ -1549,8 +1540,7 @@ local process_upgrade_command = function(drone_data)
 
   local target = drone_data.target
   if not (target and target.valid and target.to_be_upgraded()) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
@@ -1623,14 +1613,12 @@ local process_request_proxy_command = function(drone_data)
 
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local proxy_target = target.proxy_target
   if not (proxy_target and proxy_target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
@@ -1661,22 +1649,21 @@ local process_request_proxy_command = function(drone_data)
   if requests[stack.name] <= 0 then
     requests[stack.name] = nil
   end
+
   if not next(requests) then
     target.destroy()
-    set_drone_idle(drone)
-  else
-    target.item_requests = requests
-    process_drone_command(drone_data)
+    return set_drone_idle(drone)
   end
 
+  target.item_requests = requests
+  return process_drone_command(drone_data)
 end
 
 local process_construct_tile_command = function(drone_data)
   print("Processing construct tile command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
@@ -1703,6 +1690,7 @@ local process_construct_tile_command = function(drone_data)
       drone_data.extra_inventory = products
     end
   end
+
   if stack then
     drone_data.held_stack = stack
     drone_data.dropoff = {stack = stack}
@@ -1711,16 +1699,15 @@ local process_construct_tile_command = function(drone_data)
   end
 
   remove_drone_sticker(drone_data)
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
 local process_deconstruct_tile_command = function(drone_data)
   print("Processing deconstruct tile command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
     print("Target was not valid...")
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
@@ -1756,16 +1743,15 @@ local process_deconstruct_tile_command = function(drone_data)
   end
 
   print("Shouldn't really happen, but ok...")
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
-process_deconstruct_cliff_command = function(drone_data)
+local process_deconstruct_cliff_command = function(drone_data)
   print("Processing deconstruct cliff command")
   local target = drone_data.target
   if not (target and target.valid) then
-    cancel_drone_order(drone_data)
     print("Target cliff was not valid. ")
-    return
+    return cancel_drone_order(drone_data)
   end
 
   local drone = drone_data.entity
@@ -1779,7 +1765,7 @@ process_deconstruct_cliff_command = function(drone_data)
   drone_data.held_stack = nil
   remove_drone_sticker(drone_data)
 
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
 process_drone_command = function(drone_data, result)
@@ -1797,83 +1783,73 @@ process_drone_command = function(drone_data, result)
 
   if (result == defines.behavior_result.fail) then
     print("Fail")
-    process_failed_command(drone_data)
-    return
+    return process_failed_command(drone_data)
   end
 
   if drone_data.path then
     print("Path")
-    drone_follow_path(drone_data)
-    return
+    return drone_follow_path(drone_data)
   end
 
   if drone_data.pickup then
     print("Pickup")
-    process_pickup_command(drone_data)
-    return
+    return process_pickup_command(drone_data)
   end
 
   if drone_data.dropoff then
     print("Dropoff")
-    process_dropoff_command(drone_data)
-    return
+    return process_dropoff_command(drone_data)
   end
 
   if drone_data.order == drone_orders.construct then
     print("Construct")
-    process_construct_command(drone_data)
-    return
+    return process_construct_command(drone_data)
   end
 
   if drone_data.order == drone_orders.deconstruct then
     print("Deconstruct")
-    process_deconstruct_command(drone_data)
-    return
+    return process_deconstruct_command(drone_data)
   end
 
   if drone_data.order == drone_orders.repair then
     print("Repair")
-    process_repair_command(drone_data)
-    return
+    return process_repair_command(drone_data)
   end
 
   if drone_data.order == drone_orders.upgrade then
     print("Upgrade")
-    process_upgrade_command(drone_data)
-    return
+    return process_upgrade_command(drone_data)
   end
 
   if drone_data.order == drone_orders.request_proxy then
     print("Request proxy")
-    process_request_proxy_command(drone_data)
-    return
+    return process_request_proxy_command(drone_data)
   end
 
   if drone_data.order == drone_orders.tile_construct then
     print("Tile Construct")
-    process_construct_tile_command(drone_data)
-    return
+    return process_construct_tile_command(drone_data)
   end
 
   if drone_data.order == drone_orders.tile_deconstruct then
     print("Tile Deconstruct")
-    process_deconstruct_tile_command(drone_data)
-    return
+    return process_deconstruct_tile_command(drone_data)
   end
 
   if drone_data.order == drone_orders.cliff_deconstruct then
     print("Cliff Deconstruct")
-    process_deconstruct_cliff_command(drone_data)
-    return
+    return process_deconstruct_cliff_command(drone_data)
   end
 
   print("Nothin")
-  set_drone_idle(drone)
+  return set_drone_idle(drone)
 end
 
 local on_ai_command_completed = function(event)
   drone_data = data.drone_commands[event.unit_number]
-  if drone_data then process_drone_command(drone_data, event.result) end
+  if drone_data then
+    return process_drone_command(drone_data, event.result)
+  end
 end
 
 local on_entity_removed = function(event)
