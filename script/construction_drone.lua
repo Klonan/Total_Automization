@@ -58,8 +58,9 @@ end
 
 local print = function(string)
   if not data.debug then return end
-  log(string)
-  game.print(string)
+  local tick = game.tick
+  log(tick.." | "..string)
+  game.print(tick.." | "..string)
 end
 
 local dist = function(cell_a, cell_b)
@@ -1771,15 +1772,15 @@ end
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   if not (drone and drone.valid) then
-    error("Drone entity not valid when processing its own command!")
+    error("Drone entity not valid when processing its own command!\n"..serpent.block(drone_data))
   end
-  drone.speed = drone.prototype.speed
-  print("Drone AI command complete, processing queue "..drone.unit_number.." - "..game.tick.." = "..tostring(result ~= defines.behavior_result.fail))
-
 
   local print = function(string)
-    print(string.. "("..drone.unit_number.." - "..game.tick..")")
+    print(string.. " | "..drone.unit_number)
   end
+  print("Processing drone command")
+
+  drone.speed = drone.prototype.speed
 
   if (result == defines.behavior_result.fail) then
     print("Fail")
@@ -1848,6 +1849,7 @@ end
 local on_ai_command_completed = function(event)
   drone_data = data.drone_commands[event.unit_number]
   if drone_data then
+    print("Ai command complete event: "..event.unit_number.." = "..tostring(result ~= defines.behavior_result.fail))
     return process_drone_command(drone_data, event.result)
   end
 end
