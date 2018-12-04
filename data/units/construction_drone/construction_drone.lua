@@ -67,7 +67,7 @@ local unit = {
   can_open_gates = true,
   path_resolution_modifier = 2,
   affected_by_tiles = true, --not merged
-  collision_box = {{-0.025, -0.00 }, {0.0, 0.025}},
+  collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
@@ -455,6 +455,10 @@ local technology = {
       type = "unlock-recipe",
       recipe = equipment_name
     },
+    {
+      type = "ghost-time-to-live",
+      modifier = 60 * 60 * 60 * 24 * 7
+    }
   },
   unit =
   {

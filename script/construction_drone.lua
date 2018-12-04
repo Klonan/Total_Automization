@@ -53,7 +53,7 @@ local data =
 }
 
 local get_drone_radius = function()
-  return 0.2
+  return 0.3
 end
 
 local print = function(string)
@@ -880,6 +880,7 @@ end
 local check_repair = function(entity)
   if not (entity and entity.valid) then return true end
   print("Checking repair of an entity: "..entity.name)
+  if entity.has_flag("not-repairable") then return true end
   local health = entity.get_health_ratio()
   if not (health and health < 1) then return true end
   local surface = entity.surface
