@@ -319,7 +319,7 @@ local transfer_transport_line = function(transport_line, destination)
   local insert = destination.insert
   local remove = transport_line.remove_item
   local can_insert = destination.can_insert
-  for k = 1, #transport_line do
+  for k = #transport_line, 1, -1 do
     local stack = transport_line[k]
     if stack and stack.valid and stack.valid_for_read and can_insert(stack) then
       local remove_stack = {name = stack.name, count = insert(stack)}
@@ -595,14 +595,34 @@ local check_ghost = function(entity)
 
   local network = point.logistic_network
 
+  local radius = 10
+  local area = {{position.x - radius, position.y - radius}, {position.x + radius, position.y + radius}}
+  local count = 1
+  local extra_targets = {}
+  local extra = surface.find_entities_filtered{ghost_name = entity.ghost_name, area = area}
+  for k, ghost in pairs (extra) do
+    if ghost ~= entity then
+      local unit_number = ghost.unit_number
+      data.ghosts_to_be_checked[ghost.unit_number] = nil
+      data.ghosts_to_be_checked_again[ghost.unit_number] = nil
+      extra_targets[unit_number] = ghost
+      count = count + 1
+    end
+  end
+
+  --local index, target = next(extra_targets)
+  --extra_targets[index] = nil
+
   local drone_data =
   {
     order = drone_orders.construct,
-    pickup = {chest = chest, stack = item},
+    pickup = {chest = chest, stack = {name = item.name, count = count}},
     network = network,
     target = entity,
-    item_used_to_place = item.name
+    item_used_to_place = item.name,
+    extra_targets = extra_targets
   }
+
   set_drone_order(drone, drone_data)
   return true
 end
@@ -944,7 +964,7 @@ local check_deconstruction = function(deconstruct)
   for name, count in pairs (total_contents) do
     stack_sum = stack_sum + (count / items[name].stack_size)
   end
-  local needed = math.ceil(stack_sum / capacity) + 1
+  local needed = math.ceil((stack_sum + 1) / capacity)
   needed = needed - sent
 
   local drones = get_idle_drones(surface, force)
@@ -1268,6 +1288,9 @@ local cancel_drone_order = function(drone_data, on_removed)
     if target.type == ghost_type then
       data.ghosts_to_be_checked[target_unit_number] = target
     end
+    if target.type == tile_ghost_type then
+      data.tiles_to_be_checked[target_unit_number] = target
+    end
     if drone_data.order == drone_orders.request_proxy then
       insert(data.proxies_to_be_checked, target)
     end
@@ -1415,7 +1438,7 @@ local process_pickup_command = function(drone_data)
   if taken < stack.count then
     print("The chest didn't have the item we want... or not enough of it")
     drone_data.pickup.chest = nil
-    return drone_wait(drone_data, 1)
+    return drone_wait(drone_data, 6)
   end
 
   update_drone_sticker(drone_data)
@@ -1513,11 +1536,17 @@ local process_construct_command = function(drone_data)
   if not (target and target.valid) then
     return cancel_drone_order(drone_data)
   end
-  local drone = drone_data.entity
 
+  local drone_inventory = get_drone_inventory(drone_data)
+  if drone_inventory.get_item_count(drone_data.item_used_to_place) == 0 then
+    return cancel_drone_order(drone_data)
+  end
+
+  local drone = drone_data.entity
   if not in_range(target, drone) then
     return move_to_logistic_target(drone_data, target)
   end
+
   local unit_number = target.unit_number
   local success, entity, proxy = target.revive({return_item_request_proxy = true})
   if not success then
@@ -1532,16 +1561,22 @@ local process_construct_command = function(drone_data)
     return
   end
 
-  if drone_data.item_used_to_place then
-    local drone_inventory = get_drone_inventory(drone_data)
-    drone_inventory.remove{name = drone_data.item_used_to_place, count = 1}
-  end
-
+  drone_inventory.remove{name = drone_data.item_used_to_place, count = 1}
+  update_drone_sticker(drone_data)
 
   clear_target_data(unit_number)
 
   if proxy and proxy.valid then
     insert(data.proxies_to_be_checked, proxy)
+  end
+
+
+
+  local index, next_target = next(drone_data.extra_targets)
+  if index and next_target.valid then
+    drone_data.target = next_target
+    drone_data.extra_targets[index] = nil
+    return process_drone_command(drone_data)
   end
 
   return set_drone_idle(drone)
@@ -1662,9 +1697,8 @@ local process_repair_command = function(drone_data)
   end
 
   if not stack then
-    drone_data.pickup = {stack = stack}
-    update_drone_sticker(drone_data)
-    return process_drone_command(drone_data)
+    print("I don't have a repair item... get someone else to do it")
+    return cancel_drone_order(drone_data)
   end
 
   local health = target.health
@@ -1897,7 +1931,7 @@ local process_deconstruct_cliff_command = function(drone_data)
     return move_to_logistic_target(drone_data, target)
   end
 
-  inventory.remove_item{name = target.prototype.cliff_explosive_prototype, count = 1}
+  get_drone_inventory(drone_data).remove{name = target.prototype.cliff_explosive_prototype, count = 1}
   target.surface.create_entity{name = "ground-explosion", position = util.center(target.bounding_box)}
   target.destroy()
   print("Cliff destroyed, heading home bois. ")
