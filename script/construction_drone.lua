@@ -3,6 +3,7 @@ local insert = table.insert
 local remove = table.remove
 local pairs = pairs
 local drone_name = names.entities.construction_drone
+local proxy_name = names.entities.construction_drone_proxy_chest
 
 local ghost_type = "entity-ghost"
 local tile_ghost_type = "tile-ghost"
@@ -49,7 +50,8 @@ local data =
   drone_commands = {},
   targets = {},
   sent_deconstruction = {},
-  debug = false
+  debug = false,
+  proxy_chests = {}
 }
 
 local get_drone_radius = function()
@@ -189,15 +191,256 @@ local get_drone_path = function(unit, logistic_network, target)
 
 end
 
+local floor = math.floor
+local random = math.random
+local stack_from_product = function(product)
+  local count = floor(product.amount or (random() * (product.amount_max - product.amount_min) + product.amount_min))
+  if count < 1 then return end
+  local stack =
+  {
+    name = product.name,
+    count = count
+  }
+  --print(serpent.line(stack))
+  return stack
+end
+
+local get_drone_inventory = function(drone_data)
+  local inventory = drone_data.inventory
+  if inventory and inventory.valid then
+    inventory.sort_and_merge()
+    return inventory
+  end
+  local drone = drone_data.entity
+  local proxy_chest = drone.surface.create_entity
+  {
+    name = proxy_name,
+    position = {1000000, 1000000},
+    force = drone.force
+  }
+  data.proxy_chests[proxy_chest.unit_number] = proxy_chest
+  drone_data.inventory = proxy_chest.get_inventory(defines.inventory.chest)
+  return drone_data.inventory
+end
+
+local get_drone_first_stack = function(drone_data)
+  local inventory = get_drone_inventory(drone_data)
+  if inventory.is_empty() then return end
+  inventory.sort_and_merge()
+  local stack = inventory[1]
+  if stack and stack.valid and stack.valid_for_read then
+    return stack
+  end
+end
+
+local get_first_empty_stack = function(inventory)
+  inventory.sort_and_merge()
+  for k = 1, #inventory do
+    local stack = inventory[k]
+    if stack and stack.valid and not stack.valid_for_read then
+      return stack
+    end
+  end
+end
+
+local inventories = function(entity)
+  local index = 1
+  local get = entity.get_inventory
+  local inventories = {}
+  while true do
+    local inventory = get(index)
+    if inventory then
+      inventories[index] = inventory
+      index = index + 1
+    else
+      return inventories
+    end
+  end
+end
+
+local belt_connectible_type =
+{
+  ["transport-belt"] = 2,
+  ["underground-belt"] = 2,
+  ["splitter"] = 8,
+  ["loader"] = 2,
+}
+
+local transport_lines = function(entity)
+  local max_line_index = belt_connectible_type[entity.type]
+  if not max_line_index then return {} end
+  local get = entity.get_transport_line
+  local inventories = {}
+  for k = 1, max_line_index do
+    inventories[k] = get(k)
+  end
+  return inventories
+end
+
+local transfer_stack = function(destination, source_entity, stack)
+  local has = source_entity.get_item_count(stack.name)
+  if has == 0 then return 0 end
+  local wanted = stack.count
+  local transferred = 0
+  local insert = destination.insert
+  local can_insert = destination.can_insert
+  for k, inventory in pairs(inventories(source_entity)) do
+    local source_stack = inventory.find_item_stack(stack.name)
+    if source_stack and source_stack.valid and source_stack.valid_for_read and can_insert(source_stack) then
+      local inserted = insert(stack)
+      transferred = transferred + inserted
+      local remove_stack = {name = stack.name, count = inserted}
+      --count should always be greater than 0, otherwise can_insert would fail
+      inventory.remove(remove_stack)
+    end
+    if transferred >= wanted then
+      break
+    end
+  end
+  return transferred
+end
+
+local transfer_inventory = function(source, destination)
+
+  local insert = destination.insert
+  local remove = source.remove
+  local can_insert = destination.can_insert
+  for k = 1, #source do
+    local stack = source[k]
+    if stack and stack.valid and stack.valid_for_read and can_insert(stack) then
+      local remove_stack = {name = stack.name, count = insert(stack)}
+      --count should always be greater than 0, otherwise can_insert would fail
+      remove(remove_stack)
+    end
+  end
+end
+
+local transfer_transport_line = function(transport_line, destination)
+  local insert = destination.insert
+  local remove = transport_line.remove_item
+  local can_insert = destination.can_insert
+  for k = 1, #transport_line do
+    local stack = transport_line[k]
+    if stack and stack.valid and stack.valid_for_read and can_insert(stack) then
+      local remove_stack = {name = stack.name, count = insert(stack)}
+      --count should always be greater than 0, otherwise can_insert would fail
+      remove(remove_stack)
+    end
+  end
+end
+
+local rip_inventory = function(inventory, list)
+  if inventory.is_empty() then return end
+  for name, count in pairs (inventory.get_contents()) do
+    list[name] = (list[name] or 0) + count
+  end
+end
+
+local contents = function(entity)
+  local contents = {}
+
+  local get_inventory = entity.get_inventory
+  for k = 1, 10 do
+    local inventory = get_inventory(k)
+    if inventory then
+      rip_inventory(inventory, contents)
+    else
+      break
+    end
+  end
+
+  local max_line_index = belt_connectible_type[entity.type]
+  if max_line_index then
+    get_transport_line = entity.get_transport_line
+    for k = 1, max_line_index do
+      local transport_line = get_transport_line(k)
+      if transport_line then
+        for name, count in pairs (transport_line.get_contents()) do
+          contents[name] = (contents[name] or 0) + count
+        end
+      else
+        break
+      end
+    end
+  end
+
+  return contents
+end
+
+local take_all_content = function(inventory, target)
+
+  if target.type == "item-entity" then
+    local stack = target.stack
+    inventory.insert(stack)
+  end
+
+  for k, target_inventory in pairs (inventories(target)) do
+    transfer_inventory(target_inventory, inventory)
+  end
+
+  for k, transport_line in pairs (transport_lines(target)) do
+    transfer_transport_line(transport_line, inventory)
+  end
+end
+
+local take_product_stacks = function(inventory, products)
+  local insert = inventory.insert
+  if products then
+    for k, product in pairs (products) do
+      insert(stack_from_product(product))
+    end
+  end
+end
+
+local mine_entity = function(inventory, target)
+  take_all_content(inventory, target)
+
+  if target.has_items_inside() then
+    print("Tried to take all the target items, but he still has some, ergo, we cant fit that many items.")
+    return
+  end
+
+  take_product_stacks(inventory, target.prototype.mineable_properties.products)
+
+  target.destroy()
+
+  return true
+end
+
+local transfer_item = function(source, destination, name)
+  local insert = destination.insert
+  local find = source.find_item_stack
+  while true do
+    stack = find(name)
+    if stack then
+      local count = stack.count
+      local taken = insert(stack)
+      if taken >= count then
+        stack.clear()
+      else
+        stack.count = count - taken
+        return
+      end
+    else
+      return
+    end
+  end
+end
+
 remote.add_interface("construction_drone",
 {
   set_debug = function(bool)
     data.debug = bool
+  end,
+  transfer = function(source, target)
+    transfer_inventory(source, target)
   end
 })
 
-local get_drone_capacity = function(force)
-  return 4
+local get_drone_stack_capacity = function(force)
+  --Deliberately not local
+  drone_stack_capacity = drone_stack_capacity or game.entity_prototypes[proxy_name].get_inventory_size(defines.inventory.chest)
+  return drone_stack_capacity
 end
 
 local get_point = function(prototype, entity)
@@ -258,7 +501,7 @@ local remove_idle_drone = function(drone)
   idle_drones[drone.unit_number] = nil
 end
 
-local remove_drone_sticker
+local update_drone_sticker
 
 local get_or_find_network = function(drone_data)
   local network = drone_data.network
@@ -297,7 +540,7 @@ local set_drone_idle = function(drone)
 
   if not drone_data then return end
 
-  remove_drone_sticker(drone_data)
+  update_drone_sticker(drone_data)
   local network = get_or_find_network(drone_data)
   if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
@@ -357,7 +600,8 @@ local check_ghost = function(entity)
     order = drone_orders.construct,
     pickup = {chest = chest, stack = item},
     network = network,
-    target = entity
+    target = entity,
+    item_used_to_place = item.name
   }
   set_drone_order(drone, drone_data)
   return true
@@ -487,7 +731,8 @@ local check_upgrade = function(upgrade_data)
     network = network,
     target = entity,
     upgrade_neighbour = neighbour,
-    target_prototype = target_prototype
+    target_prototype = target_prototype,
+    item_used_to_place = item.name
   }
   set_drone_order(drone, drone_data)
   return true
@@ -593,52 +838,6 @@ local check_proxies_lists = function()
 
 end
 
-local rip_inventory = function(inventory, list)
-  if inventory.is_empty() then return end
-  for name, count in pairs (inventory.get_contents()) do
-    list[name] = (list[name] or 0) + count
-  end
-end
-
-local belt_connectible_type =
-{
-  ["transport-belt"] = 2,
-  ["underground-belt"] = 2,
-  ["splitter"] = 8,
-  ["loader"] = 2,
-}
-
-local contents = function(entity)
-  local contents = {}
-
-  local get_inventory = entity.get_inventory
-  for k = 1, 10 do
-    local inventory = get_inventory(k)
-    if inventory then
-      rip_inventory(inventory, contents)
-    else
-      break
-    end
-  end
-
-  local max_line_index = belt_connectible_type[entity.type]
-  if max_line_index then
-    get_transport_line = entity.get_transport_line
-    for k = 1, max_line_index do
-      local transport_line = get_transport_line(k)
-      if transport_line then
-        for name, count in pairs (transport_line.get_contents()) do
-          contents[name] = (contents[name] or 0) + count
-        end
-      else
-        break
-      end
-    end
-  end
-
-  return contents
-end
-
 local check_cliff_deconstruction = function(deconstruct)
 
   local entity = deconstruct.entity
@@ -738,18 +937,21 @@ local check_deconstruction = function(deconstruct)
     local sent = data.sent_deconstruction[unit_number]
   end
 
-  local capacity = get_drone_capacity(force)
+  local capacity = get_drone_stack_capacity(force)
   local total_contents = contents(entity)
-  local sum = 0
+  local stack_sum = 0
+  local items = game.item_prototypes
   for name, count in pairs (total_contents) do
-    sum = sum + count
+    stack_sum = stack_sum + (count / items[name].stack_size)
   end
-  local needed = math.ceil(sum / capacity) + 1
+  local needed = math.ceil(stack_sum / capacity) + 1
   needed = needed - sent
 
   local drones = get_idle_drones(surface, force)
+  local position = entity.position
   for k = 1, math.min(needed, 10) do
-    local drone = surface.get_closest(entity.position, drones)
+    if not (entity and entity.valid) then break end
+    local drone = surface.get_closest(position, drones)
     if drone then
       local drone_data =
       {
@@ -998,7 +1200,8 @@ local check_tile = function(entity)
     order = drone_orders.tile_construct,
     pickup = {chest = chest, stack = item},
     network = network,
-    target = entity
+    target = entity,
+    item_used_to_place = item.name
   }
   set_drone_order(drone, drone_data)
   return true
@@ -1086,7 +1289,7 @@ local cancel_drone_order = function(drone_data, on_removed)
   drone_data.path = nil
   drone_data.dropoff = nil
 
-  local stack = drone_data.held_stack
+  local stack = get_drone_first_stack(drone_data)
   if stack then
     if not on_removed then
       print("Holding a stack, gotta go drop it off... "..unit_number)
@@ -1121,17 +1324,6 @@ end
 
 local floor = math.floor
 local random = math.random
-local stack_from_product = function(product)
-  local count = floor(product.amount or (random() * (product.amount_max - product.amount_min) + product.amount_min))
-  if count < 1 then return end
-  local stack =
-  {
-    name = product.name,
-    count = count
-  }
-  --print(serpent.line(stack))
-  return stack
-end
 
 local drone_wait = function(drone_data, ticks)
   local drone = drone_data.entity
@@ -1165,15 +1357,19 @@ local move_to_logistic_target = function(drone_data, target)
   return process_drone_command(drone_data)
 end
 
-remove_drone_sticker = function(drone_data)
+update_drone_sticker = function(drone_data)
+
   local sticker = drone_data.sticker
   if sticker and sticker.valid then
     sticker.destroy()
   end
-end
 
-local add_drone_sticker = function(drone_data, item_name)
-  remove_drone_sticker(drone_data)
+  local inventory = get_drone_inventory(drone_data)
+
+  local stack = inventory[1]
+  local item_name = stack and stack.valid and stack.valid_for_read and stack.name
+  if not item_name then return end
+
   local sticker_name = item_name.." Drone Sticker"
   if not game.entity_prototypes[sticker_name] then
     print("No sticker with name sticker_name")
@@ -1212,36 +1408,27 @@ local process_pickup_command = function(drone_data)
   local type = chest.type
   local chest_stack
   local stack_name = stack.name
+  local drone_inventory = get_drone_inventory(drone_data)
 
-  for k = 1, 10 do
-    local inventory = chest.get_inventory(k)
-    if inventory then
-      chest_stack = inventory.find_item_stack(stack_name)
-    else
-      break
-    end
-    if chest_stack then break end
-  end
+  local taken = transfer_stack(drone_inventory, chest, stack)
 
-  if not chest_stack then
-    print("The chest didn't have the item we want... jog on...")
+  if taken < stack.count then
+    print("The chest didn't have the item we want... or not enough of it")
     drone_data.pickup.chest = nil
-    return process_drone_command(drone_data)
+    return drone_wait(drone_data, 1)
   end
-  local new_stack =
-  {
-    name = stack.name,
-    count = stack.count,
-    durability = chest_stack.durability
-  }
-  chest.remove_item(stack)
-  drone_data.held_stack = new_stack
 
-  add_drone_sticker(drone_data, new_stack.name)
+  update_drone_sticker(drone_data)
 
   drone_data.pickup = nil
 
   return process_drone_command(drone_data)
+end
+
+local get_dropoff_stack = function(drone_data)
+  local stack = drone_data.dropoff.stack
+  if stack and stack.valid and stack.valid_for_read then return stack end
+  return get_drone_first_stack(drone_data)
 end
 
 local process_dropoff_command = function(drone_data)
@@ -1251,11 +1438,18 @@ local process_dropoff_command = function(drone_data)
 
   local chest = drone_data.dropoff.chest
 
+  local stack = get_dropoff_stack(drone_data)
+  if not stack then
+    print("We didn't have any items anyway, why are we dropping it off??. "..drone.unit_number)
+    drone_data.dropoff = nil
+    return
+  end
+
   if not (chest and chest.valid) then
     local network = get_or_find_network(drone_data)
     local point
     if network then
-      point = network.select_drop_point{stack = drone_data.dropoff.stack}
+      point = network.select_drop_point{stack = stack}
     end
     if not point then
       print("really is nowhere to put it... so just sit and wait...")
@@ -1272,39 +1466,20 @@ local process_dropoff_command = function(drone_data)
     return move_to_logistic_target(drone_data, chest)
   end
 
+  local name = stack.name
+
   print("Dropoff chest in range, dropping item. "..drone.unit_number)
-  local stack = drone_data.dropoff.stack
-  if not stack then
-    print("We didn't have a stack anyway, why are we dropping it off??. "..drone.unit_number)
-    return
+  local drone_inventory = get_drone_inventory(drone_data)
+  transfer_item(drone_inventory, chest, name)
+  print("Dropped stack into the chest. "..drone.unit_number)
+  update_drone_sticker(drone_data)
+
+  if not drone_inventory.is_empty() then
+    drone_data.dropoff = {stack = get_drone_first_stack(drone_data)}
+    --So, players always are valid for robot dropping... so wait a while before chasing the player (if not a player network, it will find another chest...)
+    return drone_wait(drone_data, 6)
   end
 
-  local count = math.floor(stack.count)
-  if count > 0 then
-    stack.count = stack.count - chest.insert(stack)
-    print("Dropped stack into the chest. "..drone.unit_number)
-    if stack.count > 0 then
-      drone_data.dropoff.chest = nil
-      --So, players always are valid for robot dropping... so wait a while before chasing the player (if not a player network, it will find another chest...)
-      return drone_wait(drone_data, 6)
-    end
-  end
-  if drone_data.extra_inventory then
-    local key, product = next(drone_data.extra_inventory)
-    if not key then
-      drone_data.extra_inventory = nil
-    else
-      remove(drone_data.extra_inventory, key)
-      local stack = stack_from_product(product)
-      if stack then
-        drone_data.held_stack = stack
-        drone_data.dropoff = {stack = stack}
-        add_drone_sticker(drone_data, stack.name)
-        return process_drone_command(drone_data)
-      end
-    end
-  end
-  drone_data.held_stack = nil
   return set_drone_idle(drone)
 end
 
@@ -1356,6 +1531,12 @@ local process_construct_command = function(drone_data)
     end
     return
   end
+
+  if drone_data.item_used_to_place then
+    local drone_inventory = get_drone_inventory(drone_data)
+    drone_inventory.remove{name = drone_data.item_used_to_place, count = 1}
+  end
+
 
   clear_target_data(unit_number)
 
@@ -1435,47 +1616,21 @@ local process_deconstruct_command = function(drone_data)
     return move_to_logistic_target(drone_data, target)
   end
 
-  local remaining_contents = contents(target)
-  local stack
-  local name, count = next(remaining_contents)
-  if name then
-    print("Target has contents, lets just pick up them for now")
-    count = math.min(count, get_drone_capacity(drone.force))
-    stack = {name = name, count = count}
-    target.remove_item(stack)
-  else
-    print("Target says he has no contents")
-    local products = target.prototype.mineable_properties.products
-    if products then
-      local product = products[1]
-      stack = stack_from_product(product)
-      remove(products, 1)
-      if next(products) then
-        drone_data.extra_inventory = products
-      end
-    elseif target.type == "item-entity" then
-      stack = {name = target.stack.name, count = target.stack.count}
-    end
-    if not stack then
-      print("No stack from deconstruction: "..target.name)
-      return set_drone_idle(drone)
-    end
-    drone_data.order = nil
-    local unit_number = target.unit_number
-    target.destroy()
+  local drone_inventory = get_drone_inventory(drone_data)
+
+  local unit_number = target.unit_number
+  local mined = mine_entity(drone_inventory, target)
+
+  if mined then
     if unit_number then
       clear_target_data(unit_number)
       data.sent_deconstruction[unit_number] = nil
     end
   end
 
-  drone_data.dropoff =
-  {
-    stack = stack
-  }
-  drone_data.held_stack = stack
+  drone_data.dropoff = {}
 
-  add_drone_sticker(drone_data, stack.name)
+  update_drone_sticker(drone_data)
   return process_drone_command(drone_data)
 end
 
@@ -1489,10 +1644,8 @@ local process_repair_command = function(drone_data)
   if target.get_health_ratio() == 1 then
     print("Target is fine... give up on healing him")
     drone_data.target = nil
-    if drone_data.held_stack then
-      drone_data.dropoff = {stack = drone_data.held_stack}
-      return process_drone_command(drone_data)
-    end
+    drone_data.repair_stack = nil
+    drone_data.dropoff = {}
     return cancel_drone_order(drone_data)
   end
 
@@ -1501,10 +1654,17 @@ local process_repair_command = function(drone_data)
   if not in_range(drone, target) then
     return move_to_logistic_target(drone_data, target)
   end
+  local drone_inventory = get_drone_inventory(drone_data)
+  local stack
+  for name, prototype in pairs (get_repair_items()) do
+    stack = drone_inventory.find_item_stack(name)
+    if stack then break end
+  end
 
-  local stack = drone_data.held_stack
-  if stack.durability <= 0 then
-    error("NO, CHECK DURABILITY WHEN YOU DRAIN IT LAZY BOI")
+  if not stack then
+    drone_data.pickup = {stack = stack}
+    update_drone_sticker(drone_data)
+    return process_drone_command(drone_data)
   end
 
   local health = target.health
@@ -1516,14 +1676,11 @@ local process_repair_command = function(drone_data)
   end
 
   target.health = target.health + repair_speed
-  stack.durability = stack.durability - repair_speed
-  if stack.durability <= 0 then
-    print("Stack expired, going to pikcup a new one")
-    stack.durability = nil
-    drone_data.pickup = {stack = stack}
-    drone_data.held_stack = nil
-    remove_drone_sticker(drone_data)
-    return process_drone_command(drone_data)
+  stack.drain_durability(repair_speed)
+
+  if not stack.valid_for_read then
+    print("Stack expired, someone else will take over")
+    return cancel_drone_order(drone_data)
   end
 
   if target.get_health_ratio() == 1 then
@@ -1567,10 +1724,13 @@ local process_upgrade_command = function(drone_data)
     type = entity_type == "underground-belt" and target.belt_to_ground_type or nil
   }
   if not upgraded then error("Shouldn't happen, upgrade failed when creating entity... let me know!") return end
+  get_drone_inventory(drone_data).remove({name = drone_data.item_used_to_place})
   clear_target_data(unit_number)
 
+  local drone_inventory = get_drone_inventory(drone_data)
   local products = game.entity_prototypes[original_name].mineable_properties.products
 
+  take_product_stacks(drone_inventory, products)
 
   local neighbour = drone_data.upgrade_neighbour
   if neighbour and neighbour.valid then
@@ -1587,27 +1747,12 @@ local process_upgrade_command = function(drone_data)
       type = entity_type == "underground-belt" and neighbour.belt_to_ground_type or nil
     }
     clear_target_data(neighbor_unit_number)
-    local count = #products
-    for k = 1, count do
-      insert(products, products[k])
-    end
+    take_product_stacks(drone_inventory, products)
   end
 
-  local key, product = next(products)
-  if product then
-    remove(products, key)
-    if next(products) then
-      drone_data.extra_inventory = products
-    end
-    local stack = stack_from_product(product)
-    if stack then
-      drone_data.held_stack = stack
-      drone_data.dropoff = {stack = stack}
-      drone_data.order = nil
-      add_drone_sticker(drone_data, stack.name)
-      return process_drone_command(drone_data)
-    end
-  end
+  drone_data.dropoff = {}
+  update_drone_sticker(drone_data)
+  return process_drone_command(drone_data)
 end
 
 local process_request_proxy_command = function(drone_data)
@@ -1625,19 +1770,20 @@ local process_request_proxy_command = function(drone_data)
 
   local drone = drone_data.entity
 
-  local stack = drone_data.held_stack
+  local drone_inventory = get_drone_inventory(drone_data)
+  local find_item_stack = drone_inventory.find_item_stack
   local requests = target.item_requests
+  local stack
+  for name, count in pairs(requests) do
+    stack = find_item_stack(name)
+    if stack then break end
+  end
+
   if not stack then
     print("We don't have anything to offer, go pickup something")
     local name, count = next(requests)
-    drone_data.pickup = {stack = {name = name, count = math.min(count, get_drone_capacity(drone.force))}}
+    drone_data.pickup = {stack = {name = name, count = count}}
     return process_drone_command(drone)
-  end
-
-  if not requests[stack.name] then
-    print("Holding something he doesn't want, go put it back")
-    drone_data.dropoff = {stack = drone_data.held_stack}
-    return process_drone_command(drone_data)
   end
 
   if not in_range(proxy_target, drone) then
@@ -1646,10 +1792,13 @@ local process_request_proxy_command = function(drone_data)
 
   print("We are in range, and we have what he wants")
 
-  proxy_target.insert(stack)
-  requests[stack.name] = requests[stack.name] - stack.count
-  if requests[stack.name] <= 0 then
-    requests[stack.name] = nil
+  local stack_name = stack.name
+
+  local inserted = proxy_target.insert(stack)
+  drone_inventory.remove_item({name = stack_name, count = inserted})
+  requests[stack_name] = requests[stack_name] - inserted
+  if requests[stack_name] <= 0 then
+    requests[stack_name] = nil
   end
 
   if not next(requests) then
@@ -1681,27 +1830,20 @@ local process_construct_tile_command = function(drone_data)
   local products = current_prototype.mineable_properties.products
 
   surface.set_tiles({{name = target.ghost_name, position = position}}, true)
-  drone_data.held_stack = nil
 
-  local stack
+  local drone_inventory = get_drone_inventory(drone_data)
+  drone_inventory.remove({name = drone_data.item_used_to_place, count = 1})
+
+  local insert = drone_inventory.insert
   if products then
-    local product = products[1]
-    stack = stack_from_product(product)
-    remove(products, 1)
-    if next(products) then
-      drone_data.extra_inventory = products
+    for k, product in pairs (products) do
+      insert(stack_from_product(product))
     end
+    drone_data.dropoff = {}
   end
 
-  if stack then
-    drone_data.held_stack = stack
-    drone_data.dropoff = {stack = stack}
-    add_drone_sticker(drone_data, stack.name)
-    return process_drone_command(drone_data)
-  end
-
-  remove_drone_sticker(drone_data)
-  return set_drone_idle(drone)
+  update_drone_sticker(drone_data)
+  return process_drone_command(drone_data)
 end
 
 local process_deconstruct_tile_command = function(drone_data)
@@ -1727,30 +1869,23 @@ local process_deconstruct_tile_command = function(drone_data)
   local hidden = tile.hidden_tile or "out-of-map"
   surface.set_tiles({{name = hidden, position = position}}, true)
 
-  local stack
+  local drone_inventory = get_drone_inventory(drone_data)
+  local insert = drone_inventory.insert
   if products then
-    local product = products[1]
-    stack = stack_from_product(product)
-    remove(products, 1)
-    if next(products) then
-      drone_data.extra_inventory = products
+    for k, product in pairs (products) do
+      insert(stack_from_product(product))
     end
+    drone_data.dropoff = {}
   end
 
-  if stack then
-    drone_data.held_stack = stack
-    drone_data.dropoff = {stack = stack}
-    add_drone_sticker(drone_data, stack.name)
-    return process_drone_command(drone_data)
-  end
-
-  print("Shouldn't really happen, but ok...")
-  return set_drone_idle(drone)
+  update_drone_sticker(drone_data)
+  return process_drone_command(drone_data)
 end
 
 local process_deconstruct_cliff_command = function(drone_data)
   print("Processing deconstruct cliff command")
   local target = drone_data.target
+
   if not (target and target.valid) then
     print("Target cliff was not valid. ")
     return cancel_drone_order(drone_data)
@@ -1761,11 +1896,12 @@ local process_deconstruct_cliff_command = function(drone_data)
   if not in_range(drone, target) then
     return move_to_logistic_target(drone_data, target)
   end
+
+  inventory.remove_item{name = target.prototype.cliff_explosive_prototype, count = 1}
   target.surface.create_entity{name = "ground-explosion", position = util.center(target.bounding_box)}
   target.destroy()
   print("Cliff destroyed, heading home bois. ")
-  drone_data.held_stack = nil
-  remove_drone_sticker(drone_data)
+  update_drone_sticker(drone_data)
 
   return set_drone_idle(drone)
 end

@@ -175,7 +175,8 @@ data.entities =
   logistic_beacon = "Logistic Beacon",
   construction_drone = "Construction Drone",
   simple_storage_chest = "Simple Storage Chest",
-  simple_provider_chest = "Simple Provider Chest"
+  simple_provider_chest = "Simple Provider Chest",
+  construction_drone_proxy_chest = "Construction Drone Proxy Chest"
 }
 
 data.deployers =

@@ -473,6 +473,14 @@ local technology = {
   order = "y-a"
 }
 
+local proxy_chest_name = names.entities.construction_drone_proxy_chest
+local proxy_chest = util.copy(data.raw.container["wooden-chest"])
+proxy_chest.name = proxy_chest_name
+proxy_chest.localised_name = proxy_chest_name
+proxy_chest.collision_box = nil
+proxy_chest.inventory_size = 9
+proxy_chest.order = "nnov"
+
 data:extend
 {
   unit,
@@ -490,5 +498,6 @@ data:extend
   equipment_grid,
   equipment_item,
   equipment_recipe,
-  equipment_category
+  equipment_category,
+  proxy_chest
 }
