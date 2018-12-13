@@ -1,9 +1,20 @@
+--todo put units into groups at logistic points they finish at -> will follow player and act more cute
+
 local max = math.huge
 local insert = table.insert
 local remove = table.remove
 local pairs = pairs
-local drone_name = names.entities.construction_drone
+
 local proxy_name = names.entities.construction_drone_proxy_chest
+
+drone_names = {}
+for k, name in pairs (names.units) do
+  drone_names[name] = true
+end
+
+local is_commandable = function(string)
+  return drone_names[string]
+end
 
 local ghost_type = "entity-ghost"
 local tile_ghost_type = "tile-ghost"
@@ -73,17 +84,27 @@ end
 
 local oofah = (2 ^ 0.5) / 2
 
+local get_radius_map = function()
+  --Caching radius map, deliberately not local or data
+  if radius_map then return radius_map end
+  radius_map = {}
+  for k, entity in pairs (game.entity_prototypes) do
+    radius_map[k] = entity.radius
+  end
+  return radius_map
+end
+
 local get_radius = function(entity)
   local radius
   local type = entity.type
   if type == ghost_type then
-    radius = game.entity_prototypes[entity.ghost_name].radius
+    radius = get_radius_map()[entity.ghost_name]
   elseif type == tile_deconstruction_proxy then
     radius = 0
   elseif type == cliff_type then
     radius = entity.get_radius() * 2
-  elseif entity.name == drone_name then
-    radius = get_drone_radius()
+  --elseif entity.name == drone_name then
+  --  radius = get_drone_radius()
   else
     radius = entity.get_radius()
   end
@@ -400,10 +421,19 @@ local mine_entity = function(inventory, target)
     return
   end
 
-  take_product_stacks(inventory, target.prototype.mineable_properties.products)
+  local prototype = target.prototype
 
-  target.destroy()
+  local destroyed = target.destroy
+  {
+    raise_destroy = true
+  }
 
+  if not destroyed then
+    print("He is still alive after destroying him, tough guy.")
+    return false
+  end
+
+  take_product_stacks(inventory, prototype.mineable_properties.products)
   return true
 end
 
@@ -488,7 +518,6 @@ local get_idle_drones = function(surface, force)
     surface_drones[force_index] = force_drones
   end
 
-  return validate(force_drones)
 end
 
 local add_idle_drone = function(drone)
@@ -601,12 +630,16 @@ local check_ghost = function(entity)
   local extra_targets = {}
   local extra = surface.find_entities_filtered{ghost_name = entity.ghost_name, area = area}
   for k, ghost in pairs (extra) do
-    if ghost ~= entity then
+    local should_check = (data.ghosts_to_be_checked[unit_number] or data.ghosts_to_be_checked_again[unit_number]) and true
+    if ghost ~= entity and should_check then
       local unit_number = ghost.unit_number
-      data.ghosts_to_be_checked[ghost.unit_number] = nil
-      data.ghosts_to_be_checked_again[ghost.unit_number] = nil
+      data.ghosts_to_be_checked[unit_number] = nil
+      data.ghosts_to_be_checked_again[unit_number] = nil
       extra_targets[unit_number] = ghost
+      --surface.create_entity{name = "tutorial-flying-text", text = unit_number, position = ghost.position}
       count = count + 1
+    else
+      --surface.create_entity{name = "tutorial-flying-text", text = "Source: "..ghost.unit_number, position = ghost.position}
     end
   end
 
@@ -647,7 +680,7 @@ local on_built_entity = function(event)
     return
   end
 
-  if entity.name == drone_name then
+  if is_commandable(entity.name) then
     print("Adding idle drone")
     add_idle_drone(entity)
     return
@@ -1353,9 +1386,10 @@ local drone_wait = function(drone_data, ticks)
   if not (drone and drone.valid) then return end
   drone.set_command
   {
-    type = defines.command.stop,
+    type = defines.command.wander,
     ticks_to_wait = ticks,
-    distraction = defines.distraction.by_damage
+    distraction = defines.distraction.by_damage,
+    radius = get_radius(drone)
   }
 end
 
@@ -1438,7 +1472,7 @@ local process_pickup_command = function(drone_data)
   if taken < stack.count then
     print("The chest didn't have the item we want... or not enough of it")
     drone_data.pickup.chest = nil
-    return drone_wait(drone_data, 6)
+    return drone_wait(drone_data, 12)
   end
 
   update_drone_sticker(drone_data)
@@ -1576,7 +1610,7 @@ local process_construct_command = function(drone_data)
   if index and next_target.valid then
     drone_data.target = next_target
     drone_data.extra_targets[index] = nil
-    return process_drone_command(drone_data)
+    return drone_wait(drone_data, 6)
   end
 
   return set_drone_idle(drone)
@@ -1666,7 +1700,7 @@ local process_deconstruct_command = function(drone_data)
   drone_data.dropoff = {}
 
   update_drone_sticker(drone_data)
-  return process_drone_command(drone_data)
+  return drone_wait(drone_data, 6)
 end
 
 local process_repair_command = function(drone_data)
@@ -2032,7 +2066,7 @@ local on_entity_removed = function(event)
   local unit_number = entity.unit_number
   if not unit_number then return end
 
-  if entity.name == drone_name then
+  if is_commandable(entity.name) then
     remove_idle_drone(entity)
     local drone_data = data.drone_commands[unit_number]
     if drone_data then
@@ -2076,7 +2110,7 @@ local shoo = function(event)
   local target = player.selected or player.character
   local position = target and target.position or player.position
   local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
-  for k, unit in pairs(player.surface.find_entities_filtered{area = area, name = drone_name, force = player.force}) do
+  for k, unit in pairs(player.surface.find_entities_filtered{area = area, type = "unit", force = player.force}) do
     unit_move_away(unit, target, 4)
   end
   player.surface.play_sound{path = "shoo", position = player.position}
@@ -2127,13 +2161,13 @@ lib.on_init = function()
   end
   register_events()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_unselectable", drone_name)
+    --remote.call("unit_control", "register_unit_unselectable", drone_name)
   end
 end
 
 lib.on_configuration_changed = function()
   if remote.interfaces["unit_control"] then
-    remote.call("unit_control", "register_unit_unselectable", drone_name)
+    --remote.call("unit_control", "register_unit_unselectable", drone_name)
   end
 end
 

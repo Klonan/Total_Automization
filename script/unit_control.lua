@@ -305,7 +305,7 @@ local gui_actions =
     end
     for unit_number, unit in pairs (group) do
       if unit.type == "unit" then
-        unit.set_command{type = defines.command.wander, radius = 0.1}
+        unit.set_command{type = defines.command.wander, radius = 1, ticks_to_wait = 6}
       end
       local unit_data = data.units[unit_number]
       unit_data.command_queue = {}
@@ -858,7 +858,7 @@ process_command_queue = function(unit_data, result)
   unit_data.target = nil
 
   if not (next_command) then
-    entity.set_command(idle_command)
+    --entity.set_command(idle_command)
     if entity.type == "unit" then
       entity.speed = entity.prototype.speed
     end
@@ -1018,6 +1018,7 @@ local events =
   [defines.events.on_entity_died] = on_entity_removed,
   [defines.events.on_robot_mined_entity] = on_entity_removed,
   [defines.events.on_player_mined_entity] = on_entity_removed,
+  [defines.events.script_raised_destroy] = on_entity_removed,
   [defines.events.on_ai_command_completed] = on_ai_command_completed,
   [defines.events.on_tick] = on_tick,
   --[defines.event.on_player_created] = on_player_created
@@ -1032,6 +1033,16 @@ local events =
 remote.add_interface("unit_control", {
   register_unit_unselectable = function(entity_name)
     data.unit_unselectable[entity_name] = true
+  end,
+  only_idle = function(entities)
+    local idle = {}
+    for unit_number, entity in pairs(entities) do
+      local unit = data.units[unit_number]
+      if unit and unit.idle then
+        idle[unit_number] = entity
+      end
+    end
+    return idle
   end
 })
 

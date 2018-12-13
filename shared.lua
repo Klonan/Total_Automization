@@ -141,7 +141,8 @@ data.units =
   acid_worm = "Acid Worm",
   beetle = "Beetle",
   piercing_biter = "Piercing Biter",
-  shell_tank = "Shell Tank"
+  shell_tank = "Shell Tank",
+  construction_drone = "Construction Drone",
 }
 
 data.technologies =
@@ -173,7 +174,6 @@ data.entities =
   buy_chest = "Trade Chest Buy",
   damage_indicator_text = "Damage Indicator Text",
   logistic_beacon = "Logistic Beacon",
-  construction_drone = "Construction Drone",
   simple_storage_chest = "Simple Storage Chest",
   simple_provider_chest = "Simple Provider Chest",
   construction_drone_proxy_chest = "Construction Drone Proxy Chest"

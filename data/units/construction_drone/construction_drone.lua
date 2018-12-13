@@ -1,5 +1,5 @@
 local path = util.path("data/units/construction_drone/")
-local name = names.entities.construction_drone
+local name = names.units.construction_drone
 
 local scale = 2/3
 
