@@ -518,6 +518,7 @@ local get_idle_drones = function(surface, force)
     surface_drones[force_index] = force_drones
   end
 
+  return validate(force_drones)
 end
 
 local add_idle_drone = function(drone)
