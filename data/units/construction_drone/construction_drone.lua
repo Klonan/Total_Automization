@@ -481,6 +481,12 @@ proxy_chest.collision_box = nil
 proxy_chest.inventory_size = 9
 proxy_chest.order = "nnov"
 
+local build_beam = util.copy(data.raw.beam["electric-beam"])
+util.recursive_hack_tint(build_beam, {g = 1})
+build_beam.name = "build-beam"
+build_beam.localised_name = "build-beam"
+build_beam.action = nil
+
 data:extend
 {
   unit,
@@ -499,5 +505,6 @@ data:extend
   equipment_item,
   equipment_recipe,
   equipment_category,
-  proxy_chest
+  proxy_chest,
+  build_beam
 }

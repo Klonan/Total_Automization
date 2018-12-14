@@ -23,7 +23,7 @@ local bot =
   resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
+  collision_box = {{-0.20, -0.20}, {0.20, 0.20}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
@@ -34,7 +34,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   attack_parameters =
   {

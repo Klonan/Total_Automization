@@ -25,7 +25,8 @@ local next_command_type =
 local script_events =
 {
   on_unit_idle = script.generate_event_name(),
-  on_unit_selected = script.generate_event_name()
+  on_unit_selected = script.generate_event_name(),
+  on_unit_not_idle = script.generate_event_name()
 }
 
 local set_scout_command = function(unit_data, failure, delay)
@@ -260,6 +261,25 @@ local add_unit_indicators = function(unit_data)
   unit_data.indicators = indicators
 end
 
+local stop = {type = defines.command.stop}
+
+local set_unit_idle = function(unit_data)
+  unit_data.idle = true
+  unit_data.command_queue = {}
+  unit_data.destination = nil
+  unit_data.target = nil
+  local unit = unit_data.entity
+  unit.set_command(stop)
+  script.raise_event(script_events.on_unit_idle, {entity = unit})
+  return add_unit_indicators(unit_data)
+end
+
+local set_unit_not_idle = function(unit_data)
+  unit_data.idle = false
+  script.raise_event(script_events.on_unit_not_idle, {entity = unit_data.entity})
+  return add_unit_indicators(unit_data)
+end
+
 
 local gui_actions =
 {
@@ -304,15 +324,8 @@ local gui_actions =
       return
     end
     for unit_number, unit in pairs (group) do
-      if unit.type == "unit" then
-        unit.set_command{type = defines.command.wander, radius = 1, ticks_to_wait = 6}
-      end
       local unit_data = data.units[unit_number]
-      unit_data.command_queue = {}
-      unit_data.idle = true
-      unit_data.destination = nil
-      unit_data.target = nil
-      add_unit_indicators(unit_data)
+      set_unit_idle(unit_data)
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
@@ -323,14 +336,13 @@ local gui_actions =
     end
     local append = event.shift
     for unit_number, unit in pairs (group) do
-      local data = data.units[unit_number]
-      if append and not data.idle then
-        table.insert(data.command_queue, {command_type = next_command_type.scout})
+      local unit_data = data.units[unit_number]
+      if append and not unit_data.idle then
+        table.insert(unit_data.command_queue, {command_type = next_command_type.scout})
       else
-        set_scout_command(data, false, unit_number % 120)
-        data.command_queue = {{command_type = next_command_type.scout}}
-        data.idle = false
-        add_unit_indicators(data)
+        set_scout_command(unit_data, false, unit_number % 120)
+        unit_data.command_queue = {{command_type = next_command_type.scout}}
+        set_unit_not_idle(unit_data)
       end
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
@@ -582,8 +594,7 @@ local make_move_command = function(param)
             unit_data.command_queue = {command}
           end
         end
-        unit_data.idle = false
-        add_unit_indicators(unit_data)
+        set_unit_not_idle(unit_data)
       else
         return
       end
@@ -673,7 +684,7 @@ local make_patrol_command = function(param)
         end
         if not append then
           unit_data.command_queue = {command}
-          unit_data.idle = false
+          set_unit_not_idle(unit_data)
           if unit then
             process_command_queue(unit_data)
           end
@@ -767,8 +778,7 @@ local make_attack_command = function(group, entities, append)
       end
       unit_data.command_queue = {next_command}
     end
-    add_unit_indicators(unit_data)
-    unit_data.idle = false
+    set_unit_not_idle(unit_data)
   end
 end
 
@@ -858,12 +868,9 @@ process_command_queue = function(unit_data, result)
   unit_data.target = nil
 
   if not (next_command) then
-    --entity.set_command(idle_command)
-    if entity.type == "unit" then
-      entity.speed = entity.prototype.speed
+    if not unit_data.idle then
+      set_unit_idle(unit_data)
     end
-    unit_data.idle = true
-    --game.print("No next command??")
     return
   end
 
@@ -896,7 +903,7 @@ process_command_queue = function(unit_data, result)
     {
       type = defines.command.go_to_location,
       destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 0, 0.5) or entity.position,
-      radius = 0.5
+      radius = 1
     }
     return
   end
@@ -912,15 +919,12 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.idle then
-    entity.set_command(idle_command)
-    unit_data.idle = true
-    unit_data.destination = nil
-    return
+    unit_data.command_queue = {}
+    return set_unit_idle(unit_data)
   end
 
   if type == next_command_type.scout then
-    set_scout_command(unit_data, result == defines.behavior_result.fail)
-    return
+    return set_scout_command(unit_data, result == defines.behavior_result.fail)
   end
 
 end
@@ -1034,15 +1038,8 @@ remote.add_interface("unit_control", {
   register_unit_unselectable = function(entity_name)
     data.unit_unselectable[entity_name] = true
   end,
-  only_idle = function(entities)
-    local idle = {}
-    for unit_number, entity in pairs(entities) do
-      local unit = data.units[unit_number]
-      if unit and unit.idle then
-        idle[unit_number] = entity
-      end
-    end
-    return idle
+  get_events = function()
+    return script_events
   end
 })
 

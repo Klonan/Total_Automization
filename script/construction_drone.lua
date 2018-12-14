@@ -106,7 +106,7 @@ local get_radius = function(entity)
   --elseif entity.name == drone_name then
   --  radius = get_drone_radius()
   else
-    radius = entity.get_radius()
+    radius = entity.get_radius() + 10
   end
 
   if radius < oofah then
@@ -631,9 +631,9 @@ local check_ghost = function(entity)
   local extra_targets = {}
   local extra = surface.find_entities_filtered{ghost_name = entity.ghost_name, area = area}
   for k, ghost in pairs (extra) do
+    local unit_number = ghost.unit_number
     local should_check = (data.ghosts_to_be_checked[unit_number] or data.ghosts_to_be_checked_again[unit_number]) and true
     if ghost ~= entity and should_check then
-      local unit_number = ghost.unit_number
       data.ghosts_to_be_checked[unit_number] = nil
       data.ghosts_to_be_checked_again[unit_number] = nil
       extra_targets[unit_number] = ghost
@@ -1582,6 +1582,21 @@ local process_construct_command = function(drone_data)
     return move_to_logistic_target(drone_data, target)
   end
 
+  if not drone_data.beam then
+    drone_data.beam = drone.surface.create_entity
+    {
+      name = "build-beam",
+      source = target,
+      target = drone,
+      position = drone.position,
+      force = drone.force,
+    }
+    return drone_wait(drone_data, 20)
+  else
+    drone_data.beam.destroy()
+    drone_data.beam = nil
+  end
+
   local unit_number = target.unit_number
   local success, entity, proxy = target.revive({return_item_request_proxy = true})
   if not success then
@@ -1607,11 +1622,19 @@ local process_construct_command = function(drone_data)
 
 
 
-  local index, next_target = next(drone_data.extra_targets)
-  if index and next_target.valid then
-    drone_data.target = next_target
-    drone_data.extra_targets[index] = nil
-    return drone_wait(drone_data, 6)
+  if drone_data.extra_targets then
+    drone_data.extra_targets = validate(drone_data.extra_targets)
+    local any = next(drone_data.extra_targets)
+    if any then
+      local next_target = drone.surface.get_closest(drone.position, drone_data.extra_targets)
+      if next_target then
+        drone_data.target = next_target
+        drone_data.extra_targets[next_target.unit_number] = nil
+        return drone_wait(drone_data, 6)
+      end
+    else
+      drone_data.extra_targets = nil
+    end
   end
 
   return set_drone_idle(drone)
@@ -2124,6 +2147,29 @@ local on_marked_for_upgrade = function(event)
   data.upgrade_to_be_checked[entity.unit_number] = upgrade_data
 end
 
+local on_unit_idle = function(event)
+  local unit = event.entity
+  if not (unit and unit.valid) then return end
+  if not is_commandable(unit.name) then return end
+  local unit_number = unit.unit_number
+  if not unit_number then return end
+  
+  get_idle_drones(unit.surface, unit.force)[unit_number] = unit
+end
+
+local on_unit_not_idle = function(event)
+  local unit = event.entity
+  if not (unit and unit.valid) then return end
+  if not is_commandable(unit.name) then return end
+  local unit_number = unit.unit_number
+  if not unit_number then return end
+  local drone_data = data.drone_commands[unit_number]
+  if drone_data then
+    cancel_drone_order(drone_data)
+  end
+  get_idle_drones(unit.surface, unit.force)[unit_number] = nil
+end
+
 local lib = {}
 
 local events =
@@ -2144,6 +2190,11 @@ local events =
 
 local register_events = function()
   lib.on_event = handler(events)
+  if remote.interfaces["unit_control"] then
+    local unit_control_events = remote.call("unit_control", "get_events")
+    events[unit_control_events.on_unit_idle] = on_unit_idle
+    events[unit_control_events.on_unit_not_idle] = on_unit_not_idle
+  end
 end
 
 lib.on_load = function()
