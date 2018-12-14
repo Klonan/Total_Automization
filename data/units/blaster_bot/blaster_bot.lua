@@ -23,7 +23,7 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.20, -0.20}, {0.20, 0.20}},
+  collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
@@ -47,7 +47,7 @@ local bot =
     min_attack_distance = 18,
     projectile_creation_distance = 1,
     projectile_center = {0, 1.2},
-    sound = 
+    sound =
     {
       {
         filename = "__base__/sound/fight/laser-1.ogg",

@@ -261,7 +261,7 @@ local add_unit_indicators = function(unit_data)
   unit_data.indicators = indicators
 end
 
-local stop = {type = defines.command.stop}
+local stop = {type = defines.command.stop, ticks_to_wait = 1}
 
 local set_unit_idle = function(unit_data)
   unit_data.idle = true

@@ -7,13 +7,31 @@ local pairs = pairs
 
 local proxy_name = names.entities.construction_drone_proxy_chest
 
-drone_names = {}
-for k, name in pairs (names.units) do
-  drone_names[name] = true
-end
+drone_prototypes =
+{
+  [names.units.smg_guy] =
+  {
+    build_range = 8,
+    pickup_range = 8,
+    deconstruct_range = 8
+  },
+  [names.units.blaster_bot] =
+  {
+    build_range = 5,
+    pickup_range = 8,
+    deconstruct_range = 8
+  },
+  [names.units.shell_tank] =
+  {
+    build_range = 20,
+    pickup_range = 8,
+    deconstruct_range = 20
+  }
+}
+
 
 local is_commandable = function(string)
-  return drone_names[string]
+  return drone_prototypes[string]
 end
 
 local ghost_type = "entity-ghost"
@@ -94,7 +112,14 @@ local get_radius_map = function()
   return radius_map
 end
 
-local get_radius = function(entity)
+local ranges =
+{
+  construction = 1,
+  deconstuction = 2,
+  pickup = 3
+}
+
+local get_radius = function(entity, range)
   local radius
   local type = entity.type
   if type == ghost_type then
@@ -105,8 +130,18 @@ local get_radius = function(entity)
     radius = entity.get_radius() * 2
   --elseif entity.name == drone_name then
   --  radius = get_drone_radius()
+  elseif is_commandable(entity.name) then
+    if range == ranges.construction then
+      radius = drone_prototypes[entity.name].build_range
+    elseif range == ranges.deconstruct then
+      radius = drone_prototypes[entity.name].deconstruct_range
+    elseif range == ranges.pickup then
+      radius = drone_prototypes[entity.name].pickup_range
+    else
+      radius = get_radius_map()[entity.name]
+    end
   else
-    radius = entity.get_radius() + 10
+    radius = get_radius_map()[entity.name]
   end
 
   if radius < oofah then
@@ -115,13 +150,20 @@ local get_radius = function(entity)
   return radius
 end
 
+local distance = function(position_1, position_2)
+  return (((position_2.x - position_1.x) * (position_2.x - position_1.x)) + ((position_2.y - position_1.y) * (position_2.y - position_1.y))) ^ 0.5
+end
+
 local in_range = function(entity_1, entity_2, extra)
 
-  local position1 = entity_1.position
-  local position2 = entity_2.position
-  local distance =  (((position2.x - position1.x) * (position2.x - position1.x)) + ((position2.y - position1.y) * (position2.y - position1.y))) ^ 0.5
+  local distance = distance(entity_1.position, entity_2.position)
   return distance <= (get_radius(entity_1) + (get_radius(entity_2))) + (extra or 2)
 
+end
+
+local in_construction_range = function(drone, target, range)
+  local distance =  distance(drone.position, target.position)
+  return distance <= (get_radius(drone, range) + (get_radius(target)))
 end
 
 local lowest_f_score = function(set, f_score)
@@ -628,12 +670,13 @@ local check_ghost = function(entity)
   local radius = 10
   local area = {{position.x - radius, position.y - radius}, {position.x + radius, position.y + radius}}
   local count = 1
-  local extra_targets = {}
+  local extra_targets = {[entity.unit_number] = entity}
   local extra = surface.find_entities_filtered{ghost_name = entity.ghost_name, area = area}
   for k, ghost in pairs (extra) do
+    if count >= 6 then break end
     local unit_number = ghost.unit_number
     local should_check = (data.ghosts_to_be_checked[unit_number] or data.ghosts_to_be_checked_again[unit_number]) and true
-    if ghost ~= entity and should_check then
+    if ghost ~= target and should_check then
       data.ghosts_to_be_checked[unit_number] = nil
       data.ghosts_to_be_checked_again[unit_number] = nil
       extra_targets[unit_number] = ghost
@@ -644,6 +687,9 @@ local check_ghost = function(entity)
     end
   end
 
+  local target = surface.get_closest(chest.position, extra_targets)
+  extra_targets[target.unit_number] = nil
+
   --local index, target = next(extra_targets)
   --extra_targets[index] = nil
 
@@ -652,7 +698,7 @@ local check_ghost = function(entity)
     order = drone_orders.construct,
     pickup = {chest = chest, stack = {name = item.name, count = count}},
     network = network,
-    target = entity,
+    target = target,
     item_used_to_place = item.name,
     extra_targets = extra_targets
   }
@@ -1387,7 +1433,7 @@ local drone_wait = function(drone_data, ticks)
   if not (drone and drone.valid) then return end
   drone.set_command
   {
-    type = defines.command.wander,
+    type = defines.command.stop,
     ticks_to_wait = ticks,
     distraction = defines.distraction.by_damage,
     radius = get_radius(drone)
@@ -1407,6 +1453,30 @@ local move_to_logistic_target = function(drone_data, target)
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = get_radius(drone) + get_radius(target),
+      pathfind_flags = drone_pathfind_flags
+    }
+  end
+
+  drone_data.path = get_drone_path(drone, network, target)
+  return process_drone_command(drone_data)
+end
+
+local move_to_order_target = function(drone_data, target, range)
+  if in_construction_range(drone_data.entity, target, range) then
+    return true
+  end
+  local network = get_or_find_network(drone_data)
+  if not network then
+    return drone_wait(drone_data, 300)
+  end
+  local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
+  local drone = drone_data.entity
+  if cell.is_in_construction_range(drone.position) then
+    return drone.set_command
+    {
+      type = defines.command.go_to_location,
+      destination_entity = target,
+      radius = get_radius(drone, range) + get_radius(target),
       pathfind_flags = drone_pathfind_flags
     }
   end
@@ -1455,10 +1525,10 @@ local process_pickup_command = function(drone_data)
     return cancel_drone_order(drone_data)
   end
 
-  if not in_range(chest, drone_data.entity, 3) then
-    print("Not in range: "..drone_data.entity.unit_number.." - "..game.tick)
-    return move_to_logistic_target(drone_data, chest)
+  if not move_to_order_target(drone_data, chest, ranges.pickup) then
+    return
   end
+
 
   print("Pickup chest in range, picking up item")
   local stack = drone_data.pickup.stack
@@ -1469,7 +1539,6 @@ local process_pickup_command = function(drone_data)
   local drone_inventory = get_drone_inventory(drone_data)
 
   local taken = transfer_stack(drone_inventory, chest, stack)
-
   if taken < stack.count then
     print("The chest didn't have the item we want... or not enough of it")
     drone_data.pickup.chest = nil
@@ -1479,8 +1548,17 @@ local process_pickup_command = function(drone_data)
   update_drone_sticker(drone_data)
 
   drone_data.pickup = nil
-
-  return process_drone_command(drone_data)
+  local drone = drone_data.entity
+  drone.surface.create_entity
+  {
+    name = "build-beam",
+    source = chest,
+    target = drone,
+    position = drone.position,
+    force = drone.force,
+    duration = 20
+  }
+  return drone_wait(drone_data, 20)
 end
 
 local get_dropoff_stack = function(drone_data)
@@ -1520,9 +1598,7 @@ local process_dropoff_command = function(drone_data)
     drone_data.dropoff.chest = chest
   end
 
-  if not in_range(drone, chest) then
-    return move_to_logistic_target(drone_data, chest)
-  end
+  if not move_to_order_target(drone_data, chest) then return end
 
   local name = stack.name
 
@@ -1538,6 +1614,16 @@ local process_dropoff_command = function(drone_data)
     return drone_wait(drone_data, 6)
   end
 
+  local drone = drone_data.entity
+  drone.surface.create_entity
+  {
+    name = "build-beam",
+    source = drone,
+    target = chest,
+    position = drone.position,
+    force = drone.force,
+    duration = 20
+  }
   return set_drone_idle(drone)
 end
 
@@ -1577,25 +1663,13 @@ local process_construct_command = function(drone_data)
     return cancel_drone_order(drone_data)
   end
 
-  local drone = drone_data.entity
-  if not in_range(target, drone) then
-    return move_to_logistic_target(drone_data, target)
+  if not move_to_order_target(drone_data, target, ranges.construction) then
+    return
   end
 
-  if not drone_data.beam then
-    drone_data.beam = drone.surface.create_entity
-    {
-      name = "build-beam",
-      source = target,
-      target = drone,
-      position = drone.position,
-      force = drone.force,
-    }
-    return drone_wait(drone_data, 20)
-  else
-    drone_data.beam.destroy()
-    drone_data.beam = nil
-  end
+
+  local drone = drone_data.entity
+
 
   local unit_number = target.unit_number
   local success, entity, proxy = target.revive({return_item_request_proxy = true})
@@ -1610,6 +1684,7 @@ local process_construct_command = function(drone_data)
     end
     return
   end
+
 
   drone_inventory.remove{name = drone_data.item_used_to_place, count = 1}
   update_drone_sticker(drone_data)
@@ -1630,14 +1705,22 @@ local process_construct_command = function(drone_data)
       if next_target then
         drone_data.target = next_target
         drone_data.extra_targets[next_target.unit_number] = nil
-        return drone_wait(drone_data, 6)
       end
     else
       drone_data.extra_targets = nil
     end
   end
 
-  return set_drone_idle(drone)
+  drone.surface.create_entity
+  {
+    name = "build-beam",
+    source = drone,
+    target = entity,
+    position = drone.position,
+    force = drone.force,
+    duration = 20
+  }
+  return drone_wait(drone_data, 20)
 end
 
 local drone_follow_path = function(drone_data)
@@ -1700,18 +1783,31 @@ local process_deconstruct_command = function(drone_data)
 
   local drone = drone_data.entity
 
-
-  if not target.to_be_deconstructed(drone.force) then
-    return cancel_drone_order(drone_data)
-  end
-
-  if not in_range(drone, target) then
-    return move_to_logistic_target(drone_data, target)
+  if not move_to_order_target(drone_data, target, ranges.deconstruction) then
+    return
   end
 
   local drone_inventory = get_drone_inventory(drone_data)
 
   local unit_number = target.unit_number
+
+  local drone = drone_data.entity
+  if not drone_data.beam then
+    drone_data.beam = drone.surface.create_entity
+    {
+      name = "build-beam",
+      source = drone,
+      target = target,
+      position = drone.position,
+      force = drone.force,
+      time_to_live = 20
+    }
+    return drone_wait(drone_data, 20)
+  else
+    drone_data.beam.destroy()
+    drone_data.beam = nil
+  end
+
   local mined = mine_entity(drone_inventory, target)
 
   if mined then
@@ -1724,7 +1820,7 @@ local process_deconstruct_command = function(drone_data)
   drone_data.dropoff = {}
 
   update_drone_sticker(drone_data)
-  return drone_wait(drone_data, 6)
+  return drone_wait(drone_data, 10)
 end
 
 local process_repair_command = function(drone_data)
@@ -2153,7 +2249,7 @@ local on_unit_idle = function(event)
   if not is_commandable(unit.name) then return end
   local unit_number = unit.unit_number
   if not unit_number then return end
-  
+
   get_idle_drones(unit.surface, unit.force)[unit_number] = unit
 end
 

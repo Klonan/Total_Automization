@@ -23,7 +23,7 @@ local bot =
   resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-0.20, -0.20}, {0.20, 0.20}},
+  collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
@@ -47,7 +47,7 @@ local bot =
     projectile_creation_distance = 0.5,
     sound =
     {
-      variations = 
+      variations =
       {
         {
           filename = "__base__/sound/fight/light-gunshot-1.ogg"
