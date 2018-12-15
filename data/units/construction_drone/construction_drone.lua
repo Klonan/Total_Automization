@@ -481,11 +481,100 @@ proxy_chest.collision_box = nil
 proxy_chest.inventory_size = 9
 proxy_chest.order = "nnov"
 
-local build_beam = util.copy(data.raw.beam["electric-beam"])
+local beam_blend_mode = "additive"
+local beam_base =
+{
+  type = "beam",
+  flags = {"not-on-map"},
+  damage_interval = 1000,
+  width = 0.5,
+  random_target_offset = true,
+  target_offset_y = -0.3,
+  head =
+  {
+    filename = path.."beams/".."beam-head.png",
+    line_length = 16,
+    width = 45,
+    height = 39,
+    frame_count = 16,
+    animation_speed = 0.5,
+    blend_mode = beam_blend_mode
+  },
+  tail =
+  {
+    filename = path.."beams/".."beam-tail.png",
+    line_length = 16,
+    width = 45,
+    height = 39,
+    frame_count = 16,
+    blend_mode = beam_blend_mode
+  },
+  body =
+  {
+    {
+      filename = path.."beams/".."beam-body-1.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    },
+    {
+      filename = path.."beams/".."beam-body-2.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    },
+    {
+      filename = path.."beams/".."beam-body-3.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    },
+    {
+      filename = path.."beams/".."beam-body-4.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    },
+    {
+      filename = path.."beams/".."beam-body-5.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    },
+    {
+      filename = path.."beams/".."beam-body-6.png",
+      line_length = 16,
+      width = 45,
+      height = 39,
+      frame_count = 16,
+      blend_mode = beam_blend_mode
+    }
+  }
+}
+
+local beams = names.beams
+
+local build_beam = util.copy(beam_base)
 util.recursive_hack_tint(build_beam, {g = 1})
-build_beam.name = "build-beam"
-build_beam.localised_name = "build-beam"
+build_beam.name = beams.build
+build_beam.localised_name = beams.build
 build_beam.action = nil
+
+local deconstruct_beam = util.copy(beam_base)
+util.recursive_hack_tint(deconstruct_beam, {r = 1})
+deconstruct_beam.name = beams.deconstruction
+deconstruct_beam.localised_name = beams.deconstruction
+deconstruct_beam.action = nil
 
 data:extend
 {
@@ -506,5 +595,6 @@ data:extend
   equipment_recipe,
   equipment_category,
   proxy_chest,
-  build_beam
+  build_beam,
+  deconstruct_beam
 }

@@ -202,4 +202,12 @@ data.equipment =
   drone_port = "Personal Drone Port"
 }
 
+data.beams =
+{
+  build = "Build beam",
+  deconstruction = "Deconstruct Beam",
+  pickup = "Pickup Beam",
+  dropoff = "Dropoff Beam"
+}
+
 return data
