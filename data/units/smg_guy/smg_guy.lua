@@ -34,7 +34,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = true
+    do_separation = false
   },
   attack_parameters =
   {

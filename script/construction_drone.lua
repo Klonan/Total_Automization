@@ -13,18 +13,21 @@ drone_prototypes =
   {
     build_range = 8,
     pickup_range = 8,
+    follow_range = 8,
     deconstruct_range = 8
   },
   [names.units.blaster_bot] =
   {
     build_range = 5,
     pickup_range = 8,
+    follow_range = 8,
     deconstruct_range = 8
   },
   [names.units.shell_tank] =
   {
     build_range = 20,
     pickup_range = 8,
+    follow_range = 8,
     deconstruct_range = 20
   }
 }
@@ -62,9 +65,9 @@ local drone_orders =
   request_proxy = 5,
   tile_construct = 6,
   tile_deconstruct = 7,
-  cliff_deconstruct = 8
+  cliff_deconstruct = 8,
+  follow = 9
 }
-
 
 local data =
 {
@@ -85,7 +88,7 @@ local data =
   sent_deconstruction = {},
   debug = false,
   proxy_chests = {},
-  deconstruction_map = {}
+  deconstruction_map = {},
 }
 
 local get_drone_radius = function()
@@ -121,7 +124,8 @@ local ranges =
 {
   construction = 1,
   deconstuction = 2,
-  pickup = 3
+  pickup = 3,
+  follow = 4
 }
 
 local get_radius = function(entity, range)
@@ -142,6 +146,8 @@ local get_radius = function(entity, range)
       radius = drone_prototypes[entity.name].deconstruct_range
     elseif range == ranges.pickup then
       radius = drone_prototypes[entity.name].pickup_range
+    elseif range == ranges.follow then
+      radius = drone_prototypes[entity.name].follow_range
     else
       radius = get_radius_map()[entity.name]
     end
@@ -606,6 +612,21 @@ local get_or_find_network = function(drone_data)
   return network
 end
 
+local process_drone_command
+
+local set_drone_order = function(drone, drone_data)
+  remove_idle_drone(drone)
+  data.drone_commands[drone.unit_number] = drone_data
+  drone_data.entity = drone
+  local target = drone_data.target
+  if target and target.valid and target.unit_number then
+    local index = target.unit_number
+    data.targets[index] = data.targets[index] or {}
+    data.targets[index][drone.unit_number] = drone_data
+  end
+  return process_drone_command(drone_data)
+end
+
 local set_drone_idle = function(drone)
   if not (drone and drone.valid) then return end
   print("Setting drone idle")
@@ -622,6 +643,16 @@ local set_drone_idle = function(drone)
   if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
     local owner = destination_cell.owner
+    if destination_cell.mobile then
+      local drone_data =
+      {
+        order = drone_orders.follow,
+        target = owner
+      }
+      set_drone_order(drone, drone_data)
+      add_idle_drone(drone)
+      return
+    end
     drone.set_command
     {
       type = defines.command.go_to_location,
@@ -630,21 +661,6 @@ local set_drone_idle = function(drone)
     }
   end
 
-end
-
-local process_drone_command
-
-local set_drone_order = function(drone, drone_data)
-  remove_idle_drone(drone)
-  data.drone_commands[drone.unit_number] = drone_data
-  drone_data.entity = drone
-  local target = drone_data.target
-  if target and target.valid and target.unit_number then
-    local index = target.unit_number
-    data.targets[index] = data.targets[index] or {}
-    data.targets[index][drone.unit_number] = drone_data
-  end
-  process_drone_command(drone_data)
 end
 
 local check_ghost = function(entity)
@@ -1046,6 +1062,7 @@ local check_deconstruction = function(deconstruct)
   local position = entity.position
   if needed == 1 then
     local drone = surface.get_closest(position, drones)
+    if not drone then return end
     local extra_targets = {[index] = entity}
     local radius = 10
     local count = 6
@@ -2169,6 +2186,20 @@ local process_deconstruct_cliff_command = function(drone_data)
   return set_drone_idle(drone)
 end
 
+local follow_check_interval = 10
+local process_follow_command = function(drone_data)
+  if not (drone_data.target and drone_data.target.valid) then
+    return cancel_drone_order(drone_data)
+  end
+
+  if not move_to_order_target(drone_data, drone_data.target, ranges.follow) then
+    return
+  end
+
+  return drone_data.entity.set_command{type = defines.command.wander, ticks_to_wait = follow_check_interval}
+end
+
+
 process_drone_command = function(drone_data, result)
   local drone = drone_data.entity
   if not (drone and drone.valid) then
@@ -2242,14 +2273,19 @@ process_drone_command = function(drone_data, result)
     return process_deconstruct_cliff_command(drone_data)
   end
 
+  if drone_data.order == drone_orders.follow then
+    print("Follow")
+    return process_follow_command(drone_data)
+  end
+
   print("Nothin")
   return set_drone_idle(drone)
 end
 
 local on_ai_command_completed = function(event)
-  drone_data = data.drone_commands[event.unit_number]
+  local drone_data = data.drone_commands[event.unit_number]
   if drone_data then
-    print("Ai command complete event: "..event.unit_number.." = "..tostring(result ~= defines.behavior_result.fail))
+    print("Drone command complete event: "..event.unit_number.." = "..tostring(result ~= defines.behavior_result.fail))
     return process_drone_command(drone_data, event.result)
   end
 end

@@ -1,0 +1,1 @@
+data.raw["utility-constants"].default.ghost_tint = {r = 0.0, g = 0.0, b = 1.0, a = 0.3}
