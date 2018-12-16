@@ -2186,17 +2186,56 @@ local process_deconstruct_cliff_command = function(drone_data)
   return set_drone_idle(drone)
 end
 
-local follow_check_interval = 10
+local directions =
+{
+  [defines.direction.north] = {0, -1},
+  [defines.direction.northeast] = {1, -1},
+  [defines.direction.east] = {1, 0},
+  [defines.direction.southeast] = {1, 1},
+  [defines.direction.south] = {0, 1},
+  [defines.direction.southwest] = {-1, 1},
+  [defines.direction.west] = {-1, 0},
+  [defines.direction.northwest] = {-1, -1},
+}
+
+local follow_check_interval = 19
 local process_follow_command = function(drone_data)
-  if not (drone_data.target and drone_data.target.valid) then
+
+  local target = drone_data.target
+  if not (target and target.valid) then
     return cancel_drone_order(drone_data)
+  end
+
+  local check_time = random(20, 30)
+
+  local drone = drone_data.entity
+  if target.type == "player" then
+    --print("ME ME")
+    local player = target.player
+    if player then
+--      print("playe rhere")
+      local state = player.walking_state
+      if state.walking then
+        --print("walking here")
+        local offset = directions[state.direction]
+        --character.speed not merged yet
+        local new_position = {drone.position.x + (offset[1] * check_time * target.speed), drone.position.y + (offset[2] * check_time * target.speed)}
+        drone.speed = math.min(drone.prototype.speed, target.speed)
+        return drone.set_command
+        {
+          type = defines.command.go_to_location,
+          radius = 1,
+          destination = drone.surface.find_non_colliding_position(drone.name, new_position, 0, 1)
+        }
+      end
+    end
   end
 
   if not move_to_order_target(drone_data, drone_data.target, ranges.follow) then
     return
   end
 
-  return drone_data.entity.set_command{type = defines.command.wander, ticks_to_wait = follow_check_interval}
+  return drone_data.entity.set_command{type = defines.command.wander, ticks_to_wait = check_time}
 end
 
 
