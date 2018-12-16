@@ -2218,9 +2218,9 @@ local process_follow_command = function(drone_data)
       if state.walking then
         --print("walking here")
         local offset = directions[state.direction]
-        --character.speed not merged yet
-        local new_position = {drone.position.x + (offset[1] * check_time * target.speed), drone.position.y + (offset[2] * check_time * target.speed)}
-        drone.speed = math.min(drone.prototype.speed, target.speed)
+        local target_speed = target.character_running_speed
+        local new_position = {drone.position.x + (offset[1] * check_time * target_speed), drone.position.y + (offset[2] * check_time * target_speed)}
+        drone.speed = math.min(drone.prototype.speed, target_speed)
         return drone.set_command
         {
           type = defines.command.go_to_location,
