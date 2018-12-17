@@ -897,7 +897,8 @@ local check_proxy = function(entity)
   local items = entity.item_requests
   local force = entity.force
   local surface = entity.surface
-  local capacity = get_drone_capacity(entity.force)
+  local capacity = get_drone_capacity(force)
+  error("TODO FIXME")
   local drones = get_idle_drones(surface, force)
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local needed = 0
