@@ -2208,19 +2208,20 @@ local process_follow_command = function(drone_data)
 
   local check_time = random(20, 30)
 
+  if not move_to_order_target(drone_data, drone_data.target, ranges.follow) then
+    return
+  end
+
   local drone = drone_data.entity
   if target.type == "player" then
-    --print("ME ME")
     local player = target.player
     if player then
---      print("playe rhere")
       local state = player.walking_state
       if state.walking then
-        --print("walking here")
         local offset = directions[state.direction]
         local target_speed = target.character_running_speed
         local new_position = {drone.position.x + (offset[1] * check_time * target_speed), drone.position.y + (offset[2] * check_time * target_speed)}
-        drone.speed = math.min(drone.prototype.speed, target_speed)
+        drone.speed = math.min(drone.prototype.speed, target_speed * (check_time / (check_time - 1)))
         return drone.set_command
         {
           type = defines.command.go_to_location,
@@ -2229,10 +2230,6 @@ local process_follow_command = function(drone_data)
         }
       end
     end
-  end
-
-  if not move_to_order_target(drone_data, drone_data.target, ranges.follow) then
-    return
   end
 
   return drone_data.entity.set_command{type = defines.command.wander, ticks_to_wait = check_time}
