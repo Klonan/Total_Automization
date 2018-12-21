@@ -665,6 +665,7 @@ end
 
 local check_ghost = function(entity)
   if not (entity and entity.valid) then return true end
+  entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
   local force = entity.force
   local surface = entity.surface
   local position = entity.position
@@ -759,48 +760,43 @@ local on_built_entity = function(event)
 
 end
 
-local remove_keys = function(table, to_remove)
-  for index, bool in pairs (to_remove) do
-    tables[index] = nil
+local check_priority_list = function(list, other_list, check_function, count)
+  while count > 0 do
+    local index, entry = next(list)
+    if index == nil then break end
+    other_list[index] = entry
+    list[index] = nil
+    check_function(entry)
+    count = count - 1
   end
+  return count
+end
+
+local check_list = function(list, index, check_function, count)
+  if count == 0 then return index end
+  if not index then
+    index = next(list)
+  end
+  if not index then return end
+  while count > 0 do
+    local this_index = index
+    entry = list[this_index]
+    --TODO maybe change the index when doing the extra target logic
+    if not entry then this_index = nil end
+    index = next(list, this_index)
+    if entry and check_function(entry) == true then
+      list[this_index] = nil
+    end
+    count = count - 1
+    if index == nil then break end
+  end
+  return index
 end
 
 local check_ghost_lists = function()
-  local ghosts = data.ghosts_to_be_checked
-  local ghosts_again = data.ghosts_to_be_checked_again
-  local remaining_checks = max_checks_per_tick
-  local remove = {}
-  for k = 1, remaining_checks do
-    local key, ghost = next(ghosts)
-    if key then
-      remaining_checks = remaining_checks - 1
-      if not check_ghost(ghost) then
-        ghosts_again[key] = ghost
-      end
-      remove[key] = true
-    else
-      break
-    end
-  end
-  remove_keys(ghosts, remove)
 
-  if remaining_checks == 0 then return end
-  --print("Checking normal ghosts again")
-  local index = data.ghost_check_index
-  for k = 1, remaining_checks do
-    local key, ghost = next(ghosts_again, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if check_ghost(ghost) then
-        remove_again[key] = true
-      end
-    else
-      break
-    end
-  end
-  remove_keys(ghosts_again, remove_again)
-  data.ghost_check_index = index
+  local remaining_checks = check_priority_list(data.ghosts_to_be_checked, data.ghosts_to_be_checked_again, check_ghost, max_checks_per_tick)
+  data.ghost_check_index = check_list(data.ghosts_to_be_checked_again, data.ghost_check_index, check_ghost, remaining_checks)
 
 end
 
@@ -863,38 +859,9 @@ local check_upgrade = function(upgrade_data)
 end
 
 local check_upgrade_lists = function()
-  local upgrade = data.upgrade_to_be_checked
-  local upgrade_again = data.upgrade_to_be_checked_again
-  local remaining_checks = max_checks_per_tick
-  for k = 1, remaining_checks do
-    local key, upgrade_data = next(upgrade)
-    if key then
-      remaining_checks = remaining_checks - 1
-      upgrade[key] = nil
-      if not check_upgrade(upgrade_data) then
-        upgrade_again[key] = upgrade_data
-      end
-    else
-      break
-    end
-  end
 
-  if remaining_checks == 0 then return end
-  --print("Checking normal ghosts again")
-  local index = data.upgrade_check_index
-  for k = 1, remaining_checks do
-    local key, upgrade_data = next(upgrade_again, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if check_upgrade(upgrade_data) then
-        upgrade_again[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.upgrade_check_index = index
+  local remaining_checks = check_priority_list(data.upgrade_to_be_checked, data.upgrade_to_be_checked_again, check_upgrade, max_checks_per_tick)
+  data.upgrade_check_index = check_list(data.upgrade_to_be_checked_again, data.upgrade_check_index, check_upgrade, remaining_checks)
 
 end
 
@@ -942,24 +909,8 @@ local check_proxy = function(entity)
 end
 
 local check_proxies_lists = function()
-  --Being lazy... only 1 list for proxies (probably fine)
-  local proxies = data.proxies_to_be_checked
-  local remaining_checks = max_checks_per_tick
 
-  local index = data.proxy_check_index
-  for k = 1, remaining_checks do
-    local key, entity = next(proxies, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if check_proxy(entity) then
-        proxies[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.proxy_check_index = index
+  data.proxy_check_index = check_list(data.proxies_to_be_checked, data.proxy_check_index, check_proxy, max_checks_per_tick)
 
 end
 
@@ -1121,44 +1072,9 @@ local check_deconstruction = function(deconstruct)
 end
 
 local check_deconstruction_lists = function()
-  local decs = data.deconstructs_to_be_checked
-  local decs_again = data.deconstructs_to_be_checked_again
-  local remaining_checks = max_checks_per_tick
-  for k = 1, remaining_checks do
-    local key, deconstruct = next(decs)
-    if key then
-      remaining_checks = remaining_checks - 1
-      decs[key] = nil
-      if deconstruct.entity.valid then
-        if not check_deconstruction(deconstruct) then
-          data.deconstructs_to_be_checked_again[position_hash(deconstruct.entity.position)] = deconstruct
-        end
-      end
-    else
-      break
-    end
-  end
 
-  if remaining_checks == 0 then return end
-  --print("checking things to deconstruct")
-  local index = data.deconstruction_check_index
-  for k = 1, remaining_checks do
-    local key, deconstruct = next(decs_again, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if deconstruct.entity.valid then
-        if check_deconstruction(deconstruct) then
-          decs_again[key] = nil
-        end
-      else
-        decs_again[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.deconstruction_check_index = index
+  local remaining_checks = check_priority_list(data.deconstructs_to_be_checked, data.deconstructs_to_be_checked_again, check_deconstruction, max_checks_per_tick)
+  data.ghost_check_index = check_list(data.deconstructs_to_be_checked_again, data.deconstruction_check_index, check_deconstruction, remaining_checks)
 
 end
 
@@ -1200,21 +1116,7 @@ end
 
 local check_tile_deconstruction_lists = function()
 
-  local decs = data.deconstruction_proxies_to_be_checked
-  local remaining_checks = max_checks_per_tick
-  local index = data.deconstruction_tile_check_index
-  for k = 1, remaining_checks do
-    local key, entity = next(decs, index)
-    index = key
-    if key then
-      if check_tile_deconstruction(entity) then
-        decs[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.deconstruction_tile_check_index = index
+  data.deconstruction_tile_check_index = check_list(data.deconstruction_proxies_to_be_checked, data.deconstruction_tile_check_index, check_tile_deconstruction, max_checks_per_tick)
 
 end
 
@@ -1283,38 +1185,8 @@ end
 
 local check_repair_lists = function()
 
-  local repair = data.repair_to_be_checked
-  local repair_again = data.repair_to_be_checked_again
-  local remaining_checks = max_checks_per_tick
-  for k = 1, remaining_checks do
-    local key, entity = next(repair)
-    if key then
-      remaining_checks = remaining_checks - 1
-      repair[key] = nil
-      if not check_repair(entity) then
-        insert(repair_again, entity)
-      end
-    else
-      break
-    end
-  end
-
-  if remaining_checks == 0 then return end
-  --print("checking things to deconstruct")
-  local index = data.repair_check_index
-  for k = 1, remaining_checks do
-    local key, entity = next(repair_again, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if check_repair(entity) then
-        repair_again[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.repair_check_index = index
+  local remaining_checks = check_priority_list(data.repair_to_be_checked, data.repair_to_be_checked_again, check_repair, max_checks_per_tick)
+  data.repair_check_index = check_list(data.repair_to_be_checked, data.repair_check_index, check_repair, remaining_checks)
 
 end
 
@@ -1361,24 +1233,7 @@ end
 
 local check_tile_lists = function()
   --Being lazy... only 1 list for tiles (also probably fine)
-  local tiles = data.tiles_to_be_checked
-  local remaining_checks = max_checks_per_tick
-
-  local index = data.tile_check_index
-  for k = 1, remaining_checks do
-    local key, entity = next(tiles, index)
-    index = key
-    if key then
-      remaining_checks = remaining_checks - 1
-      if check_tile(entity) then
-        tiles[key] = nil
-      end
-    else
-      break
-    end
-  end
-  data.tile_check_index = index
-
+  data.tile_check_index = check_list(data.tiles_to_be_checked, data.tile_check_index, check_tile, max_checks_per_tick)
 end
 
 local on_tick = function(event)
