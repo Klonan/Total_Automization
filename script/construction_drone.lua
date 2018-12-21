@@ -759,10 +759,17 @@ local on_built_entity = function(event)
 
 end
 
+local remove_keys = function(table, to_remove)
+  for index, bool in pairs (to_remove) do
+    tables[index] = nil
+  end
+end
+
 local check_ghost_lists = function()
   local ghosts = data.ghosts_to_be_checked
   local ghosts_again = data.ghosts_to_be_checked_again
   local remaining_checks = max_checks_per_tick
+  local remove = {}
   for k = 1, remaining_checks do
     local key, ghost = next(ghosts)
     if key then
@@ -770,11 +777,12 @@ local check_ghost_lists = function()
       if not check_ghost(ghost) then
         ghosts_again[key] = ghost
       end
-      ghosts[key] = nil
+      remove[key] = true
     else
       break
     end
   end
+  remove_keys(ghosts, remove)
 
   if remaining_checks == 0 then return end
   --print("Checking normal ghosts again")
@@ -785,12 +793,13 @@ local check_ghost_lists = function()
     if key then
       remaining_checks = remaining_checks - 1
       if check_ghost(ghost) then
-        ghosts_again[key] = nil
+        remove_again[key] = true
       end
     else
       break
     end
   end
+  remove_keys(ghosts_again, remove_again)
   data.ghost_check_index = index
 
 end
