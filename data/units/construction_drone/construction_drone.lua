@@ -576,6 +576,12 @@ deconstruct_beam.name = beams.deconstruction
 deconstruct_beam.localised_name = beams.deconstruction
 deconstruct_beam.action = nil
 
+local pickup_beam = util.copy(beam_base)
+util.recursive_hack_tint(pickup_beam, {g = 1, b = 1})
+pickup_beam.name = beams.pickup
+pickup_beam.localised_name = beams.pickup
+pickup_beam.action = nil
+
 data:extend
 {
   unit,
@@ -596,5 +602,6 @@ data:extend
   equipment_category,
   proxy_chest,
   build_beam,
-  deconstruct_beam
+  deconstruct_beam,
+  pickup_beam
 }
