@@ -308,24 +308,18 @@ local get_first_empty_stack = function(inventory)
 end
 
 local inventories = function(entity)
-  local index = 1
   local get = entity.get_inventory
   local inventories = {}
-  while true do
-    local inventory = get(index)
-    if inventory then
-      inventories[index] = inventory
-      index = index + 1
-    else
-      return inventories
-    end
+  for k = 1, 10 do
+    inventories[k] = get(k)
   end
+  return inventories
 end
 
 local belt_connectible_type =
 {
   ["transport-belt"] = 2,
-  ["underground-belt"] = 2,
+  ["underground-belt"] = 4,
   ["splitter"] = 8,
   ["loader"] = 2,
 }
@@ -433,9 +427,25 @@ end
 
 local take_all_content = function(inventory, target)
 
-  if target.type == "item-entity" then
+  if not (target and target.valid) then return end
+
+  local type = target.type
+
+  if type == "item-entity" then
     local stack = target.stack
-    inventory.insert(stack)
+    if stack and stack.valid_for_read and inventory.can_insert(stack) then
+      local remove_stack = {name = stack.name, count = inventory.insert(stack)}
+      target.remove_item(remove_stack)
+    end
+    return
+  end
+
+  if type == "inserter" then
+    local stack = target.held_stack
+    if stack and stack.valid_for_read and inventory.can_insert(stack) then
+      local remove_stack = {name = stack.name, count = inventory.insert(stack)}
+      target.remove_item(remove_stack)
+    end
   end
 
   for k, target_inventory in pairs (inventories(target)) do
@@ -458,7 +468,10 @@ end
 
 local mine_entity = function(inventory, target)
   take_all_content(inventory, target)
-
+  if not (target and target.valid) then
+    --Items on ground die when you remove the items...
+    return true
+  end
   if target.has_items_inside() then
     print("Tried to take all the target items, but he still has some, ergo, we cant fit that many items.")
     return
@@ -773,6 +786,9 @@ local check_ghost = function(entity)
   --print(serpent.block(extra_targets))
 
   local target = surface.get_closest(chest.position, extra_targets)
+  if not target then
+    error("WAT "..serpent.block(extra_targets))
+  end
   extra_targets[target.unit_number] = nil
   local drone_data =
   {
@@ -900,7 +916,6 @@ local check_proxy = function(entity)
   local force = entity.force
   local surface = entity.surface
   local capacity = get_drone_capacity(force)
-  error("TODO FIXME")
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local needed = 0
   local sent = 0
@@ -1773,7 +1788,7 @@ local process_deconstruct_command = function(drone_data)
     {
       name = beams.deconstruction,
       source = drone,
-      target = target,
+      target_position = target.position,
       position = drone.position,
       force = drone.force,
       duration = deconstruct_time
@@ -1791,7 +1806,11 @@ local process_deconstruct_command = function(drone_data)
     end
     data.sent_deconstruction[index] = nil
   else
-    return drone_wait(drone_data, 300)
+    update_drone_sticker(drone_data)
+    if drone_inventory.is_empty() then
+      return drone_wait(drone_data, 300)
+    end
+    cancel_drone_order(drone_data)
   end
 
   if drone_data.extra_targets then
@@ -2422,7 +2441,7 @@ lib.on_init = function()
   data.ghosts_to_be_checked_again = {}
   for k, surface in pairs (game.surfaces) do
     for k, ghost in pairs (surface.find_entities_filtered{type = "entity-ghost"}) do
-      insert(data.ghosts_to_be_checked_again, ghost)
+      data.ghosts_to_be_checked_again[ghost.unit_number] = ghost
     end
   end
   register_events()
