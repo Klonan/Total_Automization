@@ -83,6 +83,7 @@ local data =
   debug = false,
   proxy_chests = {},
   deconstruction_map = {},
+  no_network_drones = {}
 }
 
 local get_drone_radius = function()
@@ -584,9 +585,47 @@ local validate = function(entities)
   return entities
 end
 
-local get_idle_drones = function(surface, force)
-  local surface_index = surface.index
+local get_nearest_network = function(entity)
+  local surface = entity.surface
+  local force = entity.force
+  local position = entity.position
+
+  local networks = surface.find_logistic_networks_by_construction_area(position, force)
+  if #networks == 0 then
+    networks = force.logistic_networks[surface.name]
+  end
+  local owners = {}
+  for k, network in pairs (networks) do
+    local cell = network.find_cell_closest_to(position)
+    if cell then insert(owners, cell.owner) end
+  end
+  local closest = surface.get_closest(position, owners)
+  if not closest then
+    return
+  end
+  return closest.logistic_cell.logistic_network
+end
+
+local get_logistic_network_surface = function(logistic_network)
+  local cell = logistic_network.cells[1]
+  return cell.owner.surface
+end
+
+local get_logistic_network_index = function(logistic_network)
+  local surface = get_logistic_network_surface(logistic_network)
+  local networks = logistic_network.force.logistic_networks[surface.name]
+  for index, network in pairs (networks) do
+    if network == logistic_network then
+      return index
+    end
+  end
+end
+
+local get_idle_drones = function(logistic_network)
+  local force = logistic_network.force
   local force_index = force.index
+  local surface_index = get_logistic_network_surface(logistic_network).index
+  local network_index = get_logistic_network_index(logistic_network)
 
   local surface_drones = data.idle_drones[surface_index]
   if not surface_drones then
@@ -600,16 +639,31 @@ local get_idle_drones = function(surface, force)
     surface_drones[force_index] = force_drones
   end
 
-  return validate(force_drones)
+  local network_drones = force_drones[network_index]
+  if not network_drones then
+    network_drones = {}
+    force_drones[network_index] = network_drones
+  end
+  print(serpent.block(network_drones))
+  return validate(network_drones)
 end
 
 local add_idle_drone = function(drone)
-  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  local network = get_nearest_network(drone)
+  if not network then
+    data.no_network_drones[drone.unit_number] = drone
+    print("No network")
+    return
+  end
+  local idle_drones = get_idle_drones(network)
   idle_drones[drone.unit_number] = drone
+  print("Added to idle drones")
 end
 
 local remove_idle_drone = function(drone)
-  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  local network = get_nearest_network(drone)
+  if not network then return end
+  local idle_drones = get_idle_drones(network)
   idle_drones[drone.unit_number] = nil
 end
 
@@ -620,23 +674,7 @@ local get_or_find_network = function(drone_data)
   if network and network.valid then
     return network
   end
-
-  local drone = drone_data.entity
-  local surface = drone.surface
-  local force = drone.force
-  local position = drone.position
-  local networks = force.logistic_networks[surface.name]
-  local owners = {}
-  for k, network in pairs (networks) do
-    local cell = network.find_cell_closest_to(position)
-    if cell then insert(owners, cell.owner) end
-  end
-  local closest = surface.get_closest(position, owners)
-  if not closest then
-    drone_data.network = nil
-    return
-  end
-  network = closest.logistic_cell.logistic_network
+  local network = get_nearest_network(drone_data.entity)
   drone_data.network = network
   return network
 end
@@ -708,7 +746,7 @@ local check_ghost = function(entity)
   end
 
   local chest = point.owner
-  local drones = get_idle_drones(surface, force)
+  local drones = get_idle_drones(point.logistic_network)
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -815,7 +853,7 @@ local check_upgrade = function(upgrade_data)
   end
 
   local chest = point.owner
-  local drones = get_idle_drones(surface, force)
+  local drones = get_idle_drones(point.logistic_network)
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -868,7 +906,6 @@ local check_proxy = function(entity)
   local surface = entity.surface
   local capacity = get_drone_capacity(force)
   error("TODO FIXME")
-  local drones = get_idle_drones(surface, force)
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local needed = 0
   local sent = 0
@@ -884,7 +921,7 @@ local check_proxy = function(entity)
     end
     if point then
       local chest = point.owner
-      local drone = surface.get_closest(chest.position, drones)
+      local drone = surface.get_closest(chest.position, get_idle_drones(point.logistic_network))
       if drone then
         drone_data =
         {
@@ -952,7 +989,8 @@ local check_cliff_deconstruction = function(deconstruct)
 
   local chest = point.owner
 
-  local drone = surface.get_closest(chest.position, get_idle_drones(surface, force))
+  local drones = get_idle_drones(point.logistic_network)
+  local drone = surface.get_closest(chest.position, drones)
   if drone then
     local drone_data =
     {
@@ -988,14 +1026,14 @@ local check_deconstruction = function(deconstruct)
     return
   end
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
-  local any
-  for k, network in pairs (networks) do
-    if network.available_construction_robots == 0 then
-      any = true
+  local network
+  for k, other_network in pairs (networks) do
+    if other_network.available_construction_robots == 0 then
+      network = other_network
       break
     end
   end
-  if not any then
+  if not network then
     print("He is outside of any of our eligible construction areas...")
     return
   end
@@ -1013,7 +1051,7 @@ local check_deconstruction = function(deconstruct)
   end
   local needed = math.ceil((stack_sum + 1) / capacity)
   needed = needed - sent
-  local drones = get_idle_drones(surface, force)
+  local drones = get_idle_drones(network)
   if needed == 1 then
     local drone = surface.get_closest(position, drones)
     if not drone then return end
@@ -1079,20 +1117,20 @@ local check_tile_deconstruction = function(entity)
   local position = entity.position
 
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
-  local any
-  for k, network in pairs (networks) do
-    if network.available_construction_robots == 0 then
-      any = true
+  local network
+  for k, other_network in pairs (networks) do
+    if other_network.available_construction_robots == 0 then
+      network = other_network
       break
     end
   end
 
-  if not any then
+  if not network then
     print("He is outside of any of our eligible construction areas...")
     return
   end
 
-  local drone = surface.get_closest(position, get_idle_drones(surface, force))
+  local drone = surface.get_closest(position, get_idle_drones(network))
   if drone then
     local drone_data =
     {
@@ -1156,7 +1194,7 @@ local check_repair = function(entity)
   end
 
   local chest = pickup_target.owner
-  local drones = get_idle_drones(surface, force)
+  local drones = get_idle_drones(pickup_target.logistic_network)
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -1200,7 +1238,7 @@ local check_tile = function(entity)
   end
 
   local chest = point.owner
-  local drones = get_idle_drones(surface, force)
+  local drones = get_idle_drones(point.logistic_network)
   local drone = surface.get_closest(chest.position, drones)
 
   if not drone then
@@ -2313,8 +2351,7 @@ local on_unit_idle = function(event)
   if not is_commandable(unit.name) then return end
   local unit_number = unit.unit_number
   if not unit_number then return end
-
-  get_idle_drones(unit.surface, unit.force)[unit_number] = unit
+  add_idle_drone(unit)
 end
 
 local on_unit_not_idle = function(event)
@@ -2327,7 +2364,7 @@ local on_unit_not_idle = function(event)
   if drone_data then
     cancel_drone_order(drone_data)
   end
-  get_idle_drones(unit.surface, unit.force)[unit_number] = nil
+  remove_idle_drone(unit)
 end
 
 local lib = {}
