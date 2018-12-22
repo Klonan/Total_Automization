@@ -83,7 +83,8 @@ local data =
   debug = false,
   proxy_chests = {},
   deconstruction_map = {},
-  no_network_drones = {}
+  no_network_drones = {},
+  networks = {}
 }
 
 local get_drone_radius = function()
@@ -275,13 +276,13 @@ local get_drone_inventory = function(drone_data)
     return inventory
   end
   local drone = drone_data.entity
-  local proxy_chest = drone.surface.create_entity
+  local proxy_chest = data.proxy_chests[drone.unit_number] or drone.surface.create_entity
   {
     name = proxy_name,
     position = {1000000, 1000000},
     force = drone.force
   }
-  data.proxy_chests[proxy_chest.unit_number] = proxy_chest
+  data.proxy_chests[drone.unit_number] = proxy_chest
   drone_data.inventory = proxy_chest.get_inventory(defines.inventory.chest)
   return drone_data.inventory
 end
@@ -612,52 +613,39 @@ local get_logistic_network_surface = function(logistic_network)
 end
 
 local get_logistic_network_index = function(logistic_network)
-  local surface = get_logistic_network_surface(logistic_network)
-  local networks = logistic_network.force.logistic_networks[surface.name]
-  for index, network in pairs (networks) do
-    if network == logistic_network then
-      return index
+  local networks = data.networks
+  local last_key = 0
+  for k, network in pairs (networks) do
+    if network and network.valid and network == logistic_network then
+      return k
     end
+    last_key = k
   end
+  local new_key = last_key + 1
+  networks[new_key] = logistic_network
+  return new_key
 end
 
 local get_idle_drones = function(logistic_network)
-  local force = logistic_network.force
-  local force_index = force.index
-  local surface_index = get_logistic_network_surface(logistic_network).index
   local network_index = get_logistic_network_index(logistic_network)
 
-  local surface_drones = data.idle_drones[surface_index]
-  if not surface_drones then
-    surface_drones = {}
-    data.idle_drones[surface_index] = surface_drones
+  local drones = data.idle_drones[network_index]
+  if not drones then
+    drones = {}
+    data.idle_drones[network_index] = drones
   end
 
-  local force_drones = surface_drones[force_index]
-  if not force_drones then
-    force_drones = {}
-    surface_drones[force_index] = force_drones
-  end
-
-  local network_drones = force_drones[network_index]
-  if not network_drones then
-    network_drones = {}
-    force_drones[network_index] = network_drones
-  end
-  print(serpent.block(network_drones))
-  return validate(network_drones)
+  return validate(drones)
 end
 
 local add_idle_drone = function(drone)
   local network = get_nearest_network(drone)
   if not network then
     data.no_network_drones[drone.unit_number] = drone
-    print("No network")
     return
   end
   local idle_drones = get_idle_drones(network)
   idle_drones[drone.unit_number] = drone
-  print("Added to idle drones")
 end
 
 local remove_idle_drone = function(drone)
@@ -698,15 +686,21 @@ local set_drone_idle = function(drone)
   if not (drone and drone.valid) then return end
   print("Setting drone idle")
   local drone_data = data.drone_commands[drone.unit_number]
+
+  if drone_data then
+    update_drone_sticker(drone_data)
+    local stack = get_drone_first_stack(drone_data)
+    if stack then
+      drone_data.dropoff = {stack = stack}
+      return process_drone_command(drone_data)
+    end
+  end
+
+  drone.speed = math.random() * drone.speed
   data.drone_commands[drone.unit_number] = nil
   add_idle_drone(drone)
 
-  drone.speed = math.random() * drone.speed
-
-  if not drone_data then return end
-
-  update_drone_sticker(drone_data)
-  local network = get_or_find_network(drone_data)
+  local network = get_nearest_network(drone)
   if network then
     local destination_cell = network.find_cell_closest_to(drone.position)
     local owner = destination_cell.owner
@@ -724,6 +718,7 @@ local set_drone_idle = function(drone)
     {
       type = defines.command.go_to_location,
       destination_entity = owner,
+      distraction = defines.distraction.none,
       radius = math.max(destination_cell.logistic_radius, get_radius(drone) + get_radius(owner))
     }
   end
@@ -732,7 +727,7 @@ end
 
 local check_ghost = function(entity)
   if not (entity and entity.valid) then return true end
-  entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
+  --entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
   local force = entity.force
   local surface = entity.surface
   local position = entity.position
@@ -809,7 +804,7 @@ local on_built_entity = function(event)
 
   if is_commandable(entity.name) then
     print("Adding idle drone")
-    add_idle_drone(entity)
+    set_drone_idle(entity)
     return
   end
 
@@ -1009,7 +1004,7 @@ local check_deconstruction = function(deconstruct)
   local entity = deconstruct.entity
   local force = deconstruct.force
   if not (entity and entity.valid) then return true end
-  entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
+  --entity.surface.create_entity{name = "flying-text", position = entity.position, text = "!"}
   if not (force and force.valid) then return true end
 
   if not entity.to_be_deconstructed(force) then return true end
@@ -1329,6 +1324,8 @@ local cancel_drone_order = function(drone_data, on_removed)
   drone_data.pickup = nil
   drone_data.path = nil
   drone_data.dropoff = nil
+  drone_data.order = nil
+  drone_data.target = nil
 
   local stack = get_drone_first_stack(drone_data)
   if stack then
@@ -1338,8 +1335,6 @@ local cancel_drone_order = function(drone_data, on_removed)
       return process_drone_command(drone_data)
     end
   end
-
-  data.drone_commands[unit_number] = nil
 
   if not on_removed then
     set_drone_idle(drone)
@@ -1373,7 +1368,7 @@ local drone_wait = function(drone_data, ticks)
   {
     type = defines.command.stop,
     ticks_to_wait = ticks,
-    distraction = defines.distraction.by_damage,
+    distraction = defines.distraction.none,
     radius = get_radius(drone)
   }
 end
@@ -1391,6 +1386,7 @@ local move_to_logistic_target = function(drone_data, target)
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = get_radius(drone) + get_radius(target),
+      distraction = defines.distraction.none,
       pathfind_flags = drone_pathfind_flags
     }
   end
@@ -1415,6 +1411,7 @@ local move_to_order_target = function(drone_data, target, range)
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = get_radius(drone, range) + get_radius(target),
+      distraction = defines.distraction.none,
       pathfind_flags = drone_pathfind_flags
     }
   end
@@ -1712,6 +1709,7 @@ local drone_follow_path = function(drone_data)
     type = defines.command.go_to_location,
     destination_entity = current_cell.owner,
     radius = math.max(current_cell.construction_radius, current_cell.logistic_radius),
+    distraction = defines.distraction.none,
     pathfind_flags = drone_pathfind_flags
   }
 end
@@ -1858,23 +1856,34 @@ local process_repair_command = function(drone_data)
     return process_drone_command(drone_data)
   end
 
-  target.health = target.health + repair_speed
-  stack.drain_durability(repair_speed)
+  local ticks_to_repair = random(20, 30)
+  local repair_cycles_left = math.ceil((target.prototype.max_health - target.health) / repair_speed)
+  local max_left = math.ceil(stack.durability / repair_speed)
+  ticks_to_repair = math.min(ticks_to_repair, repair_cycles_left)
+  ticks_to_repair = math.min(ticks_to_repair, max_left)
+
+  local repair_amount = (repair_speed * ticks_to_repair)
+
+  target.health = target.health + repair_amount
+  stack.drain_durability(repair_amount)
 
   if not stack.valid_for_read then
     print("Stack expired, someone else will take over")
     return cancel_drone_order(drone_data)
   end
 
-  if target.get_health_ratio() == 1 then
-    print("Job done, matey is all repaired")
-    drone_data.dropoff = {stack = stack}
-    drone_data.target = nil
-    return process_drone_command(drone_data)
-  end
+  drone.surface.create_entity
+  {
+    name = beams.build,
+    source = drone,
+    target = target,
+    position = drone.position,
+    force = drone.force,
+    duration = ticks_to_repair
+  }
 
-  --oof, this might be a bit heavy... maybe we can process is every n ticks? maybe later...
-  return drone_wait(drone_data, 1)
+
+  return drone_wait(drone_data, ticks_to_repair)
 end
 
 local process_upgrade_command = function(drone_data)
@@ -1939,7 +1948,7 @@ local process_upgrade_command = function(drone_data)
   local build_time = random(15, 25)
   drone.surface.create_entity
   {
-    name = beams.construct,
+    name = beams.build,
     source = drone,
     target = upgraded,
     position = drone.position,
@@ -2042,7 +2051,7 @@ local process_construct_tile_command = function(drone_data)
   local build_time = random(15, 25)
   drone.surface.create_entity
   {
-    name = beams.construct,
+    name = beams.build,
     source = drone,
     target_position = position,
     position = drone.position,
@@ -2181,13 +2190,19 @@ local process_follow_command = function(drone_data)
         {
           type = defines.command.go_to_location,
           radius = 1,
+          distraction = defines.distraction.none,
           destination = drone.surface.find_non_colliding_position(drone.name, new_position, 0, 1)
         }
       end
     end
   end
 
-  return drone_data.entity.set_command{type = defines.command.wander, ticks_to_wait = check_time}
+  return drone_data.entity.set_command
+  {
+    type = defines.command.wander,
+    distraction = defines.distraction.none,
+    ticks_to_wait = check_time
+  }
 end
 
 
@@ -2346,15 +2361,17 @@ local on_marked_for_upgrade = function(event)
 end
 
 local on_unit_idle = function(event)
+  game.print("UNIT IDLE")
   local unit = event.entity
   if not (unit and unit.valid) then return end
   if not is_commandable(unit.name) then return end
   local unit_number = unit.unit_number
   if not unit_number then return end
-  add_idle_drone(unit)
+  set_drone_idle(unit)
 end
 
 local on_unit_not_idle = function(event)
+  game.print("UNIT NOT IDLE")
   local unit = event.entity
   if not (unit and unit.valid) then return end
   if not is_commandable(unit.name) then return end
@@ -2362,7 +2379,7 @@ local on_unit_not_idle = function(event)
   if not unit_number then return end
   local drone_data = data.drone_commands[unit_number]
   if drone_data then
-    cancel_drone_order(drone_data)
+    cancel_drone_order(drone_data, true)
   end
   remove_idle_drone(unit)
 end
