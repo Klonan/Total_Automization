@@ -584,6 +584,37 @@ local validate = function(entities)
   return entities
 end
 
+local get_idle_drones = function(surface, force)
+  local surface_index = surface.index
+  local force_index = force.index
+
+  local surface_drones = data.idle_drones[surface_index]
+  if not surface_drones then
+    surface_drones = {}
+    data.idle_drones[surface_index] = surface_drones
+  end
+
+  local force_drones = surface_drones[force_index]
+  if not force_drones then
+    force_drones = {}
+    surface_drones[force_index] = force_drones
+  end
+
+  return validate(force_drones)
+end
+
+local add_idle_drone = function(drone)
+  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  idle_drones[drone.unit_number] = drone
+end
+
+local remove_idle_drone = function(drone)
+  local idle_drones = get_idle_drones(drone.surface, drone.force)
+  idle_drones[drone.unit_number] = nil
+end
+
+local update_drone_sticker
+
 local get_or_find_network = function(drone_data)
   local network = drone_data.network
   if network and network.valid then
@@ -609,52 +640,6 @@ local get_or_find_network = function(drone_data)
   drone_data.network = network
   return network
 end
-
-local get_cell_drones = function(cell)
-  return validate(data.idle_drones[cell.owner.unit_number])
-end
-
-local get_idle_drones = function(logistic_network)
-  local drones = {}
-
-  for k, cell in pairs (logistic_network.cells) do
-    for unit_number, entity in pairs (get_cell_drones(cell)) do
-      drones[unit_number] = entity
-    end
-  end
-
-  return drones
-end
-
-local find_nearest_cell = function(entity)
-  local position = entity.position
-  local network = entity.surface.find_logistic_networks_by_construction_area(position, entity.force)[1]
-  if network then
-    return network.find_cell_closest_to(position)
-  end
-end
-
-local add_idle_drone = function(drone_data)
-  local network = get_or_find_network(drone_data)
-  if not network then return end
-  local cell = network.find_cell_closest_to(drone_data.entity.position)
-  local owner = cell.owner
-  local unit_number = owner.unit_number
-  local drones = data.idle_drones[unit_number]
-  if not drones then
-    drones = {}
-    data.idle_drones[unit_number] = drones
-  end
-  drones[drone.unit_number] = drone
-end
-
-local remove_idle_drone = function(drone_data)
-  local network = get_or_find_network(drone_data)
-  if not network then return end
-
-end
-
-local update_drone_sticker
 
 local process_drone_command
 
