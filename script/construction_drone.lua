@@ -915,7 +915,7 @@ local check_proxy = function(entity)
   local items = entity.item_requests
   local force = entity.force
   local surface = entity.surface
-  local capacity = get_drone_capacity(force)
+
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local needed = 0
   local sent = 0
@@ -937,7 +937,7 @@ local check_proxy = function(entity)
         {
           order = drone_orders.request_proxy,
           network = point.logistic_network,
-          pickup = {stack = {name = name, count = math.min(count, capacity)}, chest = chest},
+          pickup = {stack = {name = name, count = count}, chest = chest},
           target = entity
         }
         set_drone_order(drone, drone_data)
@@ -1238,8 +1238,9 @@ local check_tile = function(entity)
   local force = entity.force
   local surface = entity.surface
   local position = entity.position
+  local ghost_name = entity.ghost_name
 
-  local tile_prototype = game.tile_prototypes[entity.ghost_name]
+  local tile_prototype = game.tile_prototypes[ghost_name]
   local point, item = get_point(tile_prototype, entity)
 
   if not point then
@@ -1258,16 +1259,40 @@ local check_tile = function(entity)
 
   local network = point.logistic_network
 
+  local radius = 5
+  local area = {{position.x - radius, position.y - radius}, {position.x + radius, position.y + radius}}
+  local count = 0
+  local extra_targets = {}
+  local extra = surface.find_entities_filtered{type = tile_ghost_type, area = area}
+  for k, ghost in pairs (extra) do
+    if count >= 10 then break end
+    local unit_number = ghost.unit_number
+    local should_check = data.tiles_to_be_checked[unit_number] and ghost.ghost_name == ghost_name
+    if should_check then
+      data.tile_check_index = remove_from_list(data.tiles_to_be_checked, unit_number, data.tile_check_index)
+      extra_targets[unit_number] = ghost
+      count = count + 1
+    end
+  end
+
+  --game.print("size "..table_size(extra_targets))
+  --game.print("count "..count)
+  --print(serpent.block(extra_targets))
+
+  local target = surface.get_closest(chest.position, extra_targets)
+  extra_targets[target.unit_number] = nil
+
   local drone_data =
   {
     order = drone_orders.tile_construct,
-    pickup = {chest = chest, stack = item},
+    pickup = {chest = chest, stack = {name = item.name, count = count}},
     network = network,
-    target = entity,
-    item_used_to_place = item.name
+    target = target,
+    item_used_to_place = item.name,
+    extra_targets = extra_targets
   }
-  set_drone_order(drone, drone_data)
-  return true
+
+  return set_drone_order(drone, drone_data)
 end
 
 local check_tile_lists = function()
@@ -1325,6 +1350,10 @@ local cancel_drone_order = function(drone_data, on_removed)
     elseif drone_data.order == drone_orders.construct then
       for unit_number, entity in pairs (drone_data.extra_targets or {}) do
         data.ghosts_to_be_checked[unit_number] = entity
+      end
+    elseif drone_data.order == drone_orders.tile_construct then
+      for unit_number, entity in pairs (drone_data.extra_targets or {}) do
+        data.tiles_to_be_checked[unit_number] = entity
       end
     elseif drone_data.order == drone_orders.deconstruct then
       local index = position_hash(target.position)
@@ -2067,6 +2096,21 @@ local process_construct_tile_command = function(drone_data)
 
   update_drone_sticker(drone_data)
   local drone = drone_data.entity
+
+  if drone_data.extra_targets then
+    local any = next(drone_data.extra_targets)
+    if any then
+      drone_data.extra_targets = validate(drone_data.extra_targets)
+      local next_target = drone.surface.get_closest(drone.position, drone_data.extra_targets)
+      if next_target then
+        drone_data.target = next_target
+        drone_data.extra_targets[next_target.unit_number] = nil
+      end
+    else
+      drone_data.extra_targets = nil
+    end
+  end
+
   local build_time = random(15, 25)
   drone.surface.create_entity
   {
@@ -2398,6 +2442,7 @@ local on_unit_not_idle = function(event)
   if not unit_number then return end
   local drone_data = data.drone_commands[unit_number]
   if drone_data then
+    data.drone_commands[unit_number] = nil
     cancel_drone_order(drone_data, true)
   end
   remove_idle_drone(unit)
