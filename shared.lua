@@ -207,7 +207,8 @@ data.beams =
   build = "Build beam",
   deconstruction = "Deconstruct Beam",
   pickup = "Pickup Beam",
-  dropoff = "Dropoff Beam"
+  dropoff = "Dropoff Beam",
+  attack = "Attack Beam"
 }
 
 return data

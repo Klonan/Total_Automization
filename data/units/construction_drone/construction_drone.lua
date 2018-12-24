@@ -60,7 +60,7 @@ local unit = {
   icon_size = 64,
   flags = {"placeable-player", "placeable-enemy", "placeable-off-grid"},
   map_color = {r = 0, g = 1, b = 1, a = 1},
-  max_health = 15,
+  max_health = 45,
   order = "b-b-a",
   subgroup="enemies",
   has_belt_immunity = true,
@@ -71,10 +71,10 @@ local unit = {
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
-    type = "projectile",
-    range = 1.5,
-    min_attack_distance = 0.5,
-    cooldown = SU(60),
+    type = "beam",
+    range = 16,
+    min_attack_distance = 12,
+    cooldown = 100,
     cooldown_deviation = 0.2,
     ammo_category = "melee",
     ammo_type =
@@ -86,12 +86,10 @@ local unit = {
         type = "direct",
         action_delivery =
         {
-          type = "instant",
-          target_effects =
-          {
-            type = "damage",
-            damage = { amount = 10, type = util.damage_type(name)}
-          }
+          type = "beam",
+          beam = names.beams.attack,
+          max_length = 40,
+          duration = 45
         }
       }
     },
@@ -582,6 +580,27 @@ pickup_beam.name = beams.pickup
 pickup_beam.localised_name = beams.pickup
 pickup_beam.action = nil
 
+local attack_beam = util.copy(beam_base)
+util.recursive_hack_tint(attack_beam, {r = 1, b = 1})
+attack_beam.name = beams.attack
+attack_beam.localised_name = beams.attack
+attack_beam.damage_interval = 20
+attack_beam.action =
+{
+  type = "direct",
+  action_delivery =
+  {
+    type = "instant",
+    target_effects =
+    {
+      {
+        type = "damage",
+        damage = { amount = 5, type = util.damage_type(name)}
+      }
+    }
+  }
+}
+
 data:extend
 {
   unit,
@@ -603,5 +622,6 @@ data:extend
   proxy_chest,
   build_beam,
   deconstruct_beam,
-  pickup_beam
+  pickup_beam,
+  attack_beam
 }

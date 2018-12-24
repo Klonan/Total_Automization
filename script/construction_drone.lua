@@ -675,10 +675,20 @@ local add_idle_drone = function(drone)
 end
 
 local remove_idle_drone = function(drone)
-  local network = get_nearest_network(drone)
-  if not network then return end
+  local unit_number = drone.unit_number
+  data.no_network_drones[unit_number] = nil
+  local network
+  local drone_data = data.drone_commands[unit_number]
+  if drone_data then
+    network = get_or_find_network(drone_data)
+  else
+    network = get_nearest_network(drone)
+  end
+  if not network then
+    return
+  end
   local idle_drones = get_idle_drones(network)
-  idle_drones[drone.unit_number] = nil
+  idle_drones[unit_number] = nil
 end
 
 local update_drone_sticker

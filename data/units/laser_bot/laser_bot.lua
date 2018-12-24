@@ -52,7 +52,7 @@ local bot =
     do_separation = false
   },
   minable = {result = name, mining_time = 2},
-  
+
   attack_parameters =
   {
     type = "beam",
