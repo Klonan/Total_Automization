@@ -873,31 +873,39 @@ local check_upgrade = function(upgrade_data)
   end
 
   local network = point.logistic_network
-  local neighbour
-  local type = entity.type
-  if type == "underground-belt" then
-    print("I AM UNDERNEITH")
-    neighbour = entity.neighbours
-    if neighbour then
-      item.count = item.count * 2
-      local index = neighbour.unit_number
-      data.upgrade_to_be_checked[index] = nil
-      data.upgrade_to_be_checked_again[index] = nil
+  local count = 0
+
+  local extra_targets = {}
+  local position = entity.position
+  local radius = 5
+  local area = {{position.x - radius, position.y - radius},{position.x + radius, position.y + radius}}
+  for k, nearby in pairs (surface.find_entities_filtered{name = entity.name, area = area}) do
+    if count >= 6 then break end
+    local nearby_index = nearby.unit_number
+    local should_check = data.upgrade_to_be_checked[nearby_index] or data.upgrade_to_be_checked_again[nearby_index]
+    if should_check then
+      extra_targets[nearby_index] = nearby
+      remove_from_list(data.upgrade_to_be_checked, nearby_index)
+      data.upgrade_check_index = remove_from_list(data.upgrade_to_be_checked_again, nearby_index, data.upgrade_check_index)
+      count = count + 1
     end
   end
+
+  local target = surface.get_closest(chest.position, extra_targets)
+  extra_targets[target.unit_number] = nil
 
   local drone_data =
   {
     order = drone_orders.upgrade,
-    pickup = {chest = chest, stack = item},
+    pickup = {chest = chest, stack = {name = item.name, count = count}},
     network = network,
-    target = entity,
-    upgrade_neighbour = neighbour,
+    target = target,
+    extra_targets = extra_targets,
     target_prototype = target_prototype,
     item_used_to_place = item.name
   }
-  set_drone_order(drone, drone_data)
-  return true
+
+  return set_drone_order(drone, drone_data)
 end
 
 local check_upgrade_lists = function()
@@ -1330,6 +1338,43 @@ local get_build_time = function(drone_data)
   return random(10, 20)
 end
 
+local cancel_extra_targets = function(drone_data)
+  if not drone_data.extra_targets then return end
+  local targets = validate(drone_data.extra_targets)
+  local order = drone_data.order
+
+  if order == drone_orders.upgrade then
+    for unit_number, entity in pairs (targets) do
+      data.upgrade_to_be_checked[unit_number] = {entity = entity, upgrade_prototype = drone_data.upgrade_prototype}
+    end
+    return
+  end
+
+  if order == drone_orders.construct then
+    for unit_number, entity in pairs (targets) do
+      data.ghosts_to_be_checked[unit_number] = entity
+    end
+    return
+  end
+
+  if order == drone_orders.tile_construct then
+    for unit_number, entity in pairs (targets) do
+      data.tiles_to_be_checked[unit_number] = entity
+    end
+    return
+  end
+
+  if order == drone_orders.deconstruct then
+    for index, entity in pairs (targets) do
+      local index = position_hash(entity.position)
+      data.deconstructs_to_be_checked[index] = {entity = entity, force = drone_data.entity.force}
+      data.sent_deconstruction[index] = (data.sent_deconstruction[index] or 1) - 1
+    end
+    return
+  end
+
+end
+
 local cancel_drone_order = function(drone_data, on_removed)
   local drone = drone_data.entity
   if not (drone and drone.valid) then return end
@@ -1339,6 +1384,7 @@ local cancel_drone_order = function(drone_data, on_removed)
 
   local target = drone_data.target
   if target and target.valid then
+    local order = drone_data.order
     local target_unit_number = target.unit_number
     if target_unit_number then
       if data.targets[target_unit_number] then
@@ -1348,35 +1394,25 @@ local cancel_drone_order = function(drone_data, on_removed)
         end
       end
     end
-    if target.type == ghost_type then
-      data.ghosts_to_be_checked[target_unit_number] = target
-    end
-    if target.type == tile_ghost_type then
-      data.tiles_to_be_checked[target_unit_number] = target
-    end
-    if drone_data.order == drone_orders.request_proxy then
+
+    if order == drone_orders.request_proxy then
       insert(data.proxies_to_be_checked, target)
-    elseif drone_data.order == drone_orders.repair then
+    elseif order == drone_orders.repair then
       insert(data.repair_to_be_checked, target)
-    elseif drone_data.order == drone_orders.upgrade then
-      insert(data.upgrade_to_be_checked, {entity = target, upgrade_prototype = drone_data.upgrade_prototype})
-    elseif drone_data.order == drone_orders.construct then
-      for unit_number, entity in pairs (drone_data.extra_targets or {}) do
-        data.ghosts_to_be_checked[unit_number] = entity
-      end
-    elseif drone_data.order == drone_orders.tile_construct then
-      for unit_number, entity in pairs (drone_data.extra_targets or {}) do
-        data.tiles_to_be_checked[unit_number] = entity
-      end
-    elseif drone_data.order == drone_orders.deconstruct then
+    elseif order == drone_orders.upgrade then
+      data.upgrade_to_be_checked[target_unit_number] = {entity = target, upgrade_prototype = drone_data.upgrade_prototype}
+    elseif order == drone_orders.construct then
+      data.ghosts_to_be_checked[target_unit_number] = target
+    elseif order == drone_orders.tile_construct then
+      data.tiles_to_be_checked[target_unit_number] = target
+    elseif order == drone_orders.deconstruct then
       local index = position_hash(target.position)
       data.deconstructs_to_be_checked[index] = {entity = target, force = drone.force}
       data.sent_deconstruction[index] = (data.sent_deconstruction[index] or 1) - 1
-      for index, entity in pairs (drone_data.extra_targets or {}) do
-        data.deconstructs_to_be_checked[index] = {entity = entity, force = drone.force}
-      end
     end
   end
+
+  cancel_extra_targets(drone_data)
 
   drone_data.pickup = nil
   drone_data.path = nil
@@ -1764,7 +1800,6 @@ local drone_follow_path = function(drone_data)
     remove(path, 1)
     return process_drone_command(drone_data)
   end
-
   return drone.set_command
   {
     type = defines.command.go_to_location,
@@ -1960,6 +1995,8 @@ local process_upgrade_command = function(drone_data)
   local original_name = target.name
   local entity_type = target.type
   local unit_number = target.unit_number
+  local neighbor = target.type == "underground-belt" and target.neighbours
+
   local upgraded = surface.create_entity
   {
     name = prototype.name,
@@ -1979,7 +2016,6 @@ local process_upgrade_command = function(drone_data)
 
   take_product_stacks(drone_inventory, products)
 
-  local neighbour = drone_data.upgrade_neighbour
   if neighbour and neighbour.valid then
     print("Upgrading neighbor")
     local neighbor_unit_number = neighbour.unit_number
@@ -1997,7 +2033,13 @@ local process_upgrade_command = function(drone_data)
     take_product_stacks(drone_inventory, products)
   end
 
-  drone_data.dropoff = {}
+  local target = get_extra_target(drone_data)
+  if target then
+    drone_data.target = target
+  else
+    drone_data.dropoff = {}
+  end
+
   update_drone_sticker(drone_data)
   local drone = drone_data.entity
   local build_time = get_build_time(drone_data)
@@ -2269,11 +2311,13 @@ local process_follow_command = function(drone_data)
     end
   end
 
+  --todo wander in a random direction...
+  drone.speed = random() * drone.prototype.speed
   return drone_data.entity.set_command
   {
     type = defines.command.wander,
     distraction = defines.distraction.none,
-    ticks_to_wait = check_time
+    ticks_to_wait = check_time,
   }
 end
 
