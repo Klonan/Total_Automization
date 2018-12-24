@@ -22,13 +22,26 @@ drone_prototypes =
   [names.units.construction_drone] =
   {
     interact_range = 10,
-    follow_range = 10
+    follow_range = 20
   },
 }
 
-local delim = "x"
+local abs = math.abs
+--Assumes position will be between -1000000 and 1000000
 local position_hash = function(position)
-  return position.x..delim..position.y
+  local x = position.x
+  local y = position.y
+  if x < 0 then
+    x = -x * 2 - 1
+  else
+    x = x * 2
+  end
+  if y < 0 then
+    y = -y * 2 - 1
+  else
+    y = y * 2
+  end
+  return (x * 1000000) + y
 end
 
 local is_commandable = function(string)
@@ -518,8 +531,8 @@ remote.add_interface("construction_drone",
   set_debug = function(bool)
     data.debug = bool
   end,
-  transfer = function(source, target)
-    transfer_inventory(source, target)
+  dump = function()
+    print(serpent.block(data))
   end
 })
 
@@ -786,9 +799,6 @@ local check_ghost = function(entity)
   --print(serpent.block(extra_targets))
 
   local target = surface.get_closest(chest.position, extra_targets)
-  if not target then
-    error("WAT "..serpent.block(extra_targets))
-  end
   extra_targets[target.unit_number] = nil
   local drone_data =
   {
@@ -1317,6 +1327,24 @@ local check_tile_lists = function()
   data.tile_check_index = check_list(data.tiles_to_be_checked, data.tile_check_index, check_tile, max_checks_per_tick)
 end
 
+local check_no_network_drones = function()
+  local drones = data.no_network_drones
+  local index = data.drone_check_index or next(drones)
+
+  for k = 1, max_checks_per_tick do
+    index = index or next(drones)
+    local drone = drones[index]
+    if drone then
+      drone.surface.create_entity{name = "flying-text", text = "!", position = drone.position}
+      local old_index = index
+      index = next(drones, index)
+      drones[old_index] = nil
+      set_drone_idle(drone)
+    end
+  end
+  data.drone_check_index = index
+end
+
 local on_tick = function(event)
 
   check_ghost_lists()
@@ -1332,6 +1360,8 @@ local on_tick = function(event)
   check_tile_lists()
 
   check_tile_deconstruction_lists()
+
+  check_no_network_drones()
 end
 
 local get_build_time = function(drone_data)
@@ -2276,15 +2306,14 @@ local directions =
   [defines.direction.northwest] = {-1, -1},
 }
 
-local follow_check_interval = 19
 local process_follow_command = function(drone_data)
 
   local target = drone_data.target
-  if not (target and target.valid) then
+  if not (target and target.valid and target.logistic_network) then
     return cancel_drone_order(drone_data)
   end
 
-  local check_time = random(20, 30)
+  local check_time = random(20, 40)
 
   if not move_to_order_target(drone_data, drone_data.target, ranges.follow) then
     return
@@ -2312,7 +2341,7 @@ local process_follow_command = function(drone_data)
   end
 
   --todo wander in a random direction...
-  drone.speed = random() * drone.prototype.speed
+  drone.speed = drone.prototype.speed * ((random() * 0.5) + 0.5)
   return drone_data.entity.set_command
   {
     type = defines.command.wander,
