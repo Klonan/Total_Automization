@@ -1,7 +1,7 @@
 local tools = names.unit_tools
 local path = util.path("data/unit_control/")
 
-local unit_selection_tool = 
+local unit_selection_tool =
 {
   type = "selection-tool",
   name = tools.unit_selection_tool,
@@ -27,7 +27,7 @@ for k, name in pairs (names.deployers) do
   table.insert(deploy_filter, name)
 end
 
-local deployer_selection_tool = 
+local deployer_selection_tool =
 {
   type = "selection-tool",
   name = tools.deployer_selection_tool,
@@ -141,6 +141,23 @@ local unit_force_attack_tool =
   alt_selection_color = {r = 1},
 }
 
+local unit_force_attack_tool =
+{
+  type = "selection-tool",
+  name = tools.unit_follow_tool,
+  localised_name = tools.unit_follow_tool,
+  selection_mode = {"friend", "any-entity"},
+  alt_selection_mode = {"friend", "any-entity"},
+  selection_cursor_box_type = "copy",
+  alt_selection_cursor_box_type = "copy",
+  icon = path.."unit_attack_tool.png",
+  icon_size = 258,
+  stack_size = 1,
+  flags = {"only-in-cursor"},
+  selection_color = {g = 1},
+  alt_selection_color = {g = 1},
+}
+
 data:extend{
   unit_selection_tool,
   deployer_selection_tool,
@@ -149,6 +166,6 @@ data:extend{
   unit_patrol_tool,
   unit_attack_move_tool,
   unit_force_attack_tool,
+  unit_follow_tool,
   unit_attack_tool
 }
-

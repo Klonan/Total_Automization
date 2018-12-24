@@ -121,6 +121,7 @@ data.unit_tools =
   unit_attack_move_tool = "Attack move to position",
   unit_attack_tool = "Attack targets",
   unit_force_attack_tool = "Force attack targets",
+  unit_follow_tool = "Follow target",
   move_indicator = "Move Indicator",
   attack_move_indicator = "Attack Move Indicator",
   unit_selection_sticker = "Unit Selection Sticker",

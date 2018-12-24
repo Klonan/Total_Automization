@@ -20,6 +20,7 @@ local next_command_type =
   scout = 3,
   idle = 4,
   attack = 5,
+  follow = 6
 }
 
 local script_events =
@@ -28,6 +29,10 @@ local script_events =
   on_unit_selected = script.generate_event_name(),
   on_unit_not_idle = script.generate_event_name()
 }
+
+local distance = function(position_1, position_2)
+  return (((position_2.x - position_1.x) * (position_2.x - position_1.x)) + ((position_2.y - position_1.y) * (position_2.y - position_1.y))) ^ 0.5
+end
 
 local set_scout_command = function(unit_data, failure, delay)
   local unit = unit_data.entity
@@ -261,7 +266,7 @@ local add_unit_indicators = function(unit_data)
   unit_data.indicators = indicators
 end
 
-local stop = {type = defines.command.stop, ticks_to_wait = 1}
+local stop = {type = defines.command.stop, }-- ticks_to_wait = 1}
 
 local set_unit_idle = function(unit_data)
   unit_data.idle = true
@@ -318,7 +323,26 @@ local gui_actions =
     player.cursor_stack.set_stack{name = tool_names.unit_force_attack_tool}
     player.cursor_stack.label = "Issue force attack command"
   end,
+  follow_button = function(event)
+    local player = game.players[event.player_index]
+    if not (player and player.valid) then return end
+    player.clean_cursor()
+    player.cursor_stack.set_stack{name = tool_names.unit_follow_tool}
+    player.cursor_stack.label = "Issue follow command"
+  end,
   stop_button = function(event)
+    local group = get_selected_units(event.player_index)
+    if not group then
+      return
+    end
+    for unit_number, unit in pairs (group) do
+      local unit_data = data.units[unit_number]
+      set_unit_not_idle(unit_data)
+      unit.set_command{type = defines.command.stop}
+    end
+    game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+  end,
+  idle_button = function(event)
     local group = get_selected_units(event.player_index)
     if not group then
       return
@@ -385,7 +409,9 @@ local button_map =
   [tool_names.unit_attack_move_tool] = "attack_move_button",
   [tool_names.unit_attack_tool] = "attack_button",
   [tool_names.unit_force_attack_tool] = "force_attack_button",
+  [tool_names.unit_follow_tool] = "follow_button",
   ["Stop"] = "stop_button",
+  ["Idle"] = "idle_button",
   ["Scout"] = "scout_button"
 }
 
@@ -755,6 +781,71 @@ local attack_closest = function(unit_data, entities)
   end
 end
 
+local directions =
+{
+  [defines.direction.north] = {0, -1},
+  [defines.direction.northeast] = {1, -1},
+  [defines.direction.east] = {1, 0},
+  [defines.direction.southeast] = {1, 1},
+  [defines.direction.south] = {0, 1},
+  [defines.direction.southwest] = {-1, 1},
+  [defines.direction.west] = {-1, 0},
+  [defines.direction.northwest] = {-1, -1},
+}
+
+local random = math.random
+local follow_range = 10
+local unit_follow = function(unit_data, next_command)
+  --copy pasta from construction drone
+  local target = next_command.target
+  if not (target and target.valid) then
+    return
+  end
+
+  local unit = unit_data.entity
+
+  if distance(target.position, unit.position) > follow_range then
+    return
+    unit.set_command
+    {
+      type = defines.command.go_to_location,
+      destination_entity = target,
+      radius = follow_range
+    }
+  end
+
+  local check_time = random(20, 40)
+
+  if target.type == "player" then
+    local player = target.player
+    if player then
+      local state = player.walking_state
+      if state.walking then
+        local offset = directions[state.direction]
+        local target_speed = target.character_running_speed
+        local new_position = {unit.position.x + (offset[1] * check_time * target_speed), unit.position.y + (offset[2] * check_time * target_speed)}
+        unit.speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
+        return unit.set_command
+        {
+          type = defines.command.go_to_location,
+          radius = 1,
+          distraction = defines.distraction.by_enemy,
+          destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1)
+        }
+      end
+    end
+  end
+
+  --todo wander in a random direction...
+  unit.speed = unit.prototype.speed * ((random() * 0.5) + 0.5)
+  return unit.set_command
+  {
+    type = defines.command.wander,
+    distraction = defines.distraction.none,
+    ticks_to_wait = check_time,
+  }
+end
+
 local make_attack_command = function(group, entities, append)
   local entities = entities
   if #entities == 0 then return end
@@ -782,6 +873,32 @@ local make_attack_command = function(group, entities, append)
   end
 end
 
+local make_follow_command = function(group, target, append)
+  if not (target and target.valid) then return end
+  local data = data.units
+  for unit_number, unit in pairs (group) do
+    local commandable = (unit.type == "unit")
+    local next_command =
+    {
+      command_type = next_command_type.follow,
+      target = target
+    }
+    local unit_data = data[unit_number]
+    if append then
+      if unit_data.idle and commandable then
+        unit_follow(unit_data, next_command)
+      end
+      table.insert(unit_data.command_queue, next_command)
+    else
+      if commandable then
+        unit_follow(unit_data, next_command)
+      end
+      unit_data.command_queue = {next_command}
+    end
+    set_unit_not_idle(unit_data)
+  end
+end
+
 local attack_units = function(event)
   local group = get_selected_units(event.player_index)
   if not group then
@@ -790,6 +907,19 @@ local attack_units = function(event)
   end
   local append = event.name == defines.events.on_player_alt_selected_area
   make_attack_command(group, event.entities, append)
+  game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+end
+
+local follow_entity = function(event)
+  local group = get_selected_units(event.player_index)
+  if not group then
+    data.selected_units[event.player_index] = nil
+    return
+  end
+  local target = event.entities[1]
+  if not target then return end
+  local append = event.name == defines.events.on_player_alt_selected_area
+  make_follow_command(group, target, append)
   game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
 end
 
@@ -802,6 +932,7 @@ local selected_area_actions =
   [tool_names.unit_attack_move_tool] = attack_move_units,
   [tool_names.unit_attack_tool] = attack_units,
   [tool_names.unit_force_attack_tool] = attack_units,
+  [tool_names.unit_follow_tool] = follow_entity,
 }
 
 local alt_selected_area_actions =
@@ -813,6 +944,7 @@ local alt_selected_area_actions =
   [tool_names.unit_attack_move_tool] = attack_move_units,
   [tool_names.unit_move_tool] = move_units,
   [tool_names.unit_patrol_tool] = patrol_units,
+  [tool_names.unit_follow_tool] = follow_unit,
 }
 
 local on_player_selected_area = function(event)
@@ -925,6 +1057,10 @@ process_command_queue = function(unit_data, result)
 
   if type == next_command_type.scout then
     return set_scout_command(unit_data, result == defines.behavior_result.fail)
+  end
+
+  if type == next_command_type.follow then
+    return unit_follow(unit_data, next_command)
   end
 
 end
