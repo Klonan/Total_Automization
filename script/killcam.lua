@@ -12,12 +12,21 @@ local make_killcam = function(player, cause)
   else
     name = game.entity_prototypes[name].localised_name
   end
-  local frame = gui.add{type = "frame", caption = {"", "You were killed by ", name}}
+  local outer = gui.add{type = "frame", style = "image_frame"}
+  outer.style.width = player.display_resolution.width
+  outer.style.height = player.display_resolution.height
+  outer.style.align = "center"
+  outer.style.vertical_align = "center"
+
+
+  local frame = outer.add{type = "frame", caption = {"", "You were killed by ", name}}
+  frame.style.horizontally_stretchable = false
+  frame.style.vertically_stretchable = false
   local camera = frame.add{type = "camera", position = cause.position, zoom = 1}
   camera.style.width = player.display_resolution.width * 0.8
   camera.style.height = player.display_resolution.height * 0.8
   local cams = data.killcams
-  cams[player.index] = {gui = camera, cause = cause, frame = frame}
+  cams[player.index] = {gui = camera, cause = cause, frame = outer}
 end
 
 local on_player_died = function(event)
@@ -40,7 +49,7 @@ local on_tick = function(event)
   end
 end
 
-local events = 
+local events =
 {
   [defines.events.on_player_died] = on_player_died,
   [defines.events.on_tick] = on_tick

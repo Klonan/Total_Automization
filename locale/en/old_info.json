@@ -1,34 +1,34 @@
 {
   "language-name": "English",
   "font": {
-    "default": 
+    "default":
     [
-      "__Total_Automization__/fonts/TF2secondary.ttf", 
-      "__core__/fonts/TitilliumWeb-Regular.ttf", 
-      "__core__/fonts/DejaVuSans.ttf", 
-      "__core__/locale/zh-CN/fonts/default-font.ttf", 
-      "__core__/locale/ja/fonts/regular.ttf", 
+      "__Total_Automization__/fonts/TF2secondary.ttf",
+      "__core__/fonts/TitilliumWeb-Regular.ttf",
+      "__core__/fonts/DejaVuSans.ttf",
+      "__core__/locale/zh-CN/fonts/default-font.ttf",
+      "__core__/locale/ja/fonts/regular.ttf",
       "__core__/locale/ko/malgun.ttf"
     ],
-    "default-bold": 
+    "default-bold":
     [
-      "__Total_Automization__/fonts/TF2build.ttf", 
+      "__Total_Automization__/fonts/TF2build.ttf",
       "__core__/fonts/TitilliumWeb-Bold.ttf",
       "__core__/fonts/DejaVuSans-Bold.ttf",
       "__core__/locale/zh-CN/fonts/default-font.ttf",
       "__core__/locale/ja/fonts/bold.ttf",
       "__core__/locale/ko/malgunbd.ttf"
     ],
-    "default-mono": 
+    "default-mono":
     [
       "__core__/fonts/DejaVuSansMono.ttf",
       "__core__/locale/zh-CN/fonts/default-font.ttf",
       "__core__/locale/ja/fonts/regular.ttf",
       "__core__/locale/ko/malgun.ttf"
     ],
-    "default-semibold": 
+    "default-semibold":
     [
-      "__Total_Automization__/fonts/TF2.ttf", 
+      "__Total_Automization__/fonts/TF2.ttf",
       "__core__/fonts/TitilliumWeb-SemiBold.ttf",
       "__core__/fonts/DejaVuSans.ttf",
       "__core__/locale/zh-CN/fonts/default-font.ttf",
