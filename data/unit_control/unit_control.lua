@@ -141,7 +141,7 @@ local unit_force_attack_tool =
   alt_selection_color = {r = 1},
 }
 
-local unit_force_attack_tool =
+local unit_follow_tool =
 {
   type = "selection-tool",
   name = tools.unit_follow_tool,

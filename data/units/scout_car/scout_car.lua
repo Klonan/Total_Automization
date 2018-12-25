@@ -56,7 +56,7 @@ local unit =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-1, -1}, {1, 1}},
+  collision_box = {{-0.7, -0.7}, {0.7, 0.7}},
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
   collision_mask = {"not-colliding-with-itself", "player-layer"},
   max_pursue_distance = 64,
@@ -81,7 +81,7 @@ local unit =
     projectile_creation_distance = 1.5,
     sound =
     {
-      variations = 
+      variations =
       {
         {
           filename = "__base__/sound/fight/heavy-gunshot-1.ogg",
@@ -180,7 +180,7 @@ projectile.name = name.." Projectile"
 projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
 projectile.force_condition = "not-same"
 projectile.height = 1
-projectile.action = 
+projectile.action =
 {
   type = "direct",
   action_delivery =
