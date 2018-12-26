@@ -13,7 +13,7 @@ machine.ingredient_count = 100
 machine.module_specification = nil
 machine.animation = machine.idle_animation
 machine.idle_animation = nil
-machine.minable = {result = name, mining_time = 5}
+machine.minable = {result = name, mining_time = 1}
 machine.flags = {"placeable-neutral", "player-creation"}
 machine.fluid_boxes =
 {
@@ -30,12 +30,12 @@ machine.fluid_boxes =
 machine.scale_entity_info_icon = true
 machine.always_draw_idle_animation = false
 machine.working_visualisations = nil
-machine.minable.result = name
+machine.energy_source = {type = "void"}
 
 local item = {
   type = "item",
   name = name,
-  icon = machine.icon,  
+  icon = machine.icon,
   icon_size = machine.icon_size,
   flags = {},
   subgroup = "circuit-units",
@@ -49,7 +49,7 @@ local category = {
   name = name
 }
 
-local subgroup = 
+local subgroup =
 {
   type = "item-subgroup",
   name = "circuit-units",
@@ -93,10 +93,10 @@ local technology_1 = {
   },
   unit =
   {
-    count = 100,
+    count = 250,
     ingredients = {
       {"science-pack-1", 1},
-      {"science-pack-2", 1},
+      --{"science-pack-2", 1},
     },
     time = 30
   },
@@ -123,11 +123,11 @@ local technology_2 = {
   },
   unit =
   {
-    count = 200,
+    count = 250,
     ingredients = {
       {"science-pack-1", 1},
       {"science-pack-2", 1},
-      {"military-science-pack", 1},
+      --{"military-science-pack", 1},
     },
     time = 30
   },
@@ -155,8 +155,8 @@ local technology_3 = {
     ingredients = {
       {"science-pack-1", 1},
       {"science-pack-2", 1},
-      {"science-pack-3", 1},
       {"military-science-pack", 1},
+      --{"science-pack-3", 1},
     },
     time = 30
   },

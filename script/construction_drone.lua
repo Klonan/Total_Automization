@@ -1512,6 +1512,10 @@ local move_to_logistic_target = function(drone_data, target)
     return drone_wait(drone_data, 300)
   end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
+  if cell.logistic_network ~= network then
+    print("Not in same network, goodbye")
+    return cancel_drone_order(drone_data)
+  end
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
     return drone.set_command
@@ -1525,6 +1529,7 @@ local move_to_logistic_target = function(drone_data, target)
   end
 
   drone_data.path = get_drone_path(drone, network, target)
+
   return process_drone_command(drone_data)
 end
 
@@ -1537,6 +1542,14 @@ local move_to_order_target = function(drone_data, target, range)
     return drone_wait(drone_data, 300)
   end
   local cell = target.logistic_cell or network.find_cell_closest_to(target.position)
+  if not cell.is_in_construction_range(target.position) then
+    print("Not in construction range, goodbye")
+    return cancel_drone_order(drone_data)
+  end
+  if cell.logistic_network ~= network then
+    print("Not in same network, goodbye")
+    return cancel_drone_order(drone_data)
+  end
   local drone = drone_data.entity
   if cell.is_in_construction_range(drone.position) then
     return drone.set_command
@@ -1840,6 +1853,7 @@ local drone_follow_path = function(drone_data)
     remove(path, 1)
     return process_drone_command(drone_data)
   end
+
   return drone.set_command
   {
     type = defines.command.go_to_location,

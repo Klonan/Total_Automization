@@ -131,7 +131,7 @@ local unit = {
   {
     destroy_when_commands_fail = false,
     allow_try_return_to_spawner = false,
-    do_separation = false
+    do_separation = true
   }
 }
 
@@ -157,7 +157,9 @@ local recipe = {
   enabled = false,
   ingredients =
   {
-    {"iron-plate", 1},
+    {"iron-plate", 5},
+    {"iron-gear-wheel", 5},
+    {"electronic-circuit", 10},
   },
   energy_required = 1,
   result = name
@@ -418,7 +420,9 @@ local equipment_recipe = {
   enabled = false,
   ingredients =
   {
-    {"iron-plate", 1},
+    {"iron-plate", 10},
+    {"iron-gear-wheel", 15},
+    {"electronic-circuit", 25},
   },
   energy_required = 1,
   result = equipment_name
@@ -463,11 +467,11 @@ local technology = {
     count = 200,
     ingredients = {
       {"science-pack-1", 1},
-      {"science-pack-2", 1},
+      --{"science-pack-2", 1},
     },
     time = 30
   },
-  prerequisites = {"automation"},
+  prerequisites = {"electronics"},
   order = "y-a"
 }
 

@@ -11,7 +11,7 @@ machine.crafting_categories = {name}
 machine.crafting_speed = SD(1)
 machine.ingredient_count = nil
 machine.module_specification = nil
-machine.minable = {result = name, mining_time = 2}
+machine.minable = {result = name, mining_time = 1}
 machine.flags = {"placeable-neutral", "player-creation"}
 machine.fluid_boxes =
 {
@@ -26,12 +26,12 @@ machine.fluid_boxes =
   off_when_no_fluid_recipe = false
 }
 machine.scale_entity_info_icon = true
-machine.minable.result = name
+machine.energy_source = {type = "void"}
 
 local item = {
   type = "item",
   name = name,
-  icon = machine.icon,  
+  icon = machine.icon,
   icon_size = machine.icon_size,
   flags = {},
   subgroup = "iron-units",
@@ -45,7 +45,7 @@ local category = {
   name = name
 }
 
-local subgroup = 
+local subgroup =
 {
   type = "item-subgroup",
   name = "iron-units",
@@ -89,10 +89,10 @@ local technology_1 = {
   },
   unit =
   {
-    count = 100,
+    count = 250,
     ingredients = {
       {"science-pack-1", 1},
-      {"science-pack-2", 1},
+      --{"science-pack-2", 1},
     },
     time = 30
   },
@@ -119,11 +119,11 @@ local technology_2 = {
   },
   unit =
   {
-    count = 200,
+    count = 250,
     ingredients = {
       {"science-pack-1", 1},
       {"science-pack-2", 1},
-      {"military-science-pack", 1},
+      --{"military-science-pack", 1},
     },
     time = 30
   },
@@ -151,8 +151,8 @@ local technology_3 = {
     ingredients = {
       {"science-pack-1", 1},
       {"science-pack-2", 1},
-      {"science-pack-3", 1},
       {"military-science-pack", 1},
+      --{"science-pack-3", 1},
     },
     time = 30
   },
