@@ -805,13 +805,14 @@ local unit_follow = function(unit_data, next_command)
   local unit = unit_data.entity
 
   if distance(target.position, unit.position) > follow_range then
-    return
+    unit.speed = unit.prototype.speed
     unit.set_command
     {
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = follow_range
     }
+    return
   end
 
   local check_time = random(20, 40)
@@ -833,6 +834,24 @@ local unit_follow = function(unit_data, next_command)
           destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1)
         }
       end
+    end
+  end
+
+  if target.type == "unit" then
+    if target.moving then
+      --In factorio, north is 0 rad... so rotate back to east being 0 rad like math do
+      local orientation = (target.orientation - 0.25) * 2 * math.pi
+      local offset = {math.cos(orientation), math.sin(orientation)}
+      local target_speed = target.speed
+      local new_position = {unit.position.x + (offset[1] * check_time * target_speed), unit.position.y + (offset[2] * check_time * target_speed)}
+      unit.speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
+      return unit.set_command
+      {
+        type = defines.command.go_to_location,
+        radius = 1,
+        distraction = defines.distraction.by_enemy,
+        destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1)
+      }
     end
   end
 
