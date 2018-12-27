@@ -91,8 +91,8 @@ local technology_1 = {
   {
     count = 250,
     ingredients = {
-      {"science-pack-1", 1},
-      --{"science-pack-2", 1},
+      {"automation-science-pack", 1},
+      --{"logistic-science-pack", 1},
     },
     time = 30
   },
@@ -121,8 +121,8 @@ local technology_2 = {
   {
     count = 250,
     ingredients = {
-      {"science-pack-1", 1},
-      {"science-pack-2", 1},
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
       --{"military-science-pack", 1},
     },
     time = 30
@@ -149,10 +149,10 @@ local technology_3 = {
   {
     count = 500,
     ingredients = {
-      {"science-pack-1", 1},
-      {"science-pack-2", 1},
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
       {"military-science-pack", 1},
-      --{"science-pack-3", 1},
+      --{"chemical-science-pack", 1},
     },
     time = 30
   },
