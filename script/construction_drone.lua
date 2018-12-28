@@ -2147,9 +2147,9 @@ local process_request_proxy_command = function(drone_data)
   print("We are in range, and we have what he wants")
 
   local stack_name = stack.name
-
+  local position = target.position
   local inserted = proxy_target.insert(stack)
-  drone_inventory.remove_item({name = stack_name, count = inserted})
+  drone_inventory.remove({name = stack_name, count = inserted})
   requests[stack_name] = requests[stack_name] - inserted
   if requests[stack_name] <= 0 then
     requests[stack_name] = nil
@@ -2157,11 +2157,22 @@ local process_request_proxy_command = function(drone_data)
 
   if not next(requests) then
     target.destroy()
-    return set_drone_idle(drone)
+  else
+    target.item_requests = requests
   end
 
-  target.item_requests = requests
-  return process_drone_command(drone_data)
+  local build_time = get_build_time(drone_data)
+  drone.surface.create_entity
+  {
+    name = beams.pickup,
+    source = drone,
+    target_position = position,
+    position = drone.position,
+    force = drone.force,
+    duration = build_time
+  }
+
+  return drone_wait(drone_data, build_time)
 end
 
 local process_construct_tile_command = function(drone_data)
