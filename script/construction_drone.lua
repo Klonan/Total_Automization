@@ -97,7 +97,8 @@ local data =
   proxy_chests = {},
   deconstruction_map = {},
   no_network_drones = {},
-  networks = {}
+  networks = {},
+  allow_in_active_networks = true
 }
 
 local get_drone_radius = function()
@@ -591,7 +592,7 @@ local get_point = function(prototype, entity)
   local items = prototype.items_to_place_this
   for k, network in pairs (networks) do
     --If there are the normal bots in the network, let them handle it!
-    if network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or network.available_construction_robots == 0 then
       local select = network.select_pickup_point
       for k, item in pairs(items) do
         point = select({name = item.name, position = position})
@@ -952,7 +953,7 @@ local check_proxy = function(entity)
     needed = needed + 1
     local point
     for k, network in pairs (networks) do
-      if network.available_construction_robots == 0 then
+      if data.allow_in_active_networks or network.available_construction_robots == 0 then
         point = network.select_pickup_point({name = name, position = position})
         if point then break end
       end
@@ -992,7 +993,7 @@ local check_cliff_deconstruction = function(deconstruct)
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local any
   for k, network in pairs (networks) do
-    if network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or network.available_construction_robots == 0 then
       any = true
       break
     end
@@ -1012,7 +1013,7 @@ local check_cliff_deconstruction = function(deconstruct)
   local point
   for k, network in pairs (networks) do
     --If there are the normal bots in the network, let them handle it!
-    if network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or network.available_construction_robots == 0 then
       point = network.select_pickup_point({name = cliff_destroying_item, position = position})
       if point then
         break
@@ -1066,7 +1067,7 @@ local check_deconstruction = function(deconstruct)
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
   local network
   for k, other_network in pairs (networks) do
-    if other_network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or other_network.available_construction_robots == 0 then
       network = other_network
       break
     end
@@ -1158,7 +1159,7 @@ local check_tile_deconstruction = function(entity)
   local networks = surface.find_logistic_networks_by_construction_area(position, force)
   local network
   for k, other_network in pairs (networks) do
-    if other_network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or other_network.available_construction_robots == 0 then
       network = other_network
       break
     end
@@ -1227,7 +1228,7 @@ local check_repair = function(entity)
   local repair_item
   local pickup_target
   for k, network in pairs (networks) do
-    if network.available_construction_robots == 0 then
+    if data.allow_in_active_networks or network.available_construction_robots == 0 then
       for name, item in pairs (repair_items) do
         if network.get_item_count(name) > 0 then
           pickup_target = network.select_pickup_point({name = name})
@@ -1845,11 +1846,13 @@ local drone_follow_path = function(drone_data)
   local current_cell = path[1]
 
   if not (current_cell and current_cell.valid) then
+    print("Current cell invalid Setting path nil")
     drone_data.path = nil
     return process_drone_command(drone_data)
   end
 
   if current_cell.is_in_construction_range(drone.position) then
+    print("Current cell in range, incrementing path")
     remove(path, 1)
     return process_drone_command(drone_data)
   end
@@ -2503,7 +2506,8 @@ local on_entity_removed = function(event)
 end
 
 local on_marked_for_deconstruction = function(event)
-  local force = event.force or game.players[event.player_index].force
+
+  local force = event.force or (event.player_index and game.players[event.player_index].force)
   if not force then return end
   local entity = event.entity
   if not (entity and entity.valid) then return end

@@ -1,4 +1,4 @@
-if not remote.interfaces["freeplay"] then return end
+if not remote.interfaces["freeplay"] then return {} end
 
 local created_items = function()
   return

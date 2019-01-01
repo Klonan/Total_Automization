@@ -20,9 +20,9 @@ local libs = {
   command_center = require("script/command_center"),
   killcam = require("script/killcam"),
   pvp_interface = require("script/pvp_interface"),
+  auto_request = require("script/auto_request"),
   construction_done = require("script/construction_drone"),
   freeplay_interface = require("script/freeplay_interface"),
-  auto_request = require("script/auto_request")
   --logistic_beacon = require("script/logistic_beacon"),
   --teleporters = require "script/teleporters",
   --setup = require("script/setup"),
@@ -41,8 +41,11 @@ remote.add_interface("debug", {dump = function() log(serpent.block(global)) end}
 libs.debug.libs = libs
 
 local on_event = function(event)
+  --local tick = game.tick
+  --log(tick.. " | Control on_event triggered")
   for name, lib in pairs (libs) do
     if lib.on_event then
+      --log(tick.. " | Running on_Event for lib "..name)
       lib.on_event(event)
     end
   end
@@ -51,7 +54,7 @@ end
 local register_all_events = function()
   --hack(?)
   local last_event = script.generate_event_name()
-  log("LAST: "..last_event)
+  --log("LAST: "..last_event)
   local all_events = {}
   for k = 0, last_event do
     all_events[k] = k

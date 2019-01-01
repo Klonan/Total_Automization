@@ -66,8 +66,10 @@ local unit = {
   has_belt_immunity = true,
   can_open_gates = true,
   path_resolution_modifier = 1,
-  affected_by_tiles = true, --not merged
-  collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
+  affected_by_tiles = true,
+  --collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
+
+  collision_box = {{-0, -0}, {0.1, 0.1}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {

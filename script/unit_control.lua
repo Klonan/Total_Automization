@@ -8,7 +8,8 @@ local data =
   open_frames = {},
   units = {},
   indicators = {},
-  unit_unselectable = {}
+  unit_unselectable = {},
+  debug = false
 }
 
 local checked_tables = {}
@@ -30,6 +31,14 @@ local script_events =
   on_unit_not_idle = script.generate_event_name()
 }
 
+local print = function(string)
+  if not data.debug then return end
+  local tick = game.tick
+  log(tick.." | "..string)
+  game.print(tick.." | "..string)
+end
+
+
 local distance = function(position_1, position_2)
   return (((position_2.x - position_1.x) * (position_2.x - position_1.x)) + ((position_2.y - position_1.y) * (position_2.y - position_1.y))) ^ 0.5
 end
@@ -39,6 +48,7 @@ local set_scout_command = function(unit_data, failure, delay)
   if unit.type ~= "unit" then return end
   unit.speed = unit.prototype.speed
   if delay and delay > 0 then
+    print("Unit was delayed for some ticks: "..delay)
     unit.set_command
     {
       type = defines.command.stop,
@@ -113,6 +123,11 @@ local set_scout_command = function(unit_data, failure, delay)
       tile_destination = find_non_colliding_position(name, force.get_spawn_position(surface), 0, 4)
     end
   until tile_destination
+  print("Found destination data")
+  print(serpent.block({
+    tile_destination = tile_destination,
+    current_position = {unit.position.x, unit.position.y}
+  }))
   unit.set_command
   {
     type = defines.command.go_to_location,
@@ -1013,6 +1028,15 @@ process_command_queue = function(unit_data, result)
     game.print("Entity is nil??")
     return
   end
+  local failed = (result == defines.behavior_result.fail)
+  print("Processing command queue "..entity.unit_number.." Failure = "..tostring(result == defines.behavior_result.fail))
+  if failed then
+    unit_data.fail_count = (unit_data.fail_count or 0) + 1
+    if unit_data.fail_count > 10 then
+      set_unit_idle(unit_data)
+      unit_data.fail_count = nil
+    end
+  end
   local command_queue = unit_data.command_queue
   local next_command = command_queue[1]
   unit_data.destination = nil
@@ -1032,6 +1056,7 @@ process_command_queue = function(unit_data, result)
   local type = next_command.command_type
 
   if type == next_command_type.move then
+    print("Move")
     entity.set_command(next_command)
     unit_data.destination = next_command.destination
     table.remove(command_queue, 1)
@@ -1039,6 +1064,7 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.patrol then
+    print("Patrol")
     if next_command.destination_index == "initial" then
       next_command.destinations[1] = entity.position
       next_command.destination_index = 2
@@ -1060,6 +1086,7 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.attack then
+    print("Attack")
     --game.print"Issuing attack command"
     if not attack_closest(unit_data, next_command.targets) then
       table.remove(command_queue, 1)
@@ -1070,21 +1097,25 @@ process_command_queue = function(unit_data, result)
   end
 
   if type == next_command_type.idle then
+    print("Idle")
     unit_data.command_queue = {}
     return set_unit_idle(unit_data)
   end
 
   if type == next_command_type.scout then
+    print("Scout")
     return set_scout_command(unit_data, result == defines.behavior_result.fail)
   end
 
   if type == next_command_type.follow then
+    print("Follow")
     return unit_follow(unit_data, next_command)
   end
 
 end
 
 local on_ai_command_completed = function(event)
+  print("Ai command complete "..event.unit_number)
   local unit_data = data.units[event.unit_number]
   if unit_data then
     process_command_queue(unit_data, event.result)
