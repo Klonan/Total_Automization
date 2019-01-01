@@ -2142,6 +2142,11 @@ local process_request_proxy_command = function(drone_data)
   local stack_name = stack.name
   local position = target.position
   local inserted = proxy_target.insert(stack)
+  if inserted == 0 then
+    print("Can't insert anything anyway, kill the proxy")
+    target.destroy()
+    return cancel_drone_order(drone_data)
+  end
   drone_inventory.remove({name = stack_name, count = inserted})
   requests[stack_name] = requests[stack_name] - inserted
   if requests[stack_name] <= 0 then
