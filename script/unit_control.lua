@@ -21,7 +21,8 @@ local next_command_type =
   scout = 3,
   idle = 4,
   attack = 5,
-  follow = 6
+  follow = 6,
+  hold_position = 7
 }
 
 local script_events =
@@ -281,16 +282,18 @@ local add_unit_indicators = function(unit_data)
   unit_data.indicators = indicators
 end
 
-local stop = {type = defines.command.stop, }-- ticks_to_wait = 1}
+local stop = {type = defines.command.stop}
 
-local set_unit_idle = function(unit_data)
+local set_unit_idle = function(unit_data, send_event)
   unit_data.idle = true
   unit_data.command_queue = {}
   unit_data.destination = nil
   unit_data.target = nil
   local unit = unit_data.entity
   unit.set_command(stop)
-  script.raise_event(script_events.on_unit_idle, {entity = unit})
+  if send_event then
+    script.raise_event(script_events.on_unit_idle, {entity = unit})
+  end
   return add_unit_indicators(unit_data)
 end
 
@@ -345,15 +348,21 @@ local gui_actions =
     player.cursor_stack.set_stack{name = tool_names.unit_follow_tool}
     player.cursor_stack.label = "Issue follow command"
   end,
-  stop_button = function(event)
+  hold_position_button = function(event)
     local group = get_selected_units(event.player_index)
     if not group then
       return
     end
+    local append = event.shift
     for unit_number, unit in pairs (group) do
       local unit_data = data.units[unit_number]
-      set_unit_not_idle(unit_data)
-      unit.set_command{type = defines.command.stop}
+      if append and not unit_data.idle then
+        table.insert(unit_data.command_queue, {command_type = next_command_type.hold_position})
+      else
+        set_unit_not_idle(unit_data)
+        unit.speed = 0
+        unit.set_command{type = defines.command.stop}
+      end
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
@@ -362,9 +371,14 @@ local gui_actions =
     if not group then
       return
     end
+    local append = event.shift
     for unit_number, unit in pairs (group) do
       local unit_data = data.units[unit_number]
-      set_unit_idle(unit_data)
+      if append and not unit_data.idle then
+        table.insert(unit_data.command_queue, {command_type = next_command_type.idle})
+      else
+        set_unit_idle(unit_data, true)
+      end
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
   end,
@@ -425,7 +439,7 @@ local button_map =
   [tool_names.unit_attack_tool] = "attack_button",
   [tool_names.unit_force_attack_tool] = "force_attack_button",
   [tool_names.unit_follow_tool] = "follow_button",
-  ["Stop"] = "stop_button",
+  ["Hold Position"] = "hold_position_button",
   ["Idle"] = "idle_button",
   ["Scout"] = "scout_button"
 }
@@ -1021,6 +1035,7 @@ local on_entity_removed = function(event)
 end
 
 local idle_command = {type = defines.command.stop, radius = 1}
+local hold_position_command = {type = defines.command.stop}
 
 process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
@@ -1033,7 +1048,7 @@ process_command_queue = function(unit_data, result)
   if failed then
     unit_data.fail_count = (unit_data.fail_count or 0) + 1
     if unit_data.fail_count > 10 then
-      set_unit_idle(unit_data)
+      set_unit_idle(unit_data, true)
       unit_data.fail_count = nil
     end
   end
@@ -1099,7 +1114,7 @@ process_command_queue = function(unit_data, result)
   if type == next_command_type.idle then
     print("Idle")
     unit_data.command_queue = {}
-    return set_unit_idle(unit_data)
+    return set_unit_idle(unit_data, true)
   end
 
   if type == next_command_type.scout then
@@ -1110,6 +1125,12 @@ process_command_queue = function(unit_data, result)
   if type == next_command_type.follow then
     print("Follow")
     return unit_follow(unit_data, next_command)
+  end
+
+  if type == next_command_type.hold_position then
+    print("Hold position")
+    entity.speed = 0
+    return entity.set_command(hold_position_command)
   end
 
 end

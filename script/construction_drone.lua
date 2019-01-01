@@ -9,16 +9,6 @@ local proxy_name = names.entities.construction_drone_proxy_chest
 
 drone_prototypes =
 {
-  [names.units.smg_guy] =
-  {
-    interact_range = 8,
-    follow_range = 10
-  },
-  [names.units.blaster_bot] =
-  {
-    interact_range = 5,
-    follow_range = 10
-  },
   [names.units.construction_drone] =
   {
     interact_range = 10,
@@ -2545,7 +2535,7 @@ local on_marked_for_upgrade = function(event)
 end
 
 local on_unit_idle = function(event)
-  game.print("UNIT IDLE")
+  --game.print("UNIT IDLE")
   local unit = event.entity
   if not (unit and unit.valid) then return end
   if not is_commandable(unit.name) then return end
@@ -2555,7 +2545,7 @@ local on_unit_idle = function(event)
 end
 
 local on_unit_not_idle = function(event)
-  game.print("UNIT NOT IDLE")
+  --game.print("UNIT NOT IDLE")
   local unit = event.entity
   if not (unit and unit.valid) then return end
   if not is_commandable(unit.name) then return end
