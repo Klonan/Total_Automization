@@ -68,8 +68,9 @@ local unit = {
   path_resolution_modifier = 1,
   affected_by_tiles = true,
   --collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
+  --collision_box = {{-0, -0}, {0.1, 0.1}},
+  collision_box = {{-0.35, -0.35}, {0.35, 0.35}},
 
-  collision_box = {{-0, -0}, {0.1, 0.1}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
