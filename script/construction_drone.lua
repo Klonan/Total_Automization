@@ -697,6 +697,8 @@ local update_drone_sticker
 local process_drone_command
 
 local set_drone_order = function(drone, drone_data)
+  drone.ai_settings.path_resolution_modifier = -2
+  drone.ai_settings.do_separation = false
   remove_idle_drone(drone)
   data.drone_commands[drone.unit_number] = drone_data
   drone_data.entity = drone
@@ -763,7 +765,7 @@ local check_ghost = function(entity)
   local point, item = get_point(prototype, entity)
 
   if not point then
-    print("no eligible point with item?")
+    --print("no eligible point with item?")
     return
   end
 
@@ -1847,6 +1849,7 @@ local drone_follow_path = function(drone_data)
     return process_drone_command(drone_data)
   end
 
+  print("Moving to current cell owner")
   return drone.set_command
   {
     type = defines.command.go_to_location,
@@ -1867,11 +1870,13 @@ local process_failed_command = function(drone_data)
 
   --Sometimes they just fail for unrelated reasons, lets give them a few chances
   drone_data.fail_count = (drone_data.fail_count or 0) + 1
+  drone.ai_settings.path_resolution_modifier = math.min(3, drone.ai_settings.path_resolution_modifier + 1)
+  game.print("Set resolution: "..drone.ai_settings.path_resolution_modifier)
   if drone_data.fail_count < 10 then
-    return drone_wait(drone_data, 30)
+    return drone_wait(drone_data, 10)
   end
 
-  --We can't get to it or something, tell the player to come sort it out...
+  --We REALLY can't get to it or something, tell the player to come sort it out...
   if true then
     drone_data.fail_count = nil
     return cancel_drone_order(drone_data)

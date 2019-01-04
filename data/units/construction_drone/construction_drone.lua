@@ -68,8 +68,9 @@ local unit = {
   path_resolution_modifier = 1,
   affected_by_tiles = true,
   --collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
+  collision_box = {{-0.12, -0.12 }, {0.12, 0.12}},
 
-  collision_box = {{-0, -0}, {0.1, 0.1}},
+  --collision_box = {{-0, -0}, {0.1, 0.1}},
   selection_box = {{-0.6 * scale, -1.0 * scale}, {0.6 * scale, 0.4 * scale}},
   attack_parameters =
   {
@@ -133,7 +134,8 @@ local unit = {
   {
     destroy_when_commands_fail = false,
     allow_try_return_to_spawner = false,
-    do_separation = true
+    do_separation = true,
+    path_resolution_modifier = -2
   }
 }
 
