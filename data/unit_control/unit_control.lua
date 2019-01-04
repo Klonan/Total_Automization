@@ -60,7 +60,7 @@ local unit_move_tool =
   icon = path.."unit_move_tool.png",
   icon_size = 258,
   stack_size = 1,
-  flags = {"only-in-cursor"},
+  flags = {}, --{"only-in-cursor"},
   selection_color = {a = 0},
   alt_selection_color = {a = 0},
 }

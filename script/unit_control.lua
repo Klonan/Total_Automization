@@ -162,9 +162,7 @@ local make_unit_gui
 local clear_indicators = function(unit_data)
   if not unit_data.indicators then return end
   for k, indicator in pairs (unit_data.indicators) do
-    if indicator and indicator.valid then
-      indicator.destroy()
-    end
+    rendering.destroy(indicator)
   end
   unit_data.indicators = nil
 end
@@ -216,51 +214,55 @@ local add_unit_indicators = function(unit_data)
   local name = "highlight-box"
 
   insert(indicators,
-  create_entity
+  rendering.draw_rectangle
   {
-    name = name, box_type = "entity",
-    target = unit, render_player_index = render_index,
-    position = unit.position,
-    blink_interval = 0
+    color = {g = 1},
+    width = 2,
+    filled = false,
+    left_top = unit,
+    left_top_offset = unit.prototype.selection_box.left_top,
+    right_bottom = unit,
+    right_bottom_offset = unit.prototype.selection_box.right_bottom,
+    surface = unit.surface
   })
+  --error("HELLO?")
+
 
   local box = unit.prototype.collision_box
 
   if unit_data.destination then
     insert(indicators,
-    create_entity
+    rendering.draw_line
     {
-      name = name, box_type = "copy",
-      render_player_index = render_index,
-      position = unit_data.destination,
-      bounding_box = shift_box(box, unit_data.destination),
-      blink_interval = 0
+      color = {b = 0.1, r = 0.5, a = 0.02},
+      width = 2,
+      from = unit,
+      to = unit_data.destination,
+      surface = unit.surface
     })
   end
 
-  if unit_data.target and unit_data.target.valid then
-    insert(indicators,
-    create_entity
-    {
-      name = name, box_type = "not-allowed",
-      render_player_index = render_index,
-      target = unit_data.target,
-      position = unit_data.target.position,
-      blink_interval = 20
-    })
-  end
-
+  local position = unit_data.destination
   for k, command in pairs (unit_data.command_queue) do
     if command.command_type == next_command_type.move then
       insert(indicators,
-      create_entity
+      rendering.draw_line
       {
-        name = name, box_type = "copy",
-        render_player_index = render_index,
-        position = position,
-        bounding_box = shift_box(box, command.destination),
-        blink_interval = 0
+        color = {b = 0.1, r = 0.5, a = 0.02},
+        width = 2,
+        from = position,
+        to = command.destination,
+        surface = unit.surface
       })
+      position = command.destination
+      --create_entity
+      --{
+      --  name = name, box_type = "copy",
+      --  render_player_index = render_index,
+      --  position = position,
+      --  bounding_box = shift_box(box, command.destination),
+      --  blink_interval = 0
+      --})
     end
     if command.command_type == next_command_type.patrol then
       for k, destination in pairs (command.destinations) do
@@ -277,6 +279,25 @@ local add_unit_indicators = function(unit_data)
         end
       end
     end
+  end
+
+  if true then
+    unit_data.indicators = indicators
+    return
+  end
+
+  
+
+  if unit_data.target and unit_data.target.valid then
+    insert(indicators,
+    create_entity
+    {
+      name = name, box_type = "not-allowed",
+      render_player_index = render_index,
+      target = unit_data.target,
+      position = unit_data.target.position,
+      blink_interval = 20
+    })
   end
 
   unit_data.indicators = indicators
