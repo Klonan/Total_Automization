@@ -2135,7 +2135,7 @@ local process_request_proxy_command = function(drone_data)
     print("We don't have anything to offer, go pickup something")
     local name, count = next(requests)
     drone_data.pickup = {stack = {name = name, count = count}}
-    return process_drone_command(drone)
+    return process_drone_command(drone_data)
   end
 
   if not move_to_order_target(drone_data, proxy_target, ranges.interact) then
