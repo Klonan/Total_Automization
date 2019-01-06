@@ -618,29 +618,34 @@ function get_money()
   return format_number(script_data.money)
 end
 
-function update_connected_players()
-  local update_timer = function (gui, time_left, label)
-    if not gui.wave_frame then return end
-    if not gui.wave_frame.time_to_next_wave then return end
-    local label = gui.wave_frame.time_to_next_wave
-    if script_data.spawn_tick then
-      label.caption = {"time-to-wave-end", time_left}
-    elseif script_data.wave_tick then
-      label.caption = {"time-to-next-wave", time_left}
-    end
-    if script_data.send_satellite_round then
-      label.caption = {"send-satellite"}
-    end
+local update_timer = function (gui, time_left, label)
+  if not gui.wave_frame then return end
+  if not gui.wave_frame.time_to_next_wave then return end
+  local label = gui.wave_frame.time_to_next_wave
+  if script_data.spawn_tick then
+    label.caption = {"time-to-wave-end", time_left}
+  elseif script_data.wave_tick then
+    label.caption = {"time-to-next-wave", time_left}
   end
-  local update_money_amounts = function(player)
-    local wave_frame = mod_gui.get_frame_flow(player).wave_frame
-    local money_table = wave_frame.money_table
-    money_table.force_money_count.caption = get_money()
-    local frame = player.gui.center.team_upgrade_frame
-    if not frame then return end
-    local money_table = frame.money_table
-    money_table.force_money_count.caption = get_money()
+  if script_data.send_satellite_round then
+    label.caption = {"send-satellite"}
   end
+end
+
+local update_money_amounts = function(player)
+  local wave_frame = mod_gui.get_frame_flow(player).wave_frame
+  local money_table = wave_frame.money_table
+  money_table.force_money_count.caption = get_money()
+  local frame = player.gui.center.team_upgrade_frame
+  if not frame then return end
+  local money_table = frame.money_table
+  money_table.force_money_count.caption = get_money()
+end
+
+function update_connected_players(tick)
+
+  if tick and tick % 60 ~= 0 then return end
+
   local time_left
   if script_data.spawn_tick then
     time_left = time_to_wave_end()
@@ -655,16 +660,17 @@ function update_connected_players()
   end
 end
 
+local update_round_number_gui = function (gui, caption)
+  if not gui.wave_frame then return end
+  if not gui.wave_frame.current_wave then return end
+  local label = gui.wave_frame.current_wave
+  label.caption = caption
+end
+
 function update_round_number()
-  local update = function (gui, caption)
-    if not gui.wave_frame then return end
-    if not gui.wave_frame.current_wave then return end
-    local label = gui.wave_frame.current_wave
-    label.caption = caption
-  end
   local caption = {"current-wave", script_data.wave_number}
   for k, player in pairs (game.connected_players) do
-    update(mod_gui.get_frame_flow(player), caption)
+    update_round_number_gui(mod_gui.get_frame_flow(player), caption)
   end
 end
 
@@ -759,30 +765,45 @@ local on_player_respawned = function(event)
   give_spawn_equipment(player)
 end
 
-local on_gui_click = function(event)
-  local gui = event.element
-  local player = game.players[event.player_index]
-  if gui.name == "send_next_wave" then
-    local skipped = math.floor(script_data.skipped_multiplier*(script_data.wave_tick - game.tick)*(1.15^script_data.wave_number))
+local gui_functions =
+{
+  send_next_wave = function(event)
+    if script_data.end_spawn_tick then return end
+    local player = game.players[event.player_index]
+    local skipped = math.floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
     increment(script_data, "money", skipped)
     next_wave()
-    if #game.players > 1 then
-      game.print({"sent-next-wave", player.name})
-    else
+    if player.name == "" then
       game.print({"next-wave"})
+    else
+      game.print({"sent-next-wave", player.name})
     end
     update_connected_players()
-    return
-  end
-  if gui.name == "upgrade_button" then
+  end,
+  upgrade_button = function(event)
+    local player = game.players[event.player_index]
     create_upgrade_gui(player.gui.center)
-    return
-  end
-  if gui.name == "wave_defense_visibility_button" then
+  end,
+  wave_defense_visibility_button = function(event)
+    local player = game.players[event.player_index]
     local gui =  mod_gui.get_frame_flow(player)
     gui.wave_frame.visible = not gui.wave_frame.visible
-    return
   end
+}
+
+
+local on_gui_click = function(event)
+
+  local gui = event.element
+  local player = game.players[event.player_index]
+
+  if not (gui and gui.valid and player and player.valid) then return end
+
+  local action = gui_functions[gui.name]
+  if action then
+    return action(event)
+  end
+
   if script_data.team_upgrades[gui.name] then
     local list = get_upgrades()
     local upgrades = script_data.team_upgrades
@@ -808,15 +829,14 @@ local on_gui_click = function(event)
     end
     return
   end
+
 end
 
 local on_tick = function(event)
   local tick = event.tick
   check_next_wave(tick)
   check_spawn_units(tick)
-  if tick % 60 == 0 then
-    update_connected_players()
-  end
+  update_connected_players(tick)
 end
 
 local events =
