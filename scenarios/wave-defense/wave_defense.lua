@@ -13,28 +13,28 @@ function init_forces()
   for k, force in pairs (game.forces) do
     set_research(force)
     set_recipes(force)
-    force.set_spawn_position(global.silo.position, game.surfaces[1])
+    force.set_spawn_position(script_data.silo.position, game.surfaces[1])
     force.friendly_fire = false
   end
 end
 
 function init_globals()
-  global.wave_number = 0
-  global.wave_tick = 21250
-  global.force_bounty_modifier = 0.5
-  global.bounty_bonus = 1
-  global.skipped_multiplier = 0.1
-  global.round_button_visible = true
-  global.silo = game.surfaces[1].find_entities_filtered{name = "rocket-silo"}[1]
-  global.silo.minable = false
-  global.money = 0
-  global.send_satellite_round = false
-  global.spawn_time = 2500
-  global.wave_time = 10000
-  global.team_upgrades = {}
+  script_data.wave_number = 0
+  script_data.wave_tick = 21250
+  script_data.force_bounty_modifier = 0.5
+  script_data.bounty_bonus = 1
+  script_data.skipped_multiplier = 0.1
+  script_data.round_button_visible = true
+  script_data.silo = game.surfaces[1].find_entities_filtered{name = "rocket-silo"}[1]
+  script_data.silo.minable = false
+  script_data.money = 0
+  script_data.send_satellite_round = false
+  script_data.spawn_time = 2500
+  script_data.wave_time = 10000
+  script_data.team_upgrades = {}
   init_unit_settings()
   for name, upgrade in pairs (get_upgrades()) do
-    global.team_upgrades[name] = 0
+    script_data.team_upgrades[name] = 0
   end
 end
 
@@ -51,26 +51,26 @@ function init_unit_settings()
 end
 
 function check_next_wave(tick)
-  if not global.wave_tick then return end
-  if global.wave_tick ~= tick then return end
+  if not script_data.wave_tick then return end
+  if script_data.wave_tick ~= tick then return end
   game.print({"next-wave"})
   next_wave()
 end
 
 function next_wave()
-  increment(global, "wave_number")
+  increment(script_data, "wave_number")
   make_next_wave_tick()
   make_next_spawn_tick()
   local exponent = math.min(#game.connected_players, 8)
-  global.force_bounty_modifier = (0.5 * (1.15/(1.15^exponent)))
+  script_data.force_bounty_modifier = (0.5 * (1.15/(1.15^exponent)))
   update_round_number()
-  global.wave_power = calculate_wave_power(global.wave_number)
+  script_data.wave_power = calculate_wave_power(script_data.wave_number)
   next_round_button_visible(false)
-  local value = math.floor(100*((global.wave_number-1)%20+1)/20)
-  if (global.silo and global.silo.valid) then
-    global.silo.rocket_parts = value
+  local value = math.floor(100*((script_data.wave_number-1)%20+1)/20)
+  if (script_data.silo and script_data.silo.valid) then
+    script_data.silo.rocket_parts = value
   end
-  global.send_satellite_round = (value == 100)
+  script_data.send_satellite_round = (value == 100)
   command_straglers()
   spawn_units()
 end
@@ -91,33 +91,33 @@ function wave_end()
   next_round_button_visible(true)
   game.print({"wave-over"})
   spawn_units()
-  global.spawn_tick = nil
+  script_data.spawn_tick = nil
 end
 
 function make_next_spawn_tick()
-  global.spawn_tick = game.tick + math.random(200, 300)
+  script_data.spawn_tick = game.tick + math.random(200, 300)
 end
 
 function check_spawn_units(tick)
-  if not global.spawn_tick then return end
+  if not script_data.spawn_tick then return end
 
-  if global.send_satellite_round then
-    global.end_spawn_tick = tick+1
-    global.wave_tick = tick+global.wave_time
+  if script_data.send_satellite_round then
+    script_data.end_spawn_tick = tick+1
+    script_data.wave_tick = tick+script_data.wave_time
     if (tick) % 250 == 0 then
-      if not (global.silo and global.silo.valid) then return end
-      if not global.silo.get_inventory(defines.inventory.rocket_silo_rocket) then
-        global.silo.rocket_parts = 100
+      if not (script_data.silo and script_data.silo.valid) then return end
+      if not script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket) then
+        script_data.silo.rocket_parts = 100
       end
     end
   end
 
-  if global.end_spawn_tick <= tick then
+  if script_data.end_spawn_tick <= tick then
     wave_end()
     return
   end
 
-  if global.spawn_tick == tick then
+  if script_data.spawn_tick == tick then
     spawn_units()
     make_next_spawn_tick()
   end
@@ -140,10 +140,10 @@ function spawn_units()
   local rand = math.random
   local surface = game.surfaces[1]
   if surface.count_entities_filtered{type = "unit"} > 500 then return end
-  local power = 0+global.wave_power
-  local spawns = global.spawns
+  local power = 0+script_data.wave_power
+  local spawns = script_data.spawns
   local spawns_count = #spawns
-  local units = get_wave_units(global.wave_number)
+  local units = get_wave_units(script_data.wave_number)
   local units_length = #units
   local groups = {}
   local group_count = 1
@@ -193,8 +193,8 @@ function randomize_ore()
 end
 
 function set_command(groups)
-  if not (global.silo and global.silo.valid) then return end
-  local waypoints = global.waypoints
+  if not (script_data.silo and script_data.silo.valid) then return end
+  local waypoints = script_data.waypoints
   local num_waypoints = #waypoints
   local rand = math.random
   local def = defines
@@ -202,7 +202,7 @@ function set_command(groups)
   local structure = def.compound_command.return_last
   local go_to = def.command.go_to_location
   local attack = def.command.attack
-  local target = global.silo
+  local target = script_data.silo
   for k, group in pairs (groups) do
     group.set_command
     {
@@ -218,8 +218,8 @@ function set_command(groups)
 end
 
 function command_straglers()
-  if not (global.silo and global.silo.valid) then return end
-  local command = {type = defines.command.attack, target = global.silo}
+  if not (script_data.silo and script_data.silo.valid) then return end
+  local command = {type = defines.command.attack, target = script_data.silo}
   for k, unit in pairs (game.surfaces[1].find_entities_filtered({type = "unit"})) do
     if not unit.unit_group then
       unit.set_command(command)
@@ -240,26 +240,26 @@ unit_config =
   }
 
 function make_next_wave_tick()
-  global.end_spawn_tick = game.tick + global.spawn_time
-  global.wave_tick  = global.end_spawn_tick + global.wave_time
+  script_data.end_spawn_tick = game.tick + script_data.spawn_time
+  script_data.wave_tick  = script_data.end_spawn_tick + script_data.wave_time
 end
 
 function time_to_next_wave()
-  if not global.wave_tick then return end
-  return format_time(global.wave_tick - game.tick)
+  if not script_data.wave_tick then return end
+  return format_time(script_data.wave_tick - game.tick)
 end
 
 function time_to_wave_end()
-  if not global.end_spawn_tick then return end
-  return format_time(global.end_spawn_tick - game.tick)
+  if not script_data.end_spawn_tick then return end
+  return format_time(script_data.end_spawn_tick - game.tick)
 end
 
 function rocket_died(event)
-  if not (global.silo and global.silo.valid) then return end
+  if not (script_data.silo and script_data.silo.valid) then return end
   local silo = event.entity
-  if silo == global.silo then
+  if silo == script_data.silo then
     game.set_game_state{game_finished = true, player_won = false, can_continue = false}
-    global.silo = nil
+    script_data.silo = nil
   end
 end
 
@@ -269,10 +269,10 @@ function unit_died(event)
   if not force.valid then return end
   local died = event.entity
   local surface = died.surface
-  local cash = math.floor(get_bounty_price(died.name)*global.force_bounty_modifier*global.bounty_bonus)
-  increment(global, "money", cash)
+  local cash = math.floor(get_bounty_price(died.name)*script_data.force_bounty_modifier*script_data.bounty_bonus)
+  increment(script_data, "money", cash)
   surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}}
-  if global.wave_number < 20 then return end
+  if script_data.wave_number < 20 then return end
   for k, belt in pairs (surface.find_entities_filtered{area = died.bounding_box, type = "transport-belt", limit = 1}) do
     belt.damage(50, "enemy")
   end
@@ -302,8 +302,8 @@ function setup_waypoints()
     end
     entity.destroy()
   end
-  global.waypoints = waypoints
-  global.spawns = spawns
+  script_data.waypoints = waypoints
+  script_data.spawns = spawns
 end
 
 function insert_items(entity, array)
@@ -388,7 +388,7 @@ function next_round_button_visible(bool)
   for k, player in pairs (game.connected_players) do
     mod_gui.get_frame_flow(player).wave_frame.send_next_wave.visible = bool
   end
-  global.round_button_visible = bool
+  script_data.round_button_visible = bool
 end
 
 function gui_init(player)
@@ -427,7 +427,7 @@ function create_wave_frame(gui)
   if not gui.valid then return end
   local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
   frame.visible = true
-  frame.add{type = "label", name = "current_wave", caption = {"current-wave", global.wave_number}}
+  frame.add{type = "label", name = "current_wave", caption = {"current-wave", script_data.wave_number}}
   frame.add{type = "label", name = "time_to_next_wave", caption = {"time-to-next-wave", time_to_next_wave()}}
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
@@ -442,7 +442,7 @@ function create_wave_frame(gui)
     style = "play_tutorial_button"
   }
   button.style.font = "default"
-  button.visible = global.round_button_visible
+  button.visible = script_data.round_button_visible
 end
 
 function create_upgrade_gui(gui)
@@ -465,7 +465,7 @@ function create_upgrade_gui(gui)
   local upgrade_table = scroll.add{type = "table", name = "upgrade_table", column_count = 2}
   upgrade_table.style.horizontal_spacing = 0
   upgrade_table.style.vertical_spacing = 0
-  update_upgrade_listing(upgrade_table, get_upgrades(), global.team_upgrades)
+  update_upgrade_listing(upgrade_table, get_upgrades(), script_data.team_upgrades)
   player.opened = team_upgrades
 end
 
@@ -507,22 +507,14 @@ end
 
 upgrade_research =
 {
-  ["bullet-damage"] = 2500,
-  ["bullet-speed"] = 1500,
-  ["shotgun-shell-damage"] = 1250,
-  ["shotgun-shell-speed"] = 2500,
-  ["flamethrower-damage"] = 7500,
-  ["gun-turret-damage"] = 2000,
-  ["laser-turret-damage"] = 2500,
-  ["laser-turret-speed"] = 2250,
-  ["rocket-damage"] = 1000,
-  ["rocket-speed"] = 750,
-  ["grenade-damage"] = 1500,
+  ["physical-projectile-damage"] = 2000,
+  ["stronger-explosives"] = 2000,
+  ["refined-flammables"] = 2000,
+  ["energy-weapons-damage"] = 2000,
+  ["weapon-shooting-speed"] = 2000,
+  ["laser-turret-speed"] = 2000,
   ["follower-robot-count"] = 500,
-  ["combat-robot-damage"] = 1000,
-  ["mining-productivity"] = 750,
-  ["cannon-shell-damage"] = 500,
-  ["cannon-shell-speed"] = 250
+  ["mining-productivity"] = 750
 }
 
 function get_upgrades()
@@ -534,8 +526,8 @@ function get_upgrades()
       local base = tech[append]
       local upgrade = {}
       local mod = base.effects[1].modifier
-      upgrade.modifier = "+"..tostring(mod*100).."%"
-      upgrade.price = function(x) return math.floor((1+x))*price end
+      upgrade.modifier = "+"..tostring(mod * 100).."%"
+      upgrade.price = function(x) return math.floor((1 + x)) * price end
       upgrade.sprite = "technology/"..append
       upgrade.caption = {"technology-name."..name}
       upgrade.effect = {}
@@ -546,7 +538,7 @@ function get_upgrades()
           upgrade.effect[k] = function(event)
             local force = game.players[event.player_index].force
             force.set_ammo_damage_modifier(cat, force.get_ammo_damage_modifier(cat)+mod)
-            increment(global.team_upgrades, name)
+            increment(script_data.team_upgrades, name)
             return true
           end
         elseif type == "turret-attack" then
@@ -554,7 +546,7 @@ function get_upgrades()
           upgrade.effect[k] = function(event)
             local force = game.players[event.player_index].force
             force.set_turret_attack_modifier(id, force.get_turret_attack_modifier(id)+mod)
-            increment(global.team_upgrades, name)
+            increment(script_data.team_upgrades, name)
             return true
           end
         elseif type == "gun-speed" then
@@ -562,7 +554,7 @@ function get_upgrades()
           upgrade.effect[k] = function(event)
             local force = game.players[event.player_index].force
             force.set_gun_speed_modifier(cat, force.get_gun_speed_modifier(cat)+mod)
-            increment(global.team_upgrades, name)
+            increment(script_data.team_upgrades, name)
             return true
           end
         elseif type == "maximum-following-robots-count" then
@@ -570,29 +562,31 @@ function get_upgrades()
           upgrade.effect[k] = function(event)
             local force = game.players[event.player_index].force
             increment(force, "maximum_following_robot_count", mod)
-            increment(global.team_upgrades, name)
+            increment(script_data.team_upgrades, name)
             return true
           end
         elseif type == "mining-drill-productivity-bonus" then
           upgrade.effect[k] = function(event)
             local force = game.players[event.player_index].force
             increment(force, "mining_drill_productivity_bonus", mod)
-            increment(global.team_upgrades, name)
+            increment(script_data.team_upgrades, name)
             return true
           end
         else error(name.." - This tech has no relevant upgrade effect") end
       end
       list[name] = upgrade
+    else
+      game.print(name)
     end
   end
   local bonus = {}
   bonus.modifier = "+10%"
   bonus.sprite = "technology/energy-shield-equipment"
-  bonus.price = function(x) return math.floor((1+x))*2500 end
+  bonus.price = function(x) return math.floor((1 + x)) * 2500 end
   bonus.effect = {}
   bonus.effect[1] =  function (event)
-    increment(global, "bounty_bonus", 0.1)
-    increment(global.team_upgrades, "bounty_bonus")
+    increment(script_data, "bounty_bonus", 0.1)
+    increment(script_data.team_upgrades, "bounty_bonus")
     return true
   end
   bonus.caption = {"bounty-bonus"}
@@ -604,17 +598,17 @@ function get_upgrades()
   sat.hide_level = true
   sat.effect = {}
   sat.effect[1] = function(event)
-    if not (global.silo and global.silo.valid) then return end
-    local inventory = global.silo.get_inventory(defines.inventory.rocket_silo_rocket)
+    if not (script_data.silo and script_data.silo.valid) then return end
+    local inventory = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket)
     if inventory then
-      local contents = global.silo.get_inventory(defines.inventory.rocket_silo_rocket).get_contents()
+      local contents = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket).get_contents()
       if #contents == 0 then
         inventory.insert"satellite"
         game.print({"satellite-purchase", game.players[event.player_index].name})
         return false
       end
     end
-    increment(global, "money", 500000)
+    increment(script_data, "money", 500000)
     game.players[event.player_index].print({"satellite-refund"})
     return false
   end
@@ -624,7 +618,7 @@ function get_upgrades()
 end
 
 function get_money()
-  return format_number(global.money)
+  return format_number(script_data.money)
 end
 
 function update_connected_players()
@@ -632,12 +626,12 @@ function update_connected_players()
     if not gui.wave_frame then return end
     if not gui.wave_frame.time_to_next_wave then return end
     local label = gui.wave_frame.time_to_next_wave
-    if global.spawn_tick then
+    if script_data.spawn_tick then
       label.caption = {"time-to-wave-end", time_left}
-    elseif global.wave_tick then
+    elseif script_data.wave_tick then
       label.caption = {"time-to-next-wave", time_left}
     end
-    if global.send_satellite_round then
+    if script_data.send_satellite_round then
       label.caption = {"send-satellite"}
     end
   end
@@ -651,9 +645,9 @@ function update_connected_players()
     money_table.force_money_count.caption = get_money()
   end
   local time_left
-  if global.spawn_tick then
+  if script_data.spawn_tick then
     time_left = time_to_wave_end()
-  elseif global.wave_tick then
+  elseif script_data.wave_tick then
     time_left = time_to_next_wave()
   else
     time_left = "Somethings gone wrong here... ?"
@@ -671,7 +665,7 @@ function update_round_number()
     local label = gui.wave_frame.current_wave
     label.caption = caption
   end
-  local caption = {"current-wave", global.wave_number}
+  local caption = {"current-wave", script_data.wave_number}
   for k, player in pairs (game.connected_players) do
     update(mod_gui.get_frame_flow(player), caption)
   end
@@ -749,7 +743,7 @@ local on_rocket_launched = function(event)
   local rocket = event.rocket
   if rocket.get_item_count("satellite") > 0 then
     game.set_game_state{game_finished = true, player_won = true, can_continue = true}
-    global.send_satellite_round = false
+    script_data.send_satellite_round = false
     wave_end()
     update_connected_players()
   else
@@ -772,8 +766,8 @@ local on_gui_click = function(event)
   local gui = event.element
   local player = game.players[event.player_index]
   if gui.name == "send_next_wave" then
-    local skipped = math.floor(global.skipped_multiplier*(global.wave_tick - game.tick)*(1.15^global.wave_number))
-    increment(global, "money", skipped)
+    local skipped = math.floor(script_data.skipped_multiplier*(script_data.wave_tick - game.tick)*(1.15^script_data.wave_number))
+    increment(script_data, "money", skipped)
     next_wave()
     if #game.players > 1 then
       game.print({"sent-next-wave", player.name})
@@ -792,12 +786,12 @@ local on_gui_click = function(event)
     gui.wave_frame.visible = not gui.wave_frame.visible
     return
   end
-  if global.team_upgrades[gui.name] then
+  if script_data.team_upgrades[gui.name] then
     local list = get_upgrades()
-    local upgrades = global.team_upgrades
+    local upgrades = script_data.team_upgrades
     local price = list[gui.name].price(upgrades[gui.name])
-    if global.money >= price then
-      increment(global, "money", -price)
+    if script_data.money >= price then
+      increment(script_data, "money", -price)
       local sucess = false
       for k, effect in pairs (list[gui.name].effect) do
         sucess = effect(event)
@@ -819,7 +813,7 @@ local on_gui_click = function(event)
   end
 end
 
-local on_tick =  function(event)
+local on_tick = function(event)
   local tick = event.tick
   check_next_wave(tick)
   check_spawn_units(tick)
