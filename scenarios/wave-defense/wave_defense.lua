@@ -486,7 +486,26 @@ function next_round_button_visible(bool)
   script_data.round_button_visible = bool
 end
 
+function make_preview_gui(player)
+  local surface = script_data.surface
+  if not surface then
+    create_battle_surface()
+    surface = script_data.surface
+    player.force.chart(surface, {{-200, -200},{200,200}})
+  end
+  local gui = player.gui.center
+  local frame = gui.add{type = "frame", caption = "Start round or something"}
+  local buttons = frame.add{type = "flow", direction = "vertical"}
+  local minimap = frame.add{type = "minimap", surface_index = surface.index, zoom = 1, force = player.force.name, position = player.force.get_spawn_position(surface)}
+  minimap.style.width = 500
+  minimap.style.height = 500
+  buttons.add{type = "button", caption = "Looks good, lets go!"}
+end
+
 function gui_init(player)
+
+  make_preview_gui(player)
+
   local gui = mod_gui.get_frame_flow(player)
   if gui.wave_frame then
     gui.wave_frame.destroy()
