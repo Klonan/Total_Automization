@@ -3,6 +3,7 @@ local mod_gui = require "mod-gui"
 local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
+local insert = table.insert
 
 local script_data =
 {
@@ -23,14 +24,111 @@ function init_forces()
   for k, force in pairs (game.forces) do
     set_research(force)
     set_recipes(force)
-    force.set_spawn_position(script_data.silo.position, game.surfaces[1])
+    --force.set_spawn_position(script_data.silo.position, game.surfaces[1])
     force.friendly_fire = false
   end
 end
 
+function get_walkable_tile()
+  for name, tile in pairs (game.tile_prototypes) do
+    if tile.collision_mask["player-layer"] == nil and not tile.items_to_place_this then
+      return name
+    end
+  end
+  error("No walkable tile in prototype list")
+end
+
+function set_tiles_safe(surface, tiles)
+  local grass = get_walkable_tile()
+  local grass_tiles = {}
+  for k, tile in pairs (tiles) do
+    grass_tiles[k] = {position = {x = (tile.position.x or tile.position[1]), y = (tile.position.y or tile.position[2])}, name = grass}
+  end
+  surface.set_tiles(grass_tiles, false)
+  surface.set_tiles(tiles)
+end
+
+function teleport_all_players()
+  local surface = script_data.surface
+  local force = game.forces.player
+  local spawn = force.get_spawn_position(surface)
+  local find = surface.find_non_colliding_position
+  for k, player in pairs (game.players) do
+    player.teleport(find(player.character.name, spawn, 0, 1), surface)
+  end
+end
+
+function start_round()
+  create_battle_surface()
+  create_silo()
+  teleport_all_players()
+end
+
+function get_map_gen_settings()
+  local settings = game.surfaces[1].map_gen_settings
+  settings.seed = math.random(2000000)
+  return settings
+end
+
+function create_battle_surface()
+  local name = "battle_surface"
+  if game.surfaces[name] then
+    game.delete_surface(name)
+    name = name.."_1"
+    if game.surfaces[name] then
+      game.delete_surface(name)
+      name = name.."_1"
+    end
+  end
+  local settings = get_map_gen_settings()
+  local surface = game.create_surface(name, settings)
+  surface.request_to_generate_chunks({0,0}, 5)
+  surface.force_generate_chunk_requests()
+  script_data.surface = surface
+end
+
+function create_silo()
+  local force = game.forces.player
+  local surface = script_data.surface
+  local origin = force.get_spawn_position(surface)
+  local offset = {0,0}
+  local silo_position = {x = origin.x + (offset.x or offset[1]), y = origin.y + (offset.y or offset[2])}
+  local silo_name = "rocket-silo"
+  if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
+  local silo = surface.create_entity{name = silo_name, position = silo_position, force = force, raise_built = true, create_build_effect_smoke = false}
+
+  if not (silo and silo.valid) then return end
+
+  silo.minable = false
+  if silo.supports_backer_name() then
+    silo.backer_name = ""
+  end
+  script_data.silo = silo
+
+  local tile_name = "concrete"
+  if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
+
+  local tiles_2 = {}
+  local box = silo.bounding_box
+  local x1, x2, y1, y2 =
+    math.floor(box.left_top.x) - 1,
+    math.floor(box.right_bottom.x) + 1,
+    math.floor(box.left_top.y) - 1,
+    math.floor(box.right_bottom.y) + 1
+  for X = x1, x2 do
+    for Y = y1, y2 do
+      insert(tiles_2, {name = tile_name, position = {X, Y}})
+    end
+  end
+
+  for i, entity in pairs(surface.find_entities_filtered({area = {{x1 - 1, y1 - 1},{x2 + 1, y2 + 1}}, force = "neutral"})) do
+    entity.destroy()
+  end
+
+  set_tiles_safe(surface, tiles_2)
+end
+
 function init_globals()
-  script_data.silo = game.surfaces[1].find_entities_filtered{name = "rocket-silo"}[1]
-  script_data.silo.minable = false
   init_unit_settings()
   for name, upgrade in pairs (get_upgrades()) do
     script_data.team_upgrades[name] = 0
