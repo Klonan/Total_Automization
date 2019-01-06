@@ -1,12 +1,22 @@
-require "util"
-require "mod-gui"
+local util = require "util"
+local mod_gui = require "mod-gui"
 local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
 
 local script_data =
 {
-
+  wave_number = 0,
+  wave_tick = 21250,
+  force_bounty_modifier = 0.5,
+  bounty_bonus = 1,
+  skipped_multiplier = 0.1,
+  round_button_visible = true,
+  money = 0,
+  send_satellite_round = false,
+  spawn_time = 2500,
+  wave_time = 10000,
+  team_upgrades = {}
 }
 
 function init_forces()
@@ -19,19 +29,8 @@ function init_forces()
 end
 
 function init_globals()
-  script_data.wave_number = 0
-  script_data.wave_tick = 21250
-  script_data.force_bounty_modifier = 0.5
-  script_data.bounty_bonus = 1
-  script_data.skipped_multiplier = 0.1
-  script_data.round_button_visible = true
   script_data.silo = game.surfaces[1].find_entities_filtered{name = "rocket-silo"}[1]
   script_data.silo.minable = false
-  script_data.money = 0
-  script_data.send_satellite_round = false
-  script_data.spawn_time = 2500
-  script_data.wave_time = 10000
-  script_data.team_upgrades = {}
   init_unit_settings()
   for name, upgrade in pairs (get_upgrades()) do
     script_data.team_upgrades[name] = 0
@@ -62,11 +61,11 @@ function next_wave()
   make_next_wave_tick()
   make_next_spawn_tick()
   local exponent = math.min(#game.connected_players, 8)
-  script_data.force_bounty_modifier = (0.5 * (1.15/(1.15^exponent)))
+  script_data.force_bounty_modifier = (0.5 * (1.15 / (1.15 ^ exponent)))
   update_round_number()
   script_data.wave_power = calculate_wave_power(script_data.wave_number)
   next_round_button_visible(false)
-  local value = math.floor(100*((script_data.wave_number-1)%20+1)/20)
+  local value = math.floor(100*((script_data.wave_number - 1) % 20 + 1) / 20)
   if (script_data.silo and script_data.silo.valid) then
     script_data.silo.rocket_parts = value
   end
@@ -79,11 +78,11 @@ function calculate_wave_power(x)
   local c = 1.65
   local p = math.min(#game.connected_players, 8)
   if x % 4 == 0 then
-    return math.floor((1.15^p)*(x^c)*60)
+    return math.floor((1.15 ^ p) * (x ^ c) * 60)
   elseif x % 2 == 0 then
-    return math.floor((1.15^p)*(x^c)*50)
+    return math.floor((1.15 ^ p) * (x ^ c) * 50)
   else
-    return math.floor((1.15^p)*(x^c)*40)
+    return math.floor((1.15 ^ p) * (x ^ c) * 40)
   end
 end
 
@@ -102,9 +101,9 @@ function check_spawn_units(tick)
   if not script_data.spawn_tick then return end
 
   if script_data.send_satellite_round then
-    script_data.end_spawn_tick = tick+1
-    script_data.wave_tick = tick+script_data.wave_time
-    if (tick) % 250 == 0 then
+    script_data.end_spawn_tick = tick + 1
+    script_data.wave_tick = tick + script_data.wave_time
+    if tick % 250 == 0 then
       if not (script_data.silo and script_data.silo.valid) then return end
       if not script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket) then
         script_data.silo.rocket_parts = 100
@@ -140,7 +139,7 @@ function spawn_units()
   local rand = math.random
   local surface = game.surfaces[1]
   if surface.count_entities_filtered{type = "unit"} > 500 then return end
-  local power = 0+script_data.wave_power
+  local power = script_data.wave_power
   local spawns = script_data.spawns
   local spawns_count = #spawns
   local units = get_wave_units(script_data.wave_number)
