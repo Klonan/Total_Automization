@@ -18,8 +18,15 @@ local script_data =
   send_satellite_round = false,
   spawn_time = 2500,
   wave_time = 10000,
-  team_upgrades = {}
+  team_upgrades = {},
+  gui =
+  {
+    preview_frame = {},
+
+  }
 }
+
+local max_seed = 2^32 - 2
 
 function init_forces()
   for k, force in pairs (game.forces) do
@@ -65,9 +72,23 @@ function start_round()
   teleport_all_players()
 end
 
+local get_seed = function()
+  local seed = math.random(max_seed)
+  for k, player in pairs (game.players) do
+    local name = player.name or "Mary had a little lamb"
+    for k = 1, string.len(name) do
+      seed = seed + math.random(string.byte(name, k))
+      seed = seed + math.abs(player.position.x) * 1000
+      seed = seed + math.abs(player.position.y) * 1000
+    end
+  end
+  seed = math.floor(seed) % max_seed
+  return seed
+end
+
 function get_map_gen_settings()
   local settings = map_gen_settings
-  settings.seed = math.random(2000000)
+  settings.seed = get_seed()
   return settings
 end
 
@@ -494,12 +515,27 @@ function make_preview_gui(player)
     player.force.chart(surface, {{-200, -200},{200,200}})
   end
   local gui = player.gui.center
-  local frame = gui.add{type = "frame", caption = "Start round or something"}
-  local buttons = frame.add{type = "flow", direction = "vertical"}
-  local minimap = frame.add{type = "minimap", surface_index = surface.index, zoom = 1, force = player.force.name, position = player.force.get_spawn_position(surface)}
+  local frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
+  frame.style.align = "right"
+  local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
+  local subheader = inner.add{type = "frame", style = "subheader_frame"}
+  subheader.style.horizontally_stretchable = true
+  subheader.style.align = "right"
+  subheader.style.bottom_padding = 1
+  local pusher = subheader.add{type = "flow"}
+  pusher.style.horizontally_stretchable = true
+  local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
+  seed_flow.add{type = "label", style = "caption_label", caption = "Seed"}
+  seed_flow.add{type = "textfield", text = surface.map_gen_settings.seed, style = "long_number_textfield"}
+  local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
+  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = 1, force = player.force.name, position = player.force.get_spawn_position(surface)}
   minimap.style.width = 500
   minimap.style.height = 500
-  buttons.add{type = "button", caption = "Looks good, lets go!"}
+
+  local button_flow = frame.add{type = "flow"}
+  button_flow.style.align = "right"
+  button_flow.style.horizontally_stretchable = true
+  button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
 end
 
 function gui_init(player)
@@ -774,7 +810,7 @@ function update_connected_players(tick)
   end
   for k, player in pairs (game.connected_players) do
     update_timer(mod_gui.get_frame_flow(player), time_left, label)
-    update_money_amounts(player.gui.center)
+    update_money_amounts(player)
   end
 end
 
@@ -829,15 +865,12 @@ function set_recipes(force)
   end
 end
 
-local on_player_created = function(event)
-  local player = game.players[event.player_index]
+function set_player(player)
   give_spawn_equipment(player)
   give_starting_equipment(player)
-  if player.index == 1 then
-    game.show_message_dialog({text = {"welcome-to-wave-defense"}})
-  else
-    player.print({"welcome-to-wave-defense"})
-  end
+end
+
+local on_player_created = function(event)
 end
 
 local on_init = function()
