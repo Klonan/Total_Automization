@@ -1,5 +1,6 @@
 local util = require "util"
 local mod_gui = require "mod-gui"
+local map_gen_settings = require "wave_defense_map_gen_settings"
 local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
@@ -65,7 +66,7 @@ function start_round()
 end
 
 function get_map_gen_settings()
-  local settings = game.surfaces[1].map_gen_settings
+  local settings = map_gen_settings
   settings.seed = math.random(2000000)
   return settings
 end
