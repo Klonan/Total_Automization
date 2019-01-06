@@ -170,7 +170,7 @@ function spawn_units()
       if position then
         if unit_count <= 500 then
           group.add_member(surface.create_entity{name = biter.name, position = position})
-          power = power-cost
+          power = power - cost
           unit_count = unit_count + 1
         else
           new_group = true
@@ -187,7 +187,7 @@ function randomize_ore()
   local surface = game.surfaces[1]
   local rand = math.random
   for k, ore in pairs (surface.find_entities_filtered{type = "resource"}) do
-    ore.amount = ore.amount + rand(-5,5)
+    ore.amount = ore.amount + rand(-5, 5)
   end
 end
 
@@ -262,19 +262,16 @@ function rocket_died(event)
   end
 end
 
+local color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}
 function unit_died(event)
   local force = event.force
   if not force then return end
   if not force.valid then return end
   local died = event.entity
   local surface = died.surface
-  local cash = math.floor(get_bounty_price(died.name)*script_data.force_bounty_modifier*script_data.bounty_bonus)
+  local cash = math.floor(get_bounty_price(died.name) * script_data.force_bounty_modifier * script_data.bounty_bonus)
   increment(script_data, "money", cash)
-  surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}}
-  if script_data.wave_number < 20 then return end
-  for k, belt in pairs (surface.find_entities_filtered{area = died.bounding_box, type = "transport-belt", limit = 1}) do
-    belt.damage(50, "enemy")
-  end
+  surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = color}
 end
 
 function get_bounty_price(name)
@@ -422,6 +419,7 @@ function gui_init(player)
   end
 end
 
+local cash_font_color = {r = 0.8, b = 0.5, g = 0.8}
 function create_wave_frame(gui)
   if not gui.valid then return end
   local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
@@ -431,7 +429,7 @@ function create_wave_frame(gui)
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   local cash = money_table.add{type = "label", name = "force_money_count", caption = get_money()}.style
-  cash.font_color = {r = 0.8, b = 0.5, g = 0.8}
+  cash.font_color = cash_font_color
   local button = frame.add
   {
     type = "button",
@@ -575,7 +573,7 @@ function get_upgrades()
       end
       list[name] = upgrade
     else
-      game.print(name)
+      error(name.." is not a valid technology.")
     end
   end
   local bonus = {}
