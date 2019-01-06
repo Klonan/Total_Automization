@@ -104,7 +104,7 @@ function create_battle_surface()
   end
   local settings = get_map_gen_settings()
   local surface = game.create_surface(name, settings)
-  surface.request_to_generate_chunks({0,0}, 5)
+  surface.request_to_generate_chunks({0,0}, 400/32)
   surface.force_generate_chunk_requests()
   script_data.surface = surface
 end
@@ -511,6 +511,7 @@ function make_preview_gui(player)
   local surface = script_data.surface
   if not surface then
     create_battle_surface()
+    create_silo()
     surface = script_data.surface
     player.force.chart(surface, {{-200, -200},{200,200}})
   end
@@ -527,10 +528,14 @@ function make_preview_gui(player)
   local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
   seed_flow.add{type = "label", style = "caption_label", caption = "Seed"}
   seed_flow.add{type = "textfield", text = surface.map_gen_settings.seed, style = "long_number_textfield"}
+  local shuffle_button = seed_flow.add{type = "sprite-button", sprite = "utility/shuffle", style = "tool_button"}
   local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
-  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = 1, force = player.force.name, position = player.force.get_spawn_position(surface)}
-  minimap.style.width = 500
-  minimap.style.height = 500
+  local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.8
+  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / 400, force = player.force.name, position = player.force.get_spawn_position(surface)}
+  minimap.style.width = max
+  minimap.style.height = max
+  --minimap.style.vertically_stretchable = true
+  --minimap.style.horizontally_stretchable = true
 
   local button_flow = frame.add{type = "flow"}
   button_flow.style.align = "right"
