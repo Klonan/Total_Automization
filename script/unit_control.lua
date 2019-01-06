@@ -238,7 +238,9 @@ local add_unit_indicators = function(unit_data)
       width = 2,
       from = unit,
       to = unit_data.destination,
-      surface = unit.surface
+      surface = unit.surface,
+      gap_amount = 10,
+      gap_length = 0.5
     })
   end
 
@@ -286,7 +288,7 @@ local add_unit_indicators = function(unit_data)
     return
   end
 
-  
+
 
   if unit_data.target and unit_data.target.valid then
     insert(indicators,

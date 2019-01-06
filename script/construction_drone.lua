@@ -1332,7 +1332,7 @@ end
 
 local check_no_network_drones = function()
   local drones = data.no_network_drones
-  local index = data.drone_check_index or next(drones)
+  local index = data.drone_check_index
 
   for k = 1, max_checks_per_tick do
     index = index or next(drones)
