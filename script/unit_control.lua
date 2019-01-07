@@ -234,7 +234,7 @@ local add_unit_indicators = function(unit_data)
     insert(indicators,
     rendering.draw_line
     {
-      color = {b = 0.1, r = 0.5, a = 0.02},
+      color = {b = 0.1, g = 0.5, a = 0.02},
       width = 2,
       from = unit,
       to = unit_data.destination,
@@ -244,65 +244,59 @@ local add_unit_indicators = function(unit_data)
     })
   end
 
-  local position = unit_data.destination
+  local position = unit_data.destination or unit.position
   for k, command in pairs (unit_data.command_queue) do
+
     if command.command_type == next_command_type.move then
       insert(indicators,
       rendering.draw_line
       {
-        color = {b = 0.1, r = 0.5, a = 0.02},
+        color = {b = 0.1, g = 0.5, a = 0.02},
         width = 2,
         from = position,
         to = command.destination,
         surface = unit.surface
       })
       position = command.destination
-      --create_entity
-      --{
-      --  name = name, box_type = "copy",
-      --  render_player_index = render_index,
-      --  position = position,
-      --  bounding_box = shift_box(box, command.destination),
-      --  blink_interval = 0
-      --})
     end
+
     if command.command_type == next_command_type.patrol then
       for k, destination in pairs (command.destinations) do
         if k ~= 1 or command.destination_index ~= "initial" then
           insert(indicators,
-          create_entity
+          rendering.draw_line
           {
-            name = name, box_type = "electricity",
-            render_player_index = render_index,
-            position = position,
-            bounding_box = shift_box(box, destination),
-            blink_interval = 0
+            color = {b = 0.1, g = 0.5, a = 0.02},
+            width = 2,
+            from = position or unit.position,
+            to = destination,
+            surface = unit.surface
           })
+          position = destination
         end
       end
     end
+    
   end
+
+  if unit_data.target and unit_data.target.valid then
+    insert(indicators,
+    rendering.draw_line
+    {
+      color = {b = 0.1, r = 0.5, a = 0.02},
+      width = 2,
+      from = unit,
+      to = unit_data.target,
+      surface = unit.surface
+    })
+  end
+
+  unit_data.indicators = indicators
 
   if true then
     unit_data.indicators = indicators
     return
   end
-
-
-
-  if unit_data.target and unit_data.target.valid then
-    insert(indicators,
-    create_entity
-    {
-      name = name, box_type = "not-allowed",
-      render_player_index = render_index,
-      target = unit_data.target,
-      position = unit_data.target.position,
-      blink_interval = 20
-    })
-  end
-
-  unit_data.indicators = indicators
 end
 
 local stop = {type = defines.command.stop}
