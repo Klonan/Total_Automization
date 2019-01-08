@@ -24,7 +24,8 @@ local script_data =
     preview_frame = {},
     wave_frame = {},
     upgrade_frame = {},
-    money_label = {}
+    money_label = {},
+    time_label = {}
   },
   gui_actions = {}
 }
@@ -608,7 +609,8 @@ function create_wave_frame(gui)
   local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
   frame.visible = true
   frame.add{type = "label", name = "current_wave", caption = {"current-wave", script_data.wave_number}}
-  frame.add{type = "label", name = "time_to_next_wave", caption = {"time-to-next-wave", time_to_next_wave()}}
+  local time = frame.add{type = "label", caption = {"time-to-next-wave", time_to_next_wave()}}
+  insert(script_data.gui_elements.time_label, time)
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   local cash = money_table.add{type = "label", caption = get_money()}
@@ -803,26 +805,13 @@ function get_money()
   return format_number(script_data.money)
 end
 
-local update_timer = function (gui, time_left, label)
-  if not gui.wave_frame then return end
-  if not gui.wave_frame.time_to_next_wave then return end
-  local label = gui.wave_frame.time_to_next_wave
-  if script_data.spawn_tick then
-    label.caption = {"time-to-wave-end", time_left}
-  elseif script_data.wave_tick then
-    label.caption = {"time-to-next-wave", time_left}
-  end
-  if script_data.send_satellite_round then
-    label.caption = {"send-satellite"}
-  end
-end
-
-local update_money_amounts = function(string)
-  for k, label in pairs (script_data.gui_elements.money_label) do
+local update_label_list = function (list, string)
+  local list = script_data.gui_elements.time_label
+  for k, label in pairs (list) do
     if label.valid then
       label.caption = string
     else
-      script_data.gui_elements.money_label[k] = nil
+      list[k] = nil
     end
   end
 end
@@ -831,6 +820,8 @@ function update_connected_players(tick)
 
   if tick and tick % 60 ~= 0 then return end
 
+  update_label_list(script_data.gui_elements.money_label, get_money())
+  
   local time_left
   if script_data.spawn_tick then
     time_left = time_to_wave_end()
@@ -839,10 +830,18 @@ function update_connected_players(tick)
   else
     time_left = "Somethings gone wrong here... ?"
   end
-  update_money_amounts(get_money())
-  for k, player in pairs (game.connected_players) do
-    update_timer(mod_gui.get_frame_flow(player), time_left, label)
+  
+  local caption
+  if script_data.spawn_tick then
+    caption = {"time-to-wave-end", time_left}
+  elseif script_data.wave_tick then
+    caption = {"time-to-next-wave", time_left}
   end
+  if script_data.send_satellite_round then
+    caption = {"send-satellite"}
+  end
+  
+  update_label_list(script_data.gui_elements.time_label, caption)
 end
 
 local update_round_number_gui = function (gui, caption)
