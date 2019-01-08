@@ -26,7 +26,8 @@ local script_data =
     upgrade_frame = {},
     money_label = {},
     time_label = {},
-    round_label = {}
+    round_label = {},
+    next_round_button = {}
   },
   gui_actions = {}
 }
@@ -527,10 +528,11 @@ function give_spawn_equipment(player)
 end
 
 function next_round_button_visible(bool)
-  for k, player in pairs (game.connected_players) do
-    mod_gui.get_frame_flow(player).wave_frame.send_next_wave.visible = bool
-  end
   script_data.round_button_visible = bool
+  for k, button in pairs (script_data.gui_elements.next_round_button) do
+    button.visible = bool
+    button.enabled = not bool
+  end
 end
 
 function make_preview_gui(player)
@@ -624,11 +626,12 @@ function create_wave_frame(gui)
   local button = frame.add
   {
     type = "button",
-    name = "send_next_wave",
     caption = {"send-next-wave"},
     tooltip = {"send-next-wave-tooltip"},
     style = "play_tutorial_button"
   }
+  insert(script_data.gui_elements.next_round_button, button)
+  register_gui_action(button, {type = "send_next_wave"})
   button.style.font = "default"
   button.visible = script_data.round_button_visible
 end
@@ -944,6 +947,8 @@ end
 local gui_functions =
 {
   send_next_wave = function(event)
+    local element = event.element
+    if not (element and element.valid and element.enabled) then return end
     if script_data.end_spawn_tick then return end
     local player = game.players[event.player_index]
     local skipped = math.floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
@@ -967,8 +972,23 @@ local gui_functions =
   end
 }
 
+function generic_gui_event(event)
+  local gui = event.element
+  if not (gui and gui.valid) then return end
+
+  local player_gui_actions = script_data.gui_actions[gui.player_index]
+  if not player_gui_actions then return end
+
+  local action = player_gui_actions[gui.index]
+  if not action then return end
+
+  gui_functions[action.type](event, action)
+  return true
+end
 
 local on_gui_click = function(event)
+
+  if generic_gui_event(event) then return end
 
   local gui = event.element
   local player = game.players[event.player_index]
