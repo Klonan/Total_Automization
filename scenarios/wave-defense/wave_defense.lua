@@ -810,11 +810,11 @@ function get_money()
   return format_number(script_data.money)
 end
 
-local update_label_list = function (list, string)
+local update_label_list = function (list, caption)
   local list = script_data.gui_elements.time_label
   for k, label in pairs (list) do
     if label.valid then
-      label.caption = string
+      label.caption = caption
     else
       list[k] = nil
     end
@@ -850,8 +850,7 @@ function update_connected_players(tick)
 end
 
 function update_round_number()
-  local caption = {"current-wave", script_data.wave_number}
-  update_label_list(script_data.gui_elements.round_label, caption)
+  update_label_list(script_data.gui_elements.round_label, {"current-wave", script_data.wave_number})
 end
 
 function set_research(force)
