@@ -698,27 +698,22 @@ local on_gui_closed = function(event)
 end
 
 function update_upgrade_listing(gui, array, upgrades)
+  gui.clear()
   for name, upgrade in pairs (array) do
     local level = upgrades[name]
-    if not gui[name] then
-      local sprite = gui.add{type = "sprite-button", name = name, sprite = upgrade.sprite, tooltip = {"purchase"}, style = "play_tutorial_button"}
-      sprite.style.minimal_height = 75
-      sprite.style.minimal_width = 75
-      local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
-      flow.style.maximal_height = 75
-      local another_table = flow.add{type = "table", name = name.."_label_table", column_count = 1}
-      another_table.style.vertical_spacing = 2
-      local label = another_table.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
-      label.style.font = "default-bold"
-      another_table.add{type = "label", name = name.."_price", caption = {"upgrade-price", format_number(upgrade.price(level))}}
-      if not upgrade.hide_level then
-        local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
-      end
-    else
-      gui[name.."_flow"][name.."_label_table"][name.."_price"].caption = {"upgrade-price", format_number(upgrade.price(level))}
-      if not upgrade.hide_level then
-        gui[name.."_flow"][name.."_label_table"][name.."_level"].caption = {"upgrade-level", level}
-      end
+    local sprite = gui.add{type = "sprite-button", name = name, sprite = upgrade.sprite, tooltip = {"purchase"}, style = "play_tutorial_button"}
+    sprite.style.minimal_height = 75
+    sprite.style.minimal_width = 75
+    register_gui_action(sprite, {type = "purchase_button", name = name})
+    local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
+    flow.style.maximal_height = 75
+    local another_table = flow.add{type = "table", name = name.."_label_table", column_count = 1}
+    another_table.style.vertical_spacing = 2
+    local label = another_table.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
+    label.style.font = "default-bold"
+    another_table.add{type = "label", name = name.."_price", caption = {"upgrade-price", format_number(upgrade.price(level))}}
+    if not upgrade.hide_level then
+      local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
     end
   end
 end
@@ -821,7 +816,7 @@ function get_upgrades()
     if inventory then
       local contents = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket).get_contents()
       if #contents == 0 then
-        inventory.insert"satellite"
+        inventory.insert("satellite")
         game.print({"satellite-purchase", game.players[event.player_index].name})
         return false
       end
@@ -993,6 +988,32 @@ local gui_functions =
   wave_defense_visibility_button = function(event)
     local frame = script_data.gui_elements.wave_frame[event.player_index]
     frame.visible = not frame.visible
+  end,
+  purchase_button = function(event, param)
+    local name = param.name
+    local list = get_upgrades()
+    local upgrades = script_data.team_upgrades
+    local player = game.players[event.player_index]
+    local price = list[name].price(upgrades[name])
+    if script_data.money >= price then
+      increment(script_data, "money", -price)
+      local sucess = false
+      for k, effect in pairs (list[name].effect) do
+        sucess = effect(event)
+      end
+      if sucess and (#game.players > 1) then
+        game.print({"purchased-team-upgrade", player.name, list[name].caption,upgrades[name]})
+      end
+      update_connected_players()
+      for k, player in pairs (game.connected_players) do
+        local gui = player.gui.center
+        if gui.team_upgrade_frame then
+          update_upgrade_listing(gui.team_upgrade_frame.team_upgrade_scroll.upgrade_table, list, upgrades)
+        end
+      end
+    else
+      player.print({"not-enough-money"})
+    end
   end
 }
 
@@ -1022,32 +1043,6 @@ local on_gui_click = function(event)
   local action = gui_functions[gui.name]
   if action then
     return action(event)
-  end
-
-  if script_data.team_upgrades[gui.name] then
-    local list = get_upgrades()
-    local upgrades = script_data.team_upgrades
-    local price = list[gui.name].price(upgrades[gui.name])
-    if script_data.money >= price then
-      increment(script_data, "money", -price)
-      local sucess = false
-      for k, effect in pairs (list[gui.name].effect) do
-        sucess = effect(event)
-      end
-      if sucess and (#game.players > 1) then
-        game.print({"purchased-team-upgrade", player.name, list[gui.name].caption,upgrades[gui.name]})
-      end
-      update_connected_players()
-      for k, player in pairs (game.connected_players) do
-        local gui = player.gui.center
-        if gui.team_upgrade_frame then
-          update_upgrade_listing(gui.team_upgrade_frame.team_upgrade_scroll.upgrade_table, list, upgrades)
-        end
-      end
-    else
-      player.print({"not-enough-money"})
-    end
-    return
   end
 
 end
