@@ -27,7 +27,9 @@ local script_data =
     money_label = {},
     time_label = {},
     round_label = {},
-    next_round_button = {}
+    next_round_button = {},
+    wave_frame_button = {},
+    upgrade_frame_button = {},
   },
   gui_actions = {}
 }
@@ -545,11 +547,11 @@ function make_preview_gui(player)
   end
   local gui = player.gui.center
   local frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
-  frame.style.align = "right"
+  frame.style.horizontal_align = "right"
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
   subheader.style.horizontally_stretchable = true
-  subheader.style.align = "right"
+  subheader.style.horizontal_align = "right"
   subheader.style.bottom_padding = 1
   local pusher = subheader.add{type = "flow"}
   pusher.style.horizontally_stretchable = true
@@ -566,7 +568,7 @@ function make_preview_gui(player)
   --minimap.style.horizontally_stretchable = true
 
   local button_flow = frame.add{type = "flow"}
-  button_flow.style.align = "right"
+  button_flow.style.horizontal_align = "right"
   button_flow.style.horizontally_stretchable = true
   button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
 end
@@ -580,33 +582,42 @@ function gui_init(player)
     gui.wave_frame.destroy()
   end
   create_wave_frame(gui)
-  local button_flow = mod_gui.get_button_flow(player)
-  local button = button_flow.wave_defense_visibility_button
+
+  local button = script_data.gui_elements.wave_frame_button[player.index]
   if not button then
-    button_flow.add
+    button = button_flow.add
     {
       type = "sprite-button",
-      name = "wave_defense_visibility_button",
       style = mod_gui.button_style,
       sprite = "entity/behemoth-spitter",
       tooltip = {"visibility-button-tooltip"}
     }
+    script_data.gui_elements.wave_frame_button[player_index] = button
+    register_gui_action(button, {type = "wave_defense_visibility_button"})
   end
-  local upgrade_button = button_flow.upgrade_button
-  if upgrade_button then upgrade_button.destroy() end
-  upgrade_button = button_flow.add{
-    type = "sprite-button",
-    name = "upgrade_button",
-    caption = {"upgrade-button"},
-    tooltip = {"upgrade-button-tooltip"},
-    style = mod_gui.button_style
-  }
+
+  local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
+  if not upgrade_button then
+    upgrade_button = button_flow.add
+    {
+      type = "sprite-button",
+      name = "upgrade_button",
+      caption = {"upgrade-button"},
+      tooltip = {"upgrade-button-tooltip"},
+      style = mod_gui.button_style
+    }
+    script_data.gui_elements.upgrade_frame_button[player_index] = button
+    register_gui_action(button, {type = "upgrade_button"})
+  end
+
   if gui.team_upgrade_frame then
     gui.team_upgrade_frame.destroy()
   end
+
 end
 
 local cash_font_color = {r = 0.8, b = 0.5, g = 0.8}
+
 function create_wave_frame(gui)
   if not gui.valid then return end
   local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
@@ -966,9 +977,8 @@ local gui_functions =
     create_upgrade_gui(player.gui.center)
   end,
   wave_defense_visibility_button = function(event)
-    local player = game.players[event.player_index]
-    local gui =  mod_gui.get_frame_flow(player)
-    gui.wave_frame.visible = not gui.wave_frame.visible
+    local frame = script_data.gui_elements.wave_frame[event.player_index]
+    frame.visible = not frame.visible
   end
 }
 
