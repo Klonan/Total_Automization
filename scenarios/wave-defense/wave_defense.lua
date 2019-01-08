@@ -576,13 +576,9 @@ end
 function gui_init(player)
 
   make_preview_gui(player)
+  create_wave_frame(player)
 
-  local gui = mod_gui.get_frame_flow(player)
-  if gui.wave_frame then
-    gui.wave_frame.destroy()
-  end
-  create_wave_frame(gui)
-
+  local button_flow = mod_gui.get_button_flow(player)
   local button = script_data.gui_elements.wave_frame_button[player.index]
   if not button then
     button = button_flow.add
@@ -592,35 +588,49 @@ function gui_init(player)
       sprite = "entity/behemoth-spitter",
       tooltip = {"visibility-button-tooltip"}
     }
-    script_data.gui_elements.wave_frame_button[player_index] = button
+    script_data.gui_elements.wave_frame_button[player.index] = button
     register_gui_action(button, {type = "wave_defense_visibility_button"})
   end
-
+  
   local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
   if not upgrade_button then
     upgrade_button = button_flow.add
     {
       type = "sprite-button",
-      name = "upgrade_button",
       caption = {"upgrade-button"},
       tooltip = {"upgrade-button-tooltip"},
       style = mod_gui.button_style
     }
-    script_data.gui_elements.upgrade_frame_button[player_index] = button
-    register_gui_action(button, {type = "upgrade_button"})
+    script_data.gui_elements.upgrade_frame_button[player.index] = upgrade_button
+    register_gui_action(upgrade_button, {type = "upgrade_button"})
   end
-
-  if gui.team_upgrade_frame then
-    gui.team_upgrade_frame.destroy()
+  
+  local upgrade_frame = script_data.gui_elements.upgrade_frame[player.index]
+  if upgrade_frame and upgrade_frame.valid then
+    upgrade_frame.destroy()
   end
+  script_data.gui_elements.upgrade_frame[player.index] = nil
 
 end
 
 local cash_font_color = {r = 0.8, b = 0.5, g = 0.8}
+local wave_frame =
+{
+  type = "frame",
+  caption = {"wave-frame"},
+  direction = "vertical"
+}
 
-function create_wave_frame(gui)
-  if not gui.valid then return end
-  local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
+function create_wave_frame(player)
+
+  local frame = script_data.gui_elements.wave_frame[player.index]
+
+  if not (frame and frame.valid) then  
+    frame = mod_gui.get_frame_flow(player).add(wave_frame)
+    script_data.gui_elements.wave_frame[player.index] = frame
+  end
+  
+  frame.clear()
   frame.visible = true
 
   local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
@@ -647,29 +657,34 @@ function create_wave_frame(gui)
   button.visible = script_data.round_button_visible
 end
 
-function create_upgrade_gui(gui)
-  local player = game.players[gui.player_index]
-  if gui.team_upgrade_frame then
-    gui.team_upgrade_frame.destroy()
+local upgrade_frame = {type = "frame", caption = {"buy-upgrades"}, direction = "vertical"}
+function toggle_upgrade_frame(player)
+
+  local frame = script_data.gui_elements.upgrade_frame[player.index]
+  if frame and frame.valid then
+    frame.destroy()
+    script_data.gui_elements.upgrade_frame[player.index] = nil
     return
   end
-  local team_upgrades = gui.add{type = "frame", name = "team_upgrade_frame", caption = {"buy-upgrades"}, direction = "vertical"}
-  team_upgrades.visible = true
-  team_upgrades.style.title_bottom_padding = 2
-  local money_table = team_upgrades.add{type = "table", name = "money_table", column_count = 2}
+
+  frame = mod_gui.get_frame_flow(player).add(upgrade_frame)
+  script_data.gui_elements.upgrade_frame[player.index] = frame
+
+  frame.visible = true
+  local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.style.column_alignments[2] = "right"
   local label = money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   label.style.font = "default-semibold"
   local cash = money_table.add{type = "label", caption = get_money()}
   insert(script_data.gui_elements.money_label, cash)
   cash.style.font_color = {r = 0.8, b = 0.5, g = 0.8}
-  local scroll = team_upgrades.add{type = "scroll-pane", name = "team_upgrade_scroll"}
+  local scroll = frame.add{type = "scroll-pane", name = "team_upgrade_scroll"}
   scroll.style.maximal_height = 450
   local upgrade_table = scroll.add{type = "table", name = "upgrade_table", column_count = 2}
   upgrade_table.style.horizontal_spacing = 0
   upgrade_table.style.vertical_spacing = 0
   update_upgrade_listing(upgrade_table, get_upgrades(), script_data.team_upgrades)
-  player.opened = team_upgrades
+  player.opened = frame
 end
 
 local on_gui_closed = function(event)
@@ -973,8 +988,7 @@ local gui_functions =
     update_connected_players()
   end,
   upgrade_button = function(event)
-    local player = game.players[event.player_index]
-    create_upgrade_gui(player.gui.center)
+    toggle_upgrade_frame(game.players[event.player_index])
   end,
   wave_defense_visibility_button = function(event)
     local frame = script_data.gui_elements.wave_frame[event.player_index]
