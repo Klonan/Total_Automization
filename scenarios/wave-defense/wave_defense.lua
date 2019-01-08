@@ -19,14 +19,36 @@ local script_data =
   spawn_time = 2500,
   wave_time = 10000,
   team_upgrades = {},
-  gui =
+  gui_elements =
   {
     preview_frame = {},
-
-  }
+    wave_frame = {},
+    upgrade_frame = {},
+    money_label = {}
+  },
+  gui_actions = {}
 }
 
 local max_seed = 2^32 - 2
+
+function deregister_gui(gui)
+  local player_gui_actions = script_data.gui_actions[gui.player_index]
+  if not player_gui_actions then return end
+  player_gui_actions[gui.index] = nil
+  for k, child in pairs (gui.children) do
+    deregister_gui(child)
+  end
+end
+
+function register_gui_action(gui, param)
+  local gui_actions = script_data.gui_actions
+  local player_gui_actions = gui_actions[gui.player_index]
+  if not player_gui_actions then
+    gui_actions[gui.player_index] = {}
+    player_gui_actions = gui_actions[gui.player_index]
+  end
+  player_gui_actions[gui.index] = param
+end
 
 function init_forces()
   for k, force in pairs (game.forces) do
@@ -72,15 +94,17 @@ function start_round()
   teleport_all_players()
 end
 
-local get_seed = function()
+local get_random_seed = function()
   local seed = math.random(max_seed)
   for k, player in pairs (game.players) do
     local name = player.name or "Mary had a little lamb"
     for k = 1, string.len(name) do
       seed = seed + math.random(string.byte(name, k))
-      seed = seed + math.abs(player.position.x) * 1000
-      seed = seed + math.abs(player.position.y) * 1000
     end
+    seed = seed + math.abs(player.position.x) * 1000
+    seed = seed + math.abs(player.position.y) * 1000
+    seed = seed + player.afk_time
+    seed = seed + player.online_time
   end
   seed = math.floor(seed) % max_seed
   return seed
@@ -88,7 +112,7 @@ end
 
 function get_map_gen_settings()
   local settings = map_gen_settings
-  settings.seed = get_seed()
+  settings.seed = get_random_seed()
   return settings
 end
 
@@ -587,8 +611,9 @@ function create_wave_frame(gui)
   frame.add{type = "label", name = "time_to_next_wave", caption = {"time-to-next-wave", time_to_next_wave()}}
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
-  local cash = money_table.add{type = "label", name = "force_money_count", caption = get_money()}.style
-  cash.font_color = cash_font_color
+  local cash = money_table.add{type = "label", caption = get_money()}
+  insert(script_data.gui_elements.money_label, cash)
+  cash.style.font_color = cash_font_color
   local button = frame.add
   {
     type = "button",
@@ -614,8 +639,9 @@ function create_upgrade_gui(gui)
   money_table.style.column_alignments[2] = "right"
   local label = money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   label.style.font = "default-semibold"
-  local cash = money_table.add{type = "label", name = "force_money_count", caption = get_money()}.style
-  cash.font_color = {r = 0.8, b = 0.5, g = 0.8}
+  local cash = money_table.add{type = "label", caption = get_money()}
+  insert(script_data.gui_elements.money_label, cash)
+  cash.style.font_color = {r = 0.8, b = 0.5, g = 0.8}
   local scroll = team_upgrades.add{type = "scroll-pane", name = "team_upgrade_scroll"}
   scroll.style.maximal_height = 450
   local upgrade_table = scroll.add{type = "table", name = "upgrade_table", column_count = 2}
@@ -791,14 +817,14 @@ local update_timer = function (gui, time_left, label)
   end
 end
 
-local update_money_amounts = function(player)
-  local wave_frame = mod_gui.get_frame_flow(player).wave_frame
-  local money_table = wave_frame.money_table
-  money_table.force_money_count.caption = get_money()
-  local frame = player.gui.center.team_upgrade_frame
-  if not frame then return end
-  local money_table = frame.money_table
-  money_table.force_money_count.caption = get_money()
+local update_money_amounts = function(string)
+  for k, label in pairs (script_data.gui_elements.money_label) do
+    if label.valid then
+      label.caption = string
+    else
+      script_data.gui_elements.money_label[k] = nil
+    end
+  end
 end
 
 function update_connected_players(tick)
@@ -813,9 +839,9 @@ function update_connected_players(tick)
   else
     time_left = "Somethings gone wrong here... ?"
   end
+  update_money_amounts(get_money())
   for k, player in pairs (game.connected_players) do
     update_timer(mod_gui.get_frame_flow(player), time_left, label)
-    update_money_amounts(player)
   end
 end
 
