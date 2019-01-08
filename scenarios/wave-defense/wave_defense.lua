@@ -25,7 +25,8 @@ local script_data =
     wave_frame = {},
     upgrade_frame = {},
     money_label = {},
-    time_label = {}
+    time_label = {},
+    round_label = {}
   },
   gui_actions = {}
 }
@@ -608,9 +609,13 @@ function create_wave_frame(gui)
   if not gui.valid then return end
   local frame = gui.add{type = "frame", name = "wave_frame", caption = {"wave-frame"}, direction = "vertical"}
   frame.visible = true
-  frame.add{type = "label", name = "current_wave", caption = {"current-wave", script_data.wave_number}}
+
+  local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
+  insert(script_data.gui_elements.round_label, round)
+
   local time = frame.add{type = "label", caption = {"time-to-next-wave", time_to_next_wave()}}
   insert(script_data.gui_elements.time_label, time)
+
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   local cash = money_table.add{type = "label", caption = get_money()}
@@ -844,18 +849,9 @@ function update_connected_players(tick)
   update_label_list(script_data.gui_elements.time_label, caption)
 end
 
-local update_round_number_gui = function (gui, caption)
-  if not gui.wave_frame then return end
-  if not gui.wave_frame.current_wave then return end
-  local label = gui.wave_frame.current_wave
-  label.caption = caption
-end
-
 function update_round_number()
   local caption = {"current-wave", script_data.wave_number}
-  for k, player in pairs (game.connected_players) do
-    update_round_number_gui(mod_gui.get_frame_flow(player), caption)
-  end
+  update_label_list(script_data.gui_elements.round_label, caption)
 end
 
 function set_research(force)
