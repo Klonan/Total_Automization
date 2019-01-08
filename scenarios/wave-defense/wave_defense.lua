@@ -24,6 +24,7 @@ local script_data =
     preview_frame = {},
     wave_frame = {},
     upgrade_frame = {},
+    upgrade_table = {},
     money_label = {},
     time_label = {},
     round_label = {},
@@ -99,10 +100,10 @@ function start_round()
   teleport_all_players()
 end
 
-local get_random_seed = function()
+local get_random_seed = function(max_seed)
   local seed = math.random(max_seed)
   for k, player in pairs (game.players) do
-    local name = player.name or "Mary had a little lamb"
+    local name = player.name
     for k = 1, string.len(name) do
       seed = seed + math.random(string.byte(name, k))
     end
@@ -111,13 +112,13 @@ local get_random_seed = function()
     seed = seed + player.afk_time
     seed = seed + player.online_time
   end
-  seed = math.floor(seed) % max_seed
+  seed = math.floor(seed) % max_seed + 1
   return seed
 end
 
 function get_map_gen_settings()
   local settings = map_gen_settings
-  settings.seed = get_random_seed()
+  settings.seed = math.random(max_seed)
   return settings
 end
 
@@ -639,7 +640,7 @@ function create_wave_frame(player)
   local time = frame.add{type = "label", caption = {"time-to-next-wave", time_to_next_wave()}}
   insert(script_data.gui_elements.time_label, time)
 
-  local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
+  local money_table = frame.add{type = "table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   local cash = money_table.add{type = "label", caption = get_money()}
   insert(script_data.gui_elements.money_label, cash)
@@ -657,6 +658,7 @@ function create_wave_frame(player)
   button.visible = script_data.round_button_visible
 end
 
+
 local upgrade_frame = {type = "frame", caption = {"buy-upgrades"}, direction = "vertical"}
 function toggle_upgrade_frame(player)
 
@@ -673,31 +675,28 @@ function toggle_upgrade_frame(player)
   frame.visible = true
   local money_table = frame.add{type = "table", name = "money_table", column_count = 2}
   money_table.style.column_alignments[2] = "right"
-  local label = money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
+  local label = money_table.add{type = "label", caption = {"force-money"}}
   label.style.font = "default-semibold"
   local cash = money_table.add{type = "label", caption = get_money()}
   insert(script_data.gui_elements.money_label, cash)
   cash.style.font_color = {r = 0.8, b = 0.5, g = 0.8}
-  local scroll = frame.add{type = "scroll-pane", name = "team_upgrade_scroll"}
+  local scroll = frame.add{type = "scroll-pane"}
   scroll.style.maximal_height = 450
-  local upgrade_table = scroll.add{type = "table", name = "upgrade_table", column_count = 2}
+  local upgrade_table = scroll.add{type = "table", column_count = 2}
   upgrade_table.style.horizontal_spacing = 0
   upgrade_table.style.vertical_spacing = 0
-  update_upgrade_listing(upgrade_table, get_upgrades(), script_data.team_upgrades)
-  player.opened = frame
+  script_data.gui_elements.upgrade_table[player.index] = upgrade_table
+  update_upgrade_listing(player)
 end
 
 local on_gui_closed = function(event)
-  local gui = event.element
-  if not gui then return end
-  local name = gui.name
-  if not name then return end
-  if name == "team_upgrade_frame" then
-    gui.destroy()
-  end
 end
 
-function update_upgrade_listing(gui, array, upgrades)
+function update_upgrade_listing(player)
+  local gui = script_data.gui_elements.upgrade_table[player.index]
+  if not (gui and gui.valid) then return end
+  local upgrades = script_data.team_upgrades
+  local array = get_upgrades()
   gui.clear()
   for name, upgrade in pairs (array) do
     local level = upgrades[name]
@@ -1006,10 +1005,7 @@ local gui_functions =
       end
       update_connected_players()
       for k, player in pairs (game.connected_players) do
-        local gui = player.gui.center
-        if gui.team_upgrade_frame then
-          update_upgrade_listing(gui.team_upgrade_frame.team_upgrade_scroll.upgrade_table, list, upgrades)
-        end
+        update_upgrade_listing(player)
       end
     else
       player.print({"not-enough-money"})
@@ -1032,19 +1028,7 @@ function generic_gui_event(event)
 end
 
 local on_gui_click = function(event)
-
   if generic_gui_event(event) then return end
-
-  local gui = event.element
-  local player = game.players[event.player_index]
-
-  if not (gui and gui.valid and player and player.valid) then return end
-
-  local action = gui_functions[gui.name]
-  if action then
-    return action(event)
-  end
-
 end
 
 local on_tick = function(event)
