@@ -44,18 +44,42 @@ local distance = function(position_1, position_2)
   return (((position_2.x - position_1.x) * (position_2.x - position_1.x)) + ((position_2.y - position_1.y) * (position_2.y - position_1.y))) ^ 0.5
 end
 
+local add_unit_indicators
+
+local set_command = function(unit_data, command)
+  unit_data.command = command
+  local unit = unit_data.entity
+  unit_data.destination = command.destination
+  unit_data.destination_entity = command.destination_entity
+  unit_data.target = command.target
+  unit.speed = command.speed or unit.prototype.speed
+  unit.ai_settings.path_resolution_modifier = command.path_resolution_modifier or -2
+  unit.set_command(command)
+  return add_unit_indicators(unit_data)
+end
+
+local retry_command = function(unit_data)
+  --game.print("Unit failed a command, retrying at higher path resolution")
+  local unit = unit_data.entity
+  unit.ai_settings.path_resolution_modifier = math.min(unit.ai_settings.path_resolution_modifier + 1, 3)
+  return pcall(unit.set_command, unit_data.command)
+end
+
 local set_scout_command = function(unit_data, failure, delay)
   local unit = unit_data.entity
   if unit.type ~= "unit" then return end
-  unit.speed = unit.prototype.speed
+  if failure and unit_data.fail_count > 10 then
+    unit_data.fail_count = nil
+    return set_unit_idle(unit_data, true)
+  end
+  unit_data.command_queue = {{command_type = next_command_type.scout}}
   if delay and delay > 0 then
     print("Unit was delayed for some ticks: "..delay)
-    unit.set_command
+    return set_command(unit_data,
     {
       type = defines.command.stop,
       ticks_to_wait = delay
-    }
-    return
+    })    
   end
   --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
   --unit.surface.create_entity{name = "explosion", position = unit.position}
@@ -124,12 +148,12 @@ local set_scout_command = function(unit_data, failure, delay)
       tile_destination = find_non_colliding_position(name, force.get_spawn_position(surface), 0, 4)
     end
   until tile_destination
-  print("Found destination data")
-  print(serpent.block({
-    tile_destination = tile_destination,
-    current_position = {unit.position.x, unit.position.y}
-  }))
-  unit.set_command
+  --print("Found destination data")
+  --print(serpent.block({
+  --  tile_destination = tile_destination,
+  --  current_position = {unit.position.x, unit.position.y}
+  --}))
+  return set_command(unit_data,
   {
     type = defines.command.go_to_location,
     distraction = defines.distraction.by_enemy,
@@ -141,8 +165,7 @@ local set_scout_command = function(unit_data, failure, delay)
       cache = true,
       low_priority = true
     }
-  }
-  unit_data.destination = tile_destination
+  })
 end
 
 local get_selected_units = function(player_index)
@@ -197,7 +220,7 @@ local shift_box = function(box, shift)
   return new
 end
 
-local add_unit_indicators = function(unit_data)
+add_unit_indicators = function(unit_data)
   clear_indicators(unit_data)
   local player
   if unit_data.player then
@@ -212,21 +235,20 @@ local add_unit_indicators = function(unit_data)
   local insert = table.insert
   local position = unit.position
   local name = "highlight-box"
-
+  local players = {player.index}
   insert(indicators,
   rendering.draw_rectangle
   {
     color = {g = 1},
-    width = 2,
+    width = 3.5,
     filled = false,
     left_top = unit,
     left_top_offset = unit.prototype.selection_box.left_top,
     right_bottom = unit,
     right_bottom_offset = unit.prototype.selection_box.right_bottom,
-    surface = unit.surface
+    surface = unit.surface,
+    players = players
   })
-  --error("HELLO?")
-
 
   local box = unit.prototype.collision_box
 
@@ -239,8 +261,20 @@ local add_unit_indicators = function(unit_data)
       from = unit,
       to = unit_data.destination,
       surface = unit.surface,
-      gap_amount = 10,
-      gap_length = 0.5
+      players = players
+    })
+  end
+
+  if unit_data.destination_entity and unit_data.destination_entity.valid then
+    insert(indicators,
+    rendering.draw_line
+    {
+      color = {b = 0.1, g = 0.5, a = 0.02},
+      width = 2,
+      from = unit,
+      to = unit_data.destination_entity,
+      surface = unit.surface,
+      players = players
     })
   end
 
@@ -255,7 +289,10 @@ local add_unit_indicators = function(unit_data)
         width = 2,
         from = position,
         to = command.destination,
-        surface = unit.surface
+        surface = unit.surface,
+        players = players,
+        gap_length = 0.66,
+        gap_amount = distance(position, command.destination)
       })
       position = command.destination
     end
@@ -270,7 +307,10 @@ local add_unit_indicators = function(unit_data)
             width = 2,
             from = position or unit.position,
             to = destination,
-            surface = unit.surface
+            surface = unit.surface,
+            players = players,
+            gap_length = 0.66,
+            gap_amount = distance(position, command.destination)
           })
           position = destination
         end
@@ -300,6 +340,8 @@ local add_unit_indicators = function(unit_data)
 end
 
 local stop = {type = defines.command.stop}
+local idle_command = {type = defines.command.stop, radius = 1}
+local hold_position_command = {type = defines.command.stop, speed = 0}
 
 local set_unit_idle = function(unit_data, send_event)
   unit_data.idle = true
@@ -307,7 +349,7 @@ local set_unit_idle = function(unit_data, send_event)
   unit_data.destination = nil
   unit_data.target = nil
   local unit = unit_data.entity
-  unit.set_command(stop)
+  set_command(unit_data, stop)
   if send_event then
     script.raise_event(script_events.on_unit_idle, {entity = unit})
   end
@@ -376,9 +418,8 @@ local gui_actions =
       if append and not unit_data.idle then
         table.insert(unit_data.command_queue, {command_type = next_command_type.hold_position})
       else
+        set_command(unit_data, hold_position_command)
         set_unit_not_idle(unit_data)
-        unit.speed = 0
-        unit.set_command{type = defines.command.stop}
       end
     end
     game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
@@ -411,7 +452,6 @@ local gui_actions =
         table.insert(unit_data.command_queue, {command_type = next_command_type.scout})
       else
         set_scout_command(unit_data, false, unit_number % 120)
-        unit_data.command_queue = {{command_type = next_command_type.scout}}
         set_unit_not_idle(unit_data)
       end
     end
@@ -489,7 +529,7 @@ make_unit_gui = function(frame)
     button.style.font = "default"
     button.style.horizontally_stretchable = true
   end
-  butts.style.align = "center"
+  butts.style.horizontal_align = "center"
 end
 
 deregister_unit = function(entity)
@@ -650,18 +690,14 @@ local make_move_command = function(param)
         local unit_data = data.units[entity.unit_number]
         if append then
           if unit_data.idle and unit then
-            entity.set_command(command)
-            entity.speed = speed
-            unit_data.destination = destination
+            set_command(unit_data, command)
           end
           insert(unit_data.command_queue, command)
         else
           unit_data.command_queue = {command}
           if unit then
-            entity.set_command(command)
-            entity.speed = speed
+            set_command(unit_data, command)
             unit_data.command_queue = {}
-            unit_data.destination = destination
           else
             unit_data.command_queue = {command}
           end
@@ -814,13 +850,12 @@ local attack_closest = function(unit_data, entities)
   local closest = unit.surface.get_closest(unit.position, entities)
 
   if closest and closest.valid then
-    unit.set_command
+    set_command(unit_data,
     {
       type = defines.command.attack,
       distraction = defines.distraction.none,
       target = closest
-    }
-    unit_data.target = closest
+    })
     return true
   else
     return false
@@ -851,13 +886,12 @@ local unit_follow = function(unit_data, next_command)
   local unit = unit_data.entity
 
   if distance(target.position, unit.position) > follow_range then
-    unit.speed = unit.prototype.speed
-    unit.set_command
+    set_command(unit_data,
     {
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = follow_range
-    }
+    })    
     return
   end
 
@@ -871,14 +905,14 @@ local unit_follow = function(unit_data, next_command)
         local offset = directions[state.direction]
         local target_speed = target.character_running_speed
         local new_position = {unit.position.x + (offset[1] * check_time * target_speed), unit.position.y + (offset[2] * check_time * target_speed)}
-        unit.speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
-        return unit.set_command
+        return set_command(unit_data,
         {
           type = defines.command.go_to_location,
           radius = 1,
           distraction = defines.distraction.by_enemy,
-          destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1)
-        }
+          destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1),
+          speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
+        })
       end
     end
   end
@@ -890,25 +924,25 @@ local unit_follow = function(unit_data, next_command)
       local offset = {math.cos(orientation), math.sin(orientation)}
       local target_speed = target.speed
       local new_position = {unit.position.x + (offset[1] * check_time * target_speed), unit.position.y + (offset[2] * check_time * target_speed)}
-      unit.speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
-      return unit.set_command
+      return set_command(unit_data,
       {
         type = defines.command.go_to_location,
         radius = 1,
         distraction = defines.distraction.by_enemy,
-        destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1)
-      }
+        destination = unit.surface.find_non_colliding_position(unit.name, new_position, 0, 1),
+        speed = math.min(unit.prototype.speed, target_speed * (check_time / (check_time - 1)))
+      })
     end
   end
 
   --todo wander in a random direction...
-  unit.speed = unit.prototype.speed * ((random() * 0.5) + 0.5)
-  return unit.set_command
+  return set_command(unit_data,
   {
     type = defines.command.wander,
     distraction = defines.distraction.none,
     ticks_to_wait = check_time,
-  }
+    speed = unit.prototype.speed * ((random() * 0.5) + 0.5)
+  })
 end
 
 local make_attack_command = function(group, entities, append)
@@ -1051,9 +1085,6 @@ local on_entity_removed = function(event)
   deregister_unit(event.entity)
 end
 
-local idle_command = {type = defines.command.stop, radius = 1}
-local hold_position_command = {type = defines.command.stop}
-
 process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
   if not (entity and entity.valid) then
@@ -1062,34 +1093,31 @@ process_command_queue = function(unit_data, result)
   end
   local failed = (result == defines.behavior_result.fail)
   print("Processing command queue "..entity.unit_number.." Failure = "..tostring(result == defines.behavior_result.fail))
+
   if failed then
     unit_data.fail_count = (unit_data.fail_count or 0) + 1
-    if unit_data.fail_count > 10 then
-      set_unit_idle(unit_data, true)
-      unit_data.fail_count = nil
+    if unit_data.fail_count < 5 then
+      if retry_command(unit_data) then
+        return
+      end
     end
-  end
+  end  
+
   local command_queue = unit_data.command_queue
   local next_command = command_queue[1]
-  unit_data.destination = nil
-  unit_data.target = nil
-
+  
   if not (next_command) then
     if not unit_data.idle then
       set_unit_idle(unit_data)
     end
     return
   end
-
-  if entity.type == "unit" then
-    entity.speed = next_command.speed or entity.prototype.speed
-  end
-
+  
   local type = next_command.command_type
 
   if type == next_command_type.move then
     print("Move")
-    entity.set_command(next_command)
+    set_command(unit_data, next_command)
     unit_data.destination = next_command.destination
     table.remove(command_queue, 1)
     return
@@ -1108,12 +1136,12 @@ process_command_queue = function(unit_data, result)
       next_command.destination_index = 1
       next_destination = next_command.destinations[next_command.destination_index]
     end
-    entity.set_command
+    set_command(unit_data, 
     {
       type = defines.command.go_to_location,
       destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 0, 0.5) or entity.position,
       radius = 1
-    }
+    })
     return
   end
 
@@ -1146,8 +1174,7 @@ process_command_queue = function(unit_data, result)
 
   if type == next_command_type.hold_position then
     print("Hold position")
-    entity.speed = 0
-    return entity.set_command(hold_position_command)
+    return set_command(unit_data, hold_position_command)
   end
 
 end
@@ -1157,7 +1184,6 @@ local on_ai_command_completed = function(event)
   local unit_data = data.units[event.unit_number]
   if unit_data then
     process_command_queue(unit_data, event.result)
-    add_unit_indicators(unit_data)
   end
 end
 
@@ -1173,7 +1199,7 @@ end
 
 local on_tick = function(event)
   checked_tables = {}
-  check_indicators(event.tick)
+  --check_indicators(event.tick)
 end
 
 local on_unit_deployed = function(event)
@@ -1264,7 +1290,10 @@ remote.add_interface("unit_control", {
   end,
   get_events = function()
     return script_events
-  end
+  end,
+  set_debug = function(bool)
+    data.debug = bool
+  end,
 })
 
 local register_events = function()
