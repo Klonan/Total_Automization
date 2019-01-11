@@ -101,19 +101,8 @@ function start_round()
 end
 
 local get_random_seed = function()
-  local seed = game.tick * math.random(game.tick)
-  local random = game.create_random_generator(seed)
-  --local table =
-  --{
-  --  tick = game.tick,
-  --  seed = max_seed % game.tick,
-  --  values = {}
-  --}
-  --for k = 1, 10 do
-  --  table.values[k] = random()
-  --end
-  --log(serpent.block(table))
-  return random(max_seed)
+  --Some random prime...
+  return (32452867 * game.tick) % max_seed
 end
 
 function get_map_gen_settings()
@@ -1063,6 +1052,8 @@ local on_tick = function(event)
   check_next_wave(tick)
   check_spawn_units(tick)
   update_connected_players(tick)
+  --local print = {tick = game.tick, seed = get_random_seed()}
+  --log(serpent.block(print))
 end
 
 local on_gui_text_changed = function(event)
