@@ -95,48 +95,55 @@ function teleport_all_players()
 end
 
 function start_round()
-  create_battle_surface()
-  create_silo()
+  --create_battle_surface()
+  --create_silo()
   teleport_all_players()
 end
 
-local get_random_seed = function(max_seed)
-  local seed = math.random(max_seed)
-  for k, player in pairs (game.players) do
-    local name = player.name
-    for k = 1, string.len(name) do
-      seed = seed + math.random(string.byte(name, k))
-    end
-    seed = seed + math.abs(player.position.x) * 1000
-    seed = seed + math.abs(player.position.y) * 1000
-    seed = seed + player.afk_time
-    seed = seed + player.online_time
-  end
-  seed = math.floor(seed) % max_seed + 1
-  return seed
+local get_random_seed = function()
+  local seed = game.tick * math.random(game.tick)
+  local random = game.create_random_generator(seed)
+  --local table =
+  --{
+  --  tick = game.tick,
+  --  seed = max_seed % game.tick,
+  --  values = {}
+  --}
+  --for k = 1, 10 do
+  --  table.values[k] = random()
+  --end
+  --log(serpent.block(table))
+  return random(max_seed)
 end
 
 function get_map_gen_settings()
-  local settings = map_gen_settings
-  settings.seed = math.random(max_seed)
-  return settings
+  return map_gen_settings
+end
+
+local get_map_size = function()
+  return script_data.map_size or 100
 end
 
 function create_battle_surface()
   local name = "battle_surface"
-  if game.surfaces[name] then
-    game.delete_surface(name)
-    name = name.."_1"
-    if game.surfaces[name] then
-      game.delete_surface(name)
-      name = name.."_1"
+  for k, surface in pairs (game.surfaces) do
+    if surface.name ~= "nauvis" then
+      game.delete_surface(surface.name)
     end
+    name = name..k
   end
   local settings = get_map_gen_settings()
+  settings.seed = seed or get_random_seed()
   local surface = game.create_surface(name, settings)
-  surface.request_to_generate_chunks({0,0}, 400/32)
+  local size = get_map_size()
+  surface.request_to_generate_chunks({0,0}, size / 32)
   surface.force_generate_chunk_requests()
+  game.forces.player.chart(surface, {{-size, -size},{size, size}})
   script_data.surface = surface
+  create_silo()
+  for k, player in pairs (game.players) do
+    refresh_preview_gui(player)
+  end
 end
 
 function create_silo()
@@ -538,17 +545,14 @@ function next_round_button_visible(bool)
   end
 end
 
-function make_preview_gui(player)
-  local surface = script_data.surface
-  if not surface then
-    create_battle_surface()
-    create_silo()
-    surface = script_data.surface
-    player.force.chart(surface, {{-200, -200},{200,200}})
-  end
-  local gui = player.gui.center
-  local frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
-  frame.style.horizontal_align = "right"
+function refresh_preview_gui(player)
+
+  local frame = script_data.gui_elements.preview_frame[player.index]
+  if not frame and frame.valid then return end
+  frame.clear()
+
+
+
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
   subheader.style.horizontally_stretchable = true
@@ -558,13 +562,21 @@ function make_preview_gui(player)
   pusher.style.horizontally_stretchable = true
   local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
   seed_flow.add{type = "label", style = "caption_label", caption = "Seed"}
-  seed_flow.add{type = "textfield", text = surface.map_gen_settings.seed, style = "long_number_textfield"}
+  local seed_input = seed_flow.add{type = "textfield", text = "", style = "long_number_textfield"}
   local shuffle_button = seed_flow.add{type = "sprite-button", sprite = "utility/shuffle", style = "tool_button"}
+  register_gui_action(shuffle_button, {type = "shuffle_button"})
   local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
-  local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.8
-  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / 400, force = player.force.name, position = player.force.get_spawn_position(surface)}
-  minimap.style.width = max
-  minimap.style.height = max
+  local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.6
+
+  local surface = script_data.surface
+  if (surface and surface.valid) then
+    seed_input.text = surface.map_gen_settings.seed
+    local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / (get_map_size() * 2), force = player.force.name, position = player.force.get_spawn_position(surface)}
+    minimap.style.width = max
+    minimap.style.height = max
+  else
+    inner.add{type = "label", caption = "NO SURFACE YET"}
+  end
   --minimap.style.vertically_stretchable = true
   --minimap.style.horizontally_stretchable = true
 
@@ -572,6 +584,18 @@ function make_preview_gui(player)
   button_flow.style.horizontal_align = "right"
   button_flow.style.horizontally_stretchable = true
   button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
+end
+
+function make_preview_gui(player)
+  local gui = player.gui.center
+  local frame = script_data.gui_elements.preview_frame[player.index]
+  if frame and frame.valid then
+    frame.destroy()
+  end
+  frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
+  frame.style.horizontal_align = "right"
+  script_data.gui_elements.preview_frame[player.index] = frame
+  refresh_preview_gui(player)
 end
 
 function gui_init(player)
@@ -592,7 +616,7 @@ function gui_init(player)
     script_data.gui_elements.wave_frame_button[player.index] = button
     register_gui_action(button, {type = "wave_defense_visibility_button"})
   end
-  
+
   local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
   if not upgrade_button then
     upgrade_button = button_flow.add
@@ -605,7 +629,7 @@ function gui_init(player)
     script_data.gui_elements.upgrade_frame_button[player.index] = upgrade_button
     register_gui_action(upgrade_button, {type = "upgrade_button"})
   end
-  
+
   local upgrade_frame = script_data.gui_elements.upgrade_frame[player.index]
   if upgrade_frame and upgrade_frame.valid then
     upgrade_frame.destroy()
@@ -626,11 +650,11 @@ function create_wave_frame(player)
 
   local frame = script_data.gui_elements.wave_frame[player.index]
 
-  if not (frame and frame.valid) then  
+  if not (frame and frame.valid) then
     frame = mod_gui.get_frame_flow(player).add(wave_frame)
     script_data.gui_elements.wave_frame[player.index] = frame
   end
-  
+
   frame.clear()
   frame.visible = true
 
@@ -849,7 +873,7 @@ function update_connected_players(tick)
   if tick and tick % 60 ~= 0 then return end
 
   update_label_list(script_data.gui_elements.money_label, get_money())
-  
+
   local time_left
   if script_data.spawn_tick then
     time_left = time_to_wave_end()
@@ -858,7 +882,7 @@ function update_connected_players(tick)
   else
     time_left = "Somethings gone wrong here... ?"
   end
-  
+
   local caption
   if script_data.spawn_tick then
     caption = {"time-to-wave-end", time_left}
@@ -868,7 +892,7 @@ function update_connected_players(tick)
   if script_data.send_satellite_round then
     caption = {"send-satellite"}
   end
-  
+
   update_label_list(script_data.gui_elements.time_label, caption)
 end
 
@@ -1010,6 +1034,9 @@ local gui_functions =
     else
       player.print({"not-enough-money"})
     end
+  end,
+  shuffle_button = function(event, param)
+    create_battle_surface()
   end
 }
 
@@ -1038,6 +1065,10 @@ local on_tick = function(event)
   update_connected_players(tick)
 end
 
+local on_gui_text_changed = function(event)
+  game.print(event.element.text)
+end
+
 local events =
 {
   [defines.events.on_entity_died] = on_entity_died,
@@ -1046,6 +1077,7 @@ local events =
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_rocket_launched] = on_rocket_launched,
+  [defines.events.on_gui_text_changed] = on_gui_text_changed,
   [defines.events.on_gui_click] = on_gui_click,
   [defines.events.on_gui_closed] = on_gui_closed
 }
