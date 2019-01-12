@@ -157,6 +157,7 @@ function create_silo(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
   local silo_position = starting_point or force.get_spawn_position(surface)
+  --todo offset out of the way from the starting patches a bit
   local silo_name = "rocket-silo"
   if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
   local silo = surface.create_entity{name = silo_name, position = silo_position, force = force, raise_built = true, create_build_effect_smoke = false}
@@ -203,7 +204,7 @@ function create_wall(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
   local origin = starting_point or force.get_spawn_position(surface)
-  local radius = (32 * math.floor((surface.get_starting_area_radius() / 32) / (2^0.5))) - 11
+  local radius = (32 * math.floor((surface.get_starting_area_radius() / 32) / (2^0.5))) + 2
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local perimeter_top = {}

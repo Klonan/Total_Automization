@@ -82,7 +82,7 @@ return
     cliff_elevation_interval = 1.6666666269302368,
     name = "cliff"
   },
-  height = 1000,
+  height = 1024,
   property_expression_names =
   {},
   research_queue_from_the_start = "after-victory",
@@ -96,5 +96,5 @@ return
   },
   terrain_segmentation = 3,
   water = 1.5,
-  width = 1000
+  width = 1024
 }
