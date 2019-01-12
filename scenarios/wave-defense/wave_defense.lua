@@ -36,6 +36,14 @@ local script_data =
 }
 
 local max_seed = 2^32 - 2
+local initial_seed = 314159265 -- Something nice
+
+local players = function(index)
+  --deliberately not local, micro-optimization?
+  player_list = player_list or game.players
+  if not index then return player_list end
+  return player_list[index]
+end
 
 function deregister_gui(gui)
   local player_gui_actions = script_data.gui_actions[gui.player_index]
@@ -84,27 +92,27 @@ function set_tiles_safe(surface, tiles)
   surface.set_tiles(tiles)
 end
 
-function teleport_all_players()
+function set_up_players()
   local surface = script_data.surface
   local force = game.forces.player
   local spawn = force.get_spawn_position(surface)
   local find = surface.find_non_colliding_position
-  for k, player in pairs (game.players) do
-    player.teleport(find(player.character.name, spawn, 0, 1), surface)
+  local create = surface.create_entity
+
+  for k, player in pairs (players()) do
+    player.teleport(spawn, surface)
+    player.character = create{name = "player", position = find("player", spawn, 0, 1), force = force}
+    give_starting_equipment(player)
+    give_spawn_equipment(player)
+    gui_init(player)
   end
+
 end
 
 function start_round()
   script_data.in_round = true
   script_data.wave_tick = game.tick + 5 * 60 * 60
-  if not (script_data.surface and script_data.surface.valid) then
-    create_battle_surface()
-  end
-
-  teleport_all_players()
-  for k, player in pairs (game.players) do
-    gui_init(player)
-  end
+  set_up_players()
 end
 
 local get_random_seed = function()
@@ -131,13 +139,13 @@ function create_battle_surface(seed)
   local settings = get_map_gen_settings()
   settings.seed = seed or get_random_seed()
   local surface = game.create_surface(name, settings)
-  local size = get_map_size()
-  surface.request_to_generate_chunks({0,0}, size / 32)
+  local size = surface.get_starting_area_radius()
+  surface.request_to_generate_chunks({0,0}, math.ceil(size / 32))
   surface.force_generate_chunk_requests()
   game.forces.player.chart(surface, {{-size, -size},{size, size}})
   script_data.surface = surface
   create_silo()
-  for k, player in pairs (game.players) do
+  for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
 end
@@ -552,7 +560,7 @@ end
 function refresh_preview_gui(player)
 
   local frame = script_data.gui_elements.preview_frame[player.index]
-  if not frame and frame.valid then return end
+  if not (frame and frame.valid) then return end
   frame.clear()
 
 
@@ -575,14 +583,11 @@ function refresh_preview_gui(player)
   local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.6
 
   local surface = script_data.surface
-  if (surface and surface.valid) then
-    seed_input.text = surface.map_gen_settings.seed
-    local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / (get_map_size() * 2), force = player.force.name, position = player.force.get_spawn_position(surface)}
-    minimap.style.width = max
-    minimap.style.height = max
-  else
-    --inner.add{type = "label", caption = "NO SURFACE YET"}
-  end
+  seed_input.text = surface.map_gen_settings.seed
+  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / (surface.get_starting_area_radius() * 2), force = player.force.name, position = player.force.get_spawn_position(surface)}
+  minimap.style.width = max
+  minimap.style.height = max
+
   --minimap.style.vertically_stretchable = true
   --minimap.style.horizontally_stretchable = true
 
@@ -784,7 +789,7 @@ function get_upgrades()
         if type == "ammo-damage" then
           local cat = effect.ammo_category
           upgrade.effect[k] = function(event)
-            local force = game.players[event.player_index].force
+            local force = players(event.player_index).force
             force.set_ammo_damage_modifier(cat, force.get_ammo_damage_modifier(cat)+mod)
             increment(script_data.team_upgrades, name)
             return true
@@ -792,7 +797,7 @@ function get_upgrades()
         elseif type == "turret-attack" then
           local id = effect.turret_id
           upgrade.effect[k] = function(event)
-            local force = game.players[event.player_index].force
+            local force = players(event.player_index).force
             force.set_turret_attack_modifier(id, force.get_turret_attack_modifier(id)+mod)
             increment(script_data.team_upgrades, name)
             return true
@@ -800,7 +805,7 @@ function get_upgrades()
         elseif type == "gun-speed" then
           local cat = effect.ammo_category
           upgrade.effect[k] = function(event)
-            local force = game.players[event.player_index].force
+            local force = players(event.player_index).force
             force.set_gun_speed_modifier(cat, force.get_gun_speed_modifier(cat)+mod)
             increment(script_data.team_upgrades, name)
             return true
@@ -808,14 +813,14 @@ function get_upgrades()
         elseif type == "maximum-following-robots-count" then
           upgrade.modifier = "+"..tostring(mod)
           upgrade.effect[k] = function(event)
-            local force = game.players[event.player_index].force
+            local force = players(event.player_index).force
             increment(force, "maximum_following_robot_count", mod)
             increment(script_data.team_upgrades, name)
             return true
           end
         elseif type == "mining-drill-productivity-bonus" then
           upgrade.effect[k] = function(event)
-            local force = game.players[event.player_index].force
+            local force = players(event.player_index).force
             increment(force, "mining_drill_productivity_bonus", mod)
             increment(script_data.team_upgrades, name)
             return true
@@ -852,12 +857,12 @@ function get_upgrades()
       local contents = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket).get_contents()
       if #contents == 0 then
         inventory.insert("satellite")
-        game.print({"satellite-purchase", game.players[event.player_index].name})
+        game.print({"satellite-purchase", players(event.player_index).name})
         return false
       end
     end
     increment(script_data, "money", 500000)
-    game.players[event.player_index].print({"satellite-refund"})
+    players(event.player_index).print({"satellite-refund"})
     return false
   end
   sat.caption = {"buy-satellite"}
@@ -955,14 +960,19 @@ function set_player(player)
 end
 
 local on_player_created = function(event)
+  local player = players(event.player_index)
+  if player.character then
+    player.character.destroy()
+  end
 end
 
 local on_init = function()
   init_globals()
-  setup_waypoints()
-  init_forces()
-  game.map_settings.pollution.enabled = false
-  randomize_ore()
+  --setup_waypoints()
+  --init_forces()
+  --game.map_settings.pollution.enabled = false
+  --randomize_ore()
+  create_battle_surface(initial_seed)
 end
 
 local on_entity_died = function(event)
@@ -991,12 +1001,12 @@ end
 
 
 local on_player_joined_game = function(event)
-  local player = game.players[event.player_index]
+  local player = players(event.player_index)
   gui_init(player)
 end
 
 local on_player_respawned = function(event)
-  local player = game.players[event.player_index]
+  local player = players(event.player_index)
   give_spawn_equipment(player)
 end
 
@@ -1015,7 +1025,7 @@ local gui_functions =
     local element = event.element
     if not (element and element.valid and element.enabled) then return end
     if script_data.end_spawn_tick then return end
-    local player = game.players[event.player_index]
+    local player = players(event.player_index)
     local skipped = math.floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
     increment(script_data, "money", skipped)
     next_wave()
@@ -1027,7 +1037,7 @@ local gui_functions =
     update_connected_players()
   end,
   upgrade_button = function(event)
-    toggle_upgrade_frame(game.players[event.player_index])
+    toggle_upgrade_frame(players(event.player_index))
   end,
   wave_defense_visibility_button = function(event)
     local frame = script_data.gui_elements.wave_frame[event.player_index]
@@ -1037,7 +1047,7 @@ local gui_functions =
     local name = param.name
     local list = get_upgrades()
     local upgrades = script_data.team_upgrades
-    local player = game.players[event.player_index]
+    local player = players(event.player_index)
     local price = list[name].price(upgrades[name])
     if script_data.money >= price then
       increment(script_data, "money", -price)
@@ -1045,7 +1055,7 @@ local gui_functions =
       for k, effect in pairs (list[name].effect) do
         sucess = effect(event)
       end
-      if sucess and (#game.players > 1) then
+      if sucess and (#players() > 1) then
         game.print({"purchased-team-upgrade", player.name, list[name].caption,upgrades[name]})
       end
       update_connected_players()
@@ -1108,9 +1118,21 @@ local on_tick = function(event)
   --log(serpent.block(print))
 end
 
-local on_gui_text_changed = function(event)
-  game.print(event.element.text)
+local oh_no_you_dont = {game_finished = false}
+local on_player_died = function(event)
+  if game.is_multiplayer() then return end
+  local player = players(event.player_index)
+  if not player then return end
+  game.set_game_state(oh_no_you_dont)
 end
+
+
+
+--(game_finished, boolean)
+--(player_won, boolean)
+--(next_level, string)
+--(can_continue, boolean)
+--(victorious_force, ForceSpecification)
 
 local events =
 {
@@ -1122,6 +1144,7 @@ local events =
   [defines.events.on_rocket_launched] = on_rocket_launched,
   [defines.events.on_gui_text_changed] = generic_gui_event,
   [defines.events.on_gui_click] = generic_gui_event,
+  [defines.events.on_player_died] = on_player_died,
   [defines.events.on_gui_closed] = on_gui_closed
 }
 

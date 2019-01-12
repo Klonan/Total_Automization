@@ -34,7 +34,7 @@ return
     },
     ["enemy-base"] =
     {
-      frequency = 1,
+      frequency = 10,
       richness = 1,
       size = 1
     },

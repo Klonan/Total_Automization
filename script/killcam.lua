@@ -15,7 +15,7 @@ local make_killcam = function(player, cause)
   local outer = gui.add{type = "frame", style = "image_frame"}
   outer.style.width = player.display_resolution.width
   outer.style.height = player.display_resolution.height
-  outer.style.align = "center"
+  outer.style.horizontal_align = "center"
   outer.style.vertical_align = "center"
 
 
