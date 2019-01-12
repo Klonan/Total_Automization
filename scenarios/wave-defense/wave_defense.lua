@@ -95,9 +95,16 @@ function teleport_all_players()
 end
 
 function start_round()
-  --create_battle_surface()
-  --create_silo()
+  script_data.in_round = true
+  script_data.wave_tick = game.tick + 5 * 60 * 60
+  if not (script_data.surface and script_data.surface.valid) then
+    create_battle_surface()
+  end
+
   teleport_all_players()
+  for k, player in pairs (game.players) do
+    gui_init(player)
+  end
 end
 
 local get_random_seed = function()
@@ -110,10 +117,10 @@ function get_map_gen_settings()
 end
 
 local get_map_size = function()
-  return script_data.map_size or 100
+  return script_data.map_size or 160
 end
 
-function create_battle_surface()
+function create_battle_surface(seed)
   local name = "battle_surface"
   for k, surface in pairs (game.surfaces) do
     if surface.name ~= "nauvis" then
@@ -534,6 +541,14 @@ function next_round_button_visible(bool)
   end
 end
 
+function delete_preview_gui(player)
+
+  local frame = script_data.gui_elements.preview_frame[player.index]
+  if frame and frame.valid then frame.destroy() end
+  script_data.gui_elements.preview_frame[player.index] = nil
+
+end
+
 function refresh_preview_gui(player)
 
   local frame = script_data.gui_elements.preview_frame[player.index]
@@ -552,9 +567,11 @@ function refresh_preview_gui(player)
   local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
   seed_flow.add{type = "label", style = "caption_label", caption = "Seed"}
   local seed_input = seed_flow.add{type = "textfield", text = "", style = "long_number_textfield"}
+  register_gui_action(seed_input, {type = "check_seed_input"})
   local shuffle_button = seed_flow.add{type = "sprite-button", sprite = "utility/shuffle", style = "tool_button"}
   register_gui_action(shuffle_button, {type = "shuffle_button"})
   local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
+  register_gui_action(refresh_button, {type = "refresh_button", textfield = seed_input})
   local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.6
 
   local surface = script_data.surface
@@ -564,7 +581,7 @@ function refresh_preview_gui(player)
     minimap.style.width = max
     minimap.style.height = max
   else
-    inner.add{type = "label", caption = "NO SURFACE YET"}
+    --inner.add{type = "label", caption = "NO SURFACE YET"}
   end
   --minimap.style.vertically_stretchable = true
   --minimap.style.horizontally_stretchable = true
@@ -572,7 +589,8 @@ function refresh_preview_gui(player)
   local button_flow = frame.add{type = "flow"}
   button_flow.style.horizontal_align = "right"
   button_flow.style.horizontally_stretchable = true
-  button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
+  local start_round = button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
+  register_gui_action(start_round, {type = "start_round"})
 end
 
 function make_preview_gui(player)
@@ -589,7 +607,12 @@ end
 
 function gui_init(player)
 
-  make_preview_gui(player)
+  if not script_data.in_round then
+    make_preview_gui(player)
+    return
+  end
+
+  delete_preview_gui(player)
   create_wave_frame(player)
 
   local button_flow = mod_gui.get_button_flow(player)
@@ -977,6 +1000,15 @@ local on_player_respawned = function(event)
   give_spawn_equipment(player)
 end
 
+local is_reasonable_seed = function(string)
+  local number = tonumber(string)
+  if not number then return end
+  if number < 0 or number > max_seed then
+    return
+  end
+  return true
+end
+
 local gui_functions =
 {
   send_next_wave = function(event)
@@ -1026,6 +1058,26 @@ local gui_functions =
   end,
   shuffle_button = function(event, param)
     create_battle_surface()
+  end,
+  refresh_button = function(event, param)
+    local input = param.textfield
+    if not (input and input.valid) then return end
+    local seed = input.text
+    if is_reasonable_seed(seed) then
+      create_battle_surface(tonumber(seed))
+    end
+  end,
+  check_seed_input = function(event, param)
+    local gui = event.element
+    if not (gui and gui.valid) then return end
+    if is_reasonable_seed(gui.text) then
+      gui.style = "long_number_textfield"
+    else
+      gui.style = "invalid_value_textfield"
+    end
+  end,
+  start_round = function(event, param)
+    start_round()
   end
 }
 
@@ -1068,8 +1120,8 @@ local events =
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_player_joined_game] = on_player_joined_game,
   [defines.events.on_rocket_launched] = on_rocket_launched,
-  [defines.events.on_gui_text_changed] = on_gui_text_changed,
-  [defines.events.on_gui_click] = on_gui_click,
+  [defines.events.on_gui_text_changed] = generic_gui_event,
+  [defines.events.on_gui_click] = generic_gui_event,
   [defines.events.on_gui_closed] = on_gui_closed
 }
 
