@@ -36,13 +36,11 @@ local script_data =
 }
 
 local max_seed = 2^32 - 2
-local initial_seed = 314159265 -- Something nice
+local initial_seed = 314159265 -- Something nice?
 
 local players = function(index)
-  --deliberately not local, micro-optimization?
-  player_list = player_list or game.players
-  if not index then return player_list end
-  return player_list[index]
+  local player_list = game.players
+  return index and player_list[index] or player_list
 end
 
 function deregister_gui(gui)
@@ -147,6 +145,7 @@ function create_battle_surface(seed)
     game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
     create_silo(starting_point)
     create_wall(starting_point)
+    create_turrets(starting_point)
   end
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
@@ -315,6 +314,68 @@ function create_wall(starting_point)
   set_tiles_safe(surface, tiles)
 end
 
+function create_turrets(starting_point)
+  local force = game.forces.player
+  local turret_name = "gun-turret"
+  if not game.entity_prototypes[turret_name] then return end
+  local surface = script_data.surface
+  local ammo_name = "uranium-rounds-magazine"
+  local direction = defines.direction
+  local surface = script_data.surface
+  local height = surface.map_gen_settings.height / 2
+  local width = surface.map_gen_settings.width / 2
+  local origin = starting_point
+  local radius = (32 * math.floor((surface.get_starting_area_radius() / 32) / (2^0.5))) - 8
+  local positions = {}
+  local Xo = origin.x
+  local Yo = origin.y
+  for X = -radius, radius do
+    local Xt = X + Xo
+    if X == -radius then
+      for Y = -radius, radius do
+        local Yt = Y + Yo
+        if (Yt + 16) % 32 ~= 0 and Yt % 8 == 0 then
+          insert(positions, {x = Xo - radius, y = Yt, direction = direction.west})
+          insert(positions, {x = Xo + radius, y = Yt, direction = direction.east})
+        end
+      end
+    elseif (Xt + 16) % 32 ~= 0 and Xt % 8 == 0 then
+      insert(positions, {x = Xt, y = Yo - radius, direction = direction.north})
+      insert(positions, {x = Xt, y = Yo + radius, direction = direction.south})
+    end
+  end
+  local tiles = {}
+  local tile_name = "hazard-concrete-left"
+  if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
+  local stack
+  if ammo_name and game.item_prototypes[ammo_name] then
+    stack = {name = ammo_name, count = 20}
+  end
+  local find_entities_filtered = surface.find_entities_filtered
+  local neutral = game.forces.neutral
+  local destroy_params = {do_cliff_correction = true}
+  local floor = math.floor
+  local create_entity = surface.create_entity
+  for k, position in pairs (positions) do
+    if is_in_map(width, height, position) then
+      local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}
+      local box = turret.bounding_box
+      for k, entity in pairs (find_entities_filtered{area = turret.bounding_box, force = neutral}) do
+        entity.destroy(destroy_params)
+      end
+      if stack then
+        turret.insert(stack)
+      end
+      for x = floor(box.left_top.x), floor(box.right_bottom.x) do
+        for y = floor(box.left_top.y), floor(box.right_bottom.y) do
+          insert(tiles, {name = tile_name, position = {x, y}})
+        end
+      end
+    end
+  end
+  set_tiles_safe(surface, tiles)
+end
+
 
 function init_globals()
   init_unit_settings()
@@ -455,10 +516,13 @@ local get_all_spawn_chunks = function()
   local surface = script_data.surface
   local force = game.forces.player
   local is_chunk_charted = force.is_chunk_charted
+  local height = surface.map_gen_settings.height / 2
+  local width = surface.map_gen_settings.width / 2
   local positions = {}
   for chunk in surface.get_chunks() do
-    if not is_chunk_charted(surface, chunk) then
-      insert(positions, {chunk.x * 32, chunk.y * 32})
+    local position = {x = 16 + (chunk.x * 32), y = 16 + (chunk.y * 32)}
+    if is_in_map(width, height, position) and not is_chunk_charted(surface, chunk) then
+      insert(positions, position)
     end
   end
   return positions
@@ -468,56 +532,41 @@ function spawn_units()
 
   local rand = math.random
   local surface = script_data.surface
-  if surface.count_entities_filtered{type = "unit"} > 500 then return end
-  local power = script_data.wave_power
+  --if surface.count_entities_filtered{type = "unit"} > 500 then return end
+  local power = 1000 or script_data.wave_power
   local spawns = get_all_spawn_chunks()
   local spawns_count = #spawns
   local units = get_wave_units(script_data.wave_number)
   local units_length = #units
-  local groups = {}
-  local group_count = 1
-  local new_group = true
-  local spawn
-  local unit_count
-  local group
+  local unit_count = 0
+  local command = {type = defines.command.attack, target = script_data.silo, distraction = defines.distraction.by_enemy}
 
+  local spawn = spawns[math.random(spawns_count)]
   while units_length > 0 do
-    if new_group == true then
-      spawn = spawns[rand(spawns_count)]
-      group = surface.create_unit_group{position = spawn}
-      groups[group_count] = group
-      group_count = group_count + 1
-      new_group = false
-      unit_count = 0
-    end
     local k = rand(units_length)
     local biter = units[k]
     local cost = biter.cost
-    local command = {type = defines.command.attack, target = script_data.silo}
+
+    if unit_count > 2 then
+      spawn = spawns[math.random(spawns_count)]
+      unit_count = 0
+    end
+
     if cost > power then
       table.remove(units, k)
       units_length = units_length - 1
     else
-      local position = surface.find_non_colliding_position(biter.name, spawn, 32, 2)
-      if position then
-        if unit_count <= 500 then
-          local unit = surface.create_entity{name = biter.name, position = position}
-          unit.ai_settings.allow_try_return_to_spawner = false
-          --unit.set_command(command)
-          --unit.ai_settings.path_resolution_modifier = -3
-          group.add_member(unit)
-          power = power - cost
-          unit_count = unit_count + 1
-        else
-          new_group = true
-        end
-      else
-        break
-      end
+      local position = surface.find_non_colliding_position(biter.name, spawn, 0, 4)
+      local unit = surface.create_entity{name = biter.name, position = position}
+      unit.ai_settings.allow_try_return_to_spawner = false
+      unit.set_command(command)
+      unit.ai_settings.path_resolution_modifier = -3
+      power = power - cost
+      unit_count = unit_count + 1
     end
+
+
   end
-  set_command(groups)
-  --command_straglers()
 end
 
 function set_command(groups)
@@ -579,7 +628,8 @@ function rocket_died(event)
   if not (script_data.silo and script_data.silo.valid) then return end
   local silo = event.entity
   if silo == script_data.silo then
-    game.set_game_state{game_finished = true, player_won = false, can_continue = false}
+    --game.set_game_state{game_finished = true, player_won = false, can_continue = false}
+    game.print("BOO HOO YOU LOSE")
     script_data.silo = nil
   end
 end
@@ -707,7 +757,7 @@ function next_round_button_visible(bool)
   script_data.round_button_visible = bool
   for k, button in pairs (script_data.gui_elements.next_round_button) do
     button.visible = bool
-    button.enabled = not bool
+    button.enabled = bool
   end
 end
 

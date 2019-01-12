@@ -90,8 +90,8 @@ return
   starting_points =
   {
     {
-      x = -450,
-      y = -450
+      x = 0,
+      y = 0
     }
   },
   terrain_segmentation = 3,
