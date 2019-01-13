@@ -18,6 +18,7 @@ local script_data =
   send_satellite_round = false,
   spawn_time = 2500,
   wave_time = 10000,
+  waves_per_day = 10,
   team_upgrades = {},
   gui_elements =
   {
@@ -108,8 +109,14 @@ function set_up_players()
 end
 
 function start_round()
+  local surface = script_data.surface
+  surface.daytime = 0
+  surface.always_day = false
   script_data.in_round = true
-  script_data.wave_tick = game.tick + 5 * 60 * 60
+  local tick = game.tick
+  script_data.wave_time = surface.ticks_per_day
+  script_data.spawn_time = math.floor(surface.ticks_per_day * (surface.morning - surface.evening))
+  script_data.wave_tick = tick + math.ceil(surface.ticks_per_day * surface.evening)
   set_up_players()
 end
 
@@ -192,6 +199,10 @@ function create_silo(starting_point)
   set_tiles_safe(surface, tiles_2)
 end
 
+local get_base_radius = function()
+  return (32 * (math.floor(((script_data.surface.get_starting_area_radius() / 32) - 0) / (2^0.5))))
+end
+
 local is_in_map = function(width, height, position)
   return position.x >= -width
     and position.x < width
@@ -203,7 +214,7 @@ function create_wall(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
   local origin = starting_point or force.get_spawn_position(surface)
-  local radius = (32 * math.floor((surface.get_starting_area_radius() / 32) / (2^0.5))) + 2
+  local radius =  get_base_radius()
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local perimeter_top = {}
@@ -258,12 +269,12 @@ function create_wall(starting_point)
     [19] = true
   }
   local create_entity = surface.create_entity
-  local can_place_entity = surface.can_place_entity
   for k, position in pairs (perimeter_left) do
     if is_in_map(width, height, position) then
       if (k ~= 1) and (k ~= #perimeter_left) then
         insert(tiles, {name = tile_name, position = {position.x + 2, position.y}})
         insert(tiles, {name = tile_name, position = {position.x + 1, position.y}})
+        insert(tiles, {name = tile_name, position = {position.x, position.y}})
       end
       if should_gate[position.y % 32] then
         create_entity{name = gate_name, position = position, direction = 0, force = force, create_build_effect_smoke = false}
@@ -277,6 +288,7 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_right) then
         insert(tiles, {name = tile_name, position = {position.x - 2, position.y}})
         insert(tiles, {name = tile_name, position = {position.x - 1, position.y}})
+        insert(tiles, {name = tile_name, position = {position.x, position.y}})
       end
       if should_gate[position.y % 32] then
         create_entity{name = gate_name, position = position, direction = 0, force = force, create_build_effect_smoke = false}
@@ -290,6 +302,7 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_top) then
         insert(tiles, {name = tile_name, position = {position.x, position.y + 2}})
         insert(tiles, {name = tile_name, position = {position.x, position.y + 1}})
+        insert(tiles, {name = tile_name, position = {position.x, position.y + 0}})
       end
       if should_gate[position.x % 32] then
         create_entity{name = gate_name, position = position, direction = 2, force = force, create_build_effect_smoke = false}
@@ -303,6 +316,7 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_bottom) then
         insert(tiles, {name = tile_name, position = {position.x, position.y - 2}})
         insert(tiles, {name = tile_name, position = {position.x, position.y - 1}})
+        insert(tiles, {name = tile_name, position = {position.x, position.y - 0}})
       end
       if should_gate[position.x % 32] then
         create_entity{name = gate_name, position = position, direction = 2, force = force, create_build_effect_smoke = false}
@@ -325,7 +339,7 @@ function create_turrets(starting_point)
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local origin = starting_point
-  local radius = (32 * math.floor((surface.get_starting_area_radius() / 32) / (2^0.5))) - 8
+  local radius = get_base_radius() - 13
   local positions = {}
   local Xo = origin.x
   local Yo = origin.y
@@ -349,15 +363,16 @@ function create_turrets(starting_point)
   if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
   local stack
   if ammo_name and game.item_prototypes[ammo_name] then
-    stack = {name = ammo_name, count = 20}
+    stack = {name = ammo_name, count = 50}
   end
   local find_entities_filtered = surface.find_entities_filtered
   local neutral = game.forces.neutral
   local destroy_params = {do_cliff_correction = true}
   local floor = math.floor
   local create_entity = surface.create_entity
+  local can_place_entity = surface.can_place_entity
   for k, position in pairs (positions) do
-    if is_in_map(width, height, position) then
+    if is_in_map(width, height, position) and can_place_entity{name = turret_name, position = position, force = force, build_check_type = defines.build_check_type.ghost_place, forced = true} then
       local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}
       local box = turret.bounding_box
       for k, entity in pairs (find_entities_filtered{area = turret.bounding_box, force = neutral}) do
@@ -438,10 +453,11 @@ function wave_end()
   game.print({"wave-over"})
   spawn_units()
   script_data.spawn_tick = nil
+  script_data.end_spawn_tick = nil
 end
 
 function make_next_spawn_tick()
-  script_data.spawn_tick = game.tick + math.random(200, 300)
+  script_data.spawn_tick = game.tick + math.floor(script_data.spawn_time / script_data.waves_per_day)
 end
 
 function check_spawn_units(tick)
@@ -515,40 +531,82 @@ end
 local get_all_spawn_chunks = function()
   local surface = script_data.surface
   local force = game.forces.player
-  local is_chunk_charted = force.is_chunk_charted
+  local check = force.is_chunk_charted
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local positions = {}
   for chunk in surface.get_chunks() do
-    local position = {x = 16 + (chunk.x * 32), y = 16 + (chunk.y * 32)}
-    if is_in_map(width, height, position) and not is_chunk_charted(surface, chunk) then
+    local position = {x = (chunk.x * 32), y = (chunk.y * 32)}
+    if is_in_map(width, height, position) and not check(surface, chunk) then
       insert(positions, position)
     end
   end
+
+  if #positions > 0 then
+    return positions
+  end
+
+  check = force.is_chunk_visible
+  for chunk in surface.get_chunks() do
+    local position = {x = (chunk.x * 32), y = (chunk.y * 32)}
+    if is_chunk_generated(chunk) and is_in_map(width, height, position) and not check(surface, chunk) then
+      insert(positions, position)
+    end
+  end
+  game.print("YOOO")
   return positions
 end
+
+
 
 function spawn_units()
 
   local rand = math.random
   local surface = script_data.surface
-  --if surface.count_entities_filtered{type = "unit"} > 500 then return end
+  local silo = script_data.silo
+  if not (silo and silo.valid) then return end
+  if surface.count_entities_filtered{type = "unit"} > 1000 then return end
+  local command =
+  {
+    type = defines.command.compound,
+    structure_type = defines.compound_command.return_last,
+    distraction = defines.distraction.by_enemy,
+    commands =
+    {
+      {
+        type = defines.command.attack,
+        target = silo,
+        distraction = defines.distraction.by_enemy
+      },
+      {
+        type = defines.command.go_to_location,
+        destination_entity = silo,
+        distraction = defines.distraction.by_enemy,
+        radius = surface.get_starting_area_radius(),
+        pathfind_flags = path_find_flags
+      },
+    }
+  }
   local power = 1000 or script_data.wave_power
   local spawns = get_all_spawn_chunks()
   local spawns_count = #spawns
   local units = get_wave_units(script_data.wave_number)
   local units_length = #units
   local unit_count = 0
-  local command = {type = defines.command.attack, target = script_data.silo, distraction = defines.distraction.by_enemy}
-
-  local spawn = spawns[math.random(spawns_count)]
+  local random = math.random
+  local random_chunk_position = function(position)
+    local x = (position[1] or position.x) + random(32)
+    local y = (position[2] or position.y) + random(32)
+    return {x, y}
+  end
+  local spawn = spawns[random(spawns_count)]
   while units_length > 0 do
     local k = rand(units_length)
     local biter = units[k]
     local cost = biter.cost
 
-    if unit_count > 2 then
-      spawn = spawns[math.random(spawns_count)]
+    if unit_count > 20 then
+      spawn = spawns[random(spawns_count)]
       unit_count = 0
     end
 
@@ -556,15 +614,14 @@ function spawn_units()
       table.remove(units, k)
       units_length = units_length - 1
     else
-      local position = surface.find_non_colliding_position(biter.name, spawn, 0, 4)
+      local position = surface.find_non_colliding_position(biter.name, random_chunk_position(spawn), 0, 4)
       local unit = surface.create_entity{name = biter.name, position = position}
       unit.ai_settings.allow_try_return_to_spawner = false
       unit.set_command(command)
-      unit.ai_settings.path_resolution_modifier = -3
+      unit.ai_settings.path_resolution_modifier = -math.random(2,4)
       power = power - cost
       unit_count = unit_count + 1
     end
-
 
   end
 end
@@ -611,7 +668,7 @@ unit_config =
 
 function make_next_wave_tick()
   script_data.end_spawn_tick = game.tick + script_data.spawn_time
-  script_data.wave_tick  = script_data.end_spawn_tick + script_data.wave_time
+  script_data.wave_tick  = game.tick + script_data.wave_time
 end
 
 function time_to_next_wave()
@@ -1174,6 +1231,7 @@ local init_map_settings = function()
   local settings = game.map_settings
   settings.pollution.enabled = false
   settings.enemy_expansion.enabled = false
+  settings.path_finder.use_path_cache = false
 end
 
 local on_init = function()
@@ -1264,13 +1322,14 @@ local gui_functions =
       for k, effect in pairs (list[name].effect) do
         sucess = effect(event)
       end
-      if sucess and (#players() > 1) then
+      if sucess and game.is_multiplayer() then
         game.print({"purchased-team-upgrade", player.name, list[name].caption,upgrades[name]})
       end
       update_connected_players()
       for k, player in pairs (game.connected_players) do
         update_upgrade_listing(player)
       end
+      update_label_list(script_data.gui_elements.money_label, get_money())
     else
       player.print({"not-enough-money"})
     end

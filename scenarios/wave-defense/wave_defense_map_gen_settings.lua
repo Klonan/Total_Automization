@@ -4,13 +4,13 @@ return
   {
     coal =
     {
-      frequency = 3,
-      richness = 2,
-      size = 0.5
+      frequency = 2,
+      richness = 1,
+      size = 1
     },
     ["copper-ore"] =
     {
-      frequency = 3,
+      frequency = 2,
       richness = 2,
       size = 0.5
     },
@@ -46,7 +46,7 @@ return
     },
     ["iron-ore"] =
     {
-      frequency = 3,
+      frequency = 2,
       richness = 2,
       size = 0.5
     },
@@ -58,7 +58,7 @@ return
     },
     stone =
     {
-      frequency = 3,
+      frequency = 2,
       richness = 2,
       size = 0.5
     },
@@ -66,7 +66,7 @@ return
     {
       frequency = 4,
       richness = 1,
-      size = 0.1666666716337204
+      size = 0.15
     },
     ["uranium-ore"] =
     {
@@ -86,7 +86,7 @@ return
   property_expression_names =
   {},
   research_queue_from_the_start = "after-victory",
-  starting_area = 1,
+  starting_area = 1.8,
   starting_points =
   {
     {
@@ -94,7 +94,7 @@ return
       y = 0
     }
   },
-  terrain_segmentation = 3,
-  water = 1.5,
+  terrain_segmentation = 2,
+  water = 1.3,
   width = 1024
 }
