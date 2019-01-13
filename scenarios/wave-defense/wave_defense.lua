@@ -490,6 +490,17 @@ local get_all_spawn_chunks = function()
   return positions
 end
 
+function get_spawn_chunks()
+  --TOdo track on chunk generated etc....
+  local spawners = script_data.surface.find_entities_filtered{type = "unit-spawner"}
+  local chunks = {}
+  for k, spawner in pairs (spawners) do
+    local position = spawner.position
+    insert(chunks, position)
+  end
+  return chunks
+end
+
 
 
 function spawn_units()
@@ -521,15 +532,15 @@ function spawn_units()
     }
   }
   local power = 1000 or script_data.wave_power
-  local spawns = get_all_spawn_chunks()
+  local spawns = get_spawn_chunks()
   local spawns_count = #spawns
   local units = get_wave_units(script_data.wave_number)
   local units_length = #units
   local unit_count = 0
   local random = script_data.random
   local random_chunk_position = function(position)
-    local x = (position[1] or position.x) + random(32)
-    local y = (position[2] or position.y) + random(32)
+    local x = (position[1] or position.x) + random(-16, 16)
+    local y = (position[2] or position.y) + random(-16, 16)
     return {x, y}
   end
   local spawn = spawns[random(spawns_count)]
