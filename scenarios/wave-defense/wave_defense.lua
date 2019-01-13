@@ -9,16 +9,14 @@ local insert = table.insert
 local script_data =
 {
   wave_number = 0,
-  wave_tick = 21250,
+  wave_tick = nil,
+  spawn_time = 2500,
+  wave_time = 10000,
+  spawn_interval = {300, 500},
   force_bounty_modifier = 0.5,
   bounty_bonus = 1,
   skipped_multiplier = 0.1,
-  round_button_visible = true,
   money = 0,
-  send_satellite_round = false,
-  spawn_time = 2500,
-  wave_time = 10000,
-  waves_per_day = 10,
   team_upgrades = {},
   gui_elements =
   {
@@ -29,11 +27,11 @@ local script_data =
     money_label = {},
     time_label = {},
     round_label = {},
-    next_round_button = {},
     wave_frame_button = {},
     upgrade_frame_button = {},
   },
-  gui_actions = {}
+  gui_actions = {},
+  random
 }
 
 local max_seed = 2^32 - 2
@@ -63,13 +61,16 @@ function register_gui_action(gui, param)
   player_gui_actions[gui.index] = param
 end
 
-function init_forces()
-  for k, force in pairs (game.forces) do
-    set_research(force)
-    set_recipes(force)
-    --force.set_spawn_position(script_data.silo.position, game.surfaces[1])
-    force.friendly_fire = false
+function init_force(force)
+
+  set_research(force)
+  set_recipes(force)
+  --force.friendly_fire = false
+
+  for name, upgrade in pairs (get_upgrades()) do
+    script_data.team_upgrades[name] = 0
   end
+
 end
 
 function get_walkable_tile()
@@ -157,12 +158,13 @@ function create_battle_surface(seed)
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
+  script_data.random = game.create_random_generator(settings.seed)
 end
 
 function create_silo(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
-  local silo_position = starting_point or force.get_spawn_position(surface)
+  local silo_position = {starting_point.x * 1.1, starting_point.y * 1.1}
   --todo offset out of the way from the starting patches a bit
   local silo_name = "rocket-silo"
   if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
@@ -214,7 +216,7 @@ function create_wall(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
   local origin = starting_point or force.get_spawn_position(surface)
-  local radius =  get_base_radius()
+  local radius =  get_base_radius() + 5
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local perimeter_top = {}
@@ -339,7 +341,7 @@ function create_turrets(starting_point)
   local height = surface.map_gen_settings.height / 2
   local width = surface.map_gen_settings.width / 2
   local origin = starting_point
-  local radius = get_base_radius() - 13
+  local radius = get_base_radius() - 5
   local positions = {}
   local Xo = origin.x
   local Yo = origin.y
@@ -391,26 +393,6 @@ function create_turrets(starting_point)
   set_tiles_safe(surface, tiles)
 end
 
-
-function init_globals()
-  init_unit_settings()
-  for name, upgrade in pairs (get_upgrades()) do
-    script_data.team_upgrades[name] = 0
-  end
-end
-
-function init_unit_settings()
-  game.map_settings.unit_group.max_group_slowdown_factor = 1
-  game.map_settings.unit_group.max_member_speedup_when_behind = 2
-  game.map_settings.unit_group.max_member_slowdown_when_ahead = 0.8
-  game.map_settings.unit_group.member_disown_distance = 25
-  game.map_settings.unit_group.min_group_radius = 8.0
-  game.map_settings.path_finder.use_path_cache = true
-  game.map_settings.path_finder.max_steps_worked_per_tick = 300
-  game.map_settings.path_finder.short_cache_size = 50
-  game.map_settings.path_finder.long_cache_size = 50
-end
-
 function check_next_wave(tick)
   if not script_data.wave_tick then return end
   if script_data.wave_tick ~= tick then return end
@@ -426,13 +408,6 @@ function next_wave()
   script_data.force_bounty_modifier = (0.5 * (1.15 / (1.15 ^ exponent)))
   update_round_number()
   script_data.wave_power = calculate_wave_power(script_data.wave_number)
-  next_round_button_visible(false)
-  local value = math.floor(100*((script_data.wave_number - 1) % 20 + 1) / 20)
-  if (script_data.silo and script_data.silo.valid) then
-    script_data.silo.rocket_parts = value
-  end
-  script_data.send_satellite_round = (value == 100)
-  command_straglers()
   spawn_units()
 end
 
@@ -449,7 +424,6 @@ function calculate_wave_power(x)
 end
 
 function wave_end()
-  next_round_button_visible(true)
   game.print({"wave-over"})
   spawn_units()
   script_data.spawn_tick = nil
@@ -457,22 +431,11 @@ function wave_end()
 end
 
 function make_next_spawn_tick()
-  script_data.spawn_tick = game.tick + math.floor(script_data.spawn_time / script_data.waves_per_day)
+  script_data.spawn_tick = game.tick + script_data.random(script_data.spawn_interval[1], script_data.spawn_interval[2])
 end
 
 function check_spawn_units(tick)
   if not script_data.spawn_tick then return end
-
-  if script_data.send_satellite_round then
-    script_data.end_spawn_tick = tick + 1
-    script_data.wave_tick = tick + script_data.wave_time
-    if tick % 250 == 0 then
-      if not (script_data.silo and script_data.silo.valid) then return end
-      if not script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket) then
-        script_data.silo.rocket_parts = 100
-      end
-    end
-  end
 
   if script_data.end_spawn_tick <= tick then
     wave_end()
@@ -483,6 +446,7 @@ function check_spawn_units(tick)
     spawn_units()
     make_next_spawn_tick()
   end
+
 end
 
 function get_wave_units(x)
@@ -495,37 +459,6 @@ function get_wave_units(x)
     end
   end
   return units
-end
-
-local direction_offsets =
-{
-  [defines.direction.north] = {0, -1},
-  [defines.direction.east] = {1, 0},
-  [defines.direction.south] = {0, 1},
-  [defines.direction.west] = {-1, 0},
-}
-
-local get_spawn_chunks = function(direction)
-  --just north for now ok, more direction logic later...
-  local direction = direction or defines.direction.north
-  local offset = direction_offsets[direction]
-  local surface = script_data.surface
-  local force = game.forces.player
-  local spawn = force.get_spawn_position(surface)
-  local is_chunk_charted = force.is_chunk_charted
-  local positions = {}
-  for k, offset in pairs (direction_offsets) do
-    local position
-    local chunk_position = {spawn.x / 32, spawn.y / 32}
-    while true do
-      if not is_chunk_charted(surface, chunk_position) then
-        table.insert(positions, {16 + (chunk_position[1] * 32), 16 + (chunk_position[2] * 32)})
-        break
-      end
-      chunk_position = {chunk_position[1] + offset[1], chunk_position[2] + offset[2]}
-    end
-  end
-  return positions
 end
 
 local get_all_spawn_chunks = function()
@@ -549,11 +482,11 @@ local get_all_spawn_chunks = function()
   check = force.is_chunk_visible
   for chunk in surface.get_chunks() do
     local position = {x = (chunk.x * 32), y = (chunk.y * 32)}
-    if is_chunk_generated(chunk) and is_in_map(width, height, position) and not check(surface, chunk) then
+    if is_in_map(width, height, position) and not check(surface, chunk) then
       insert(positions, position)
     end
   end
-  game.print("YOOO")
+
   return positions
 end
 
@@ -561,7 +494,7 @@ end
 
 function spawn_units()
 
-  local rand = math.random
+  local rand = script_data.random
   local surface = script_data.surface
   local silo = script_data.silo
   if not (silo and silo.valid) then return end
@@ -593,7 +526,7 @@ function spawn_units()
   local units = get_wave_units(script_data.wave_number)
   local units_length = #units
   local unit_count = 0
-  local random = math.random
+  local random = script_data.random
   local random_chunk_position = function(position)
     local x = (position[1] or position.x) + random(32)
     local y = (position[2] or position.y) + random(32)
@@ -618,39 +551,11 @@ function spawn_units()
       local unit = surface.create_entity{name = biter.name, position = position}
       unit.ai_settings.allow_try_return_to_spawner = false
       unit.set_command(command)
-      unit.ai_settings.path_resolution_modifier = -math.random(2,4)
+      unit.ai_settings.path_resolution_modifier = -script_data.random(2,4)
       power = power - cost
       unit_count = unit_count + 1
     end
 
-  end
-end
-
-function set_command(groups)
-  if not (script_data.silo and script_data.silo.valid) then return end
-  local rand = math.random
-  local attack = defines.command.attack
-  local distraction = defines.distraction.by_enemy
-  local target = script_data.silo
-  local command =
-  {
-    type = attack,
-    target = target,
-    distraction = distraction
-  }
-  for k, group in pairs (groups) do
-    group.set_command(command)
-  end
-end
-
-function command_straglers()
-  if not (script_data.silo and script_data.silo.valid) then return end
-  local command = {type = defines.command.attack, target = script_data.silo}
-  for k, unit in pairs (game.surfaces[1].find_entities_filtered({type = "unit"})) do
-    if not unit.unit_group then
-      unit.ai_settings.path_resolution_modifier = -2
-      unit.set_command(command)
-    end
   end
 end
 
@@ -810,18 +715,13 @@ function give_spawn_equipment(player)
   end
 end
 
-function next_round_button_visible(bool)
-  script_data.round_button_visible = bool
-  for k, button in pairs (script_data.gui_elements.next_round_button) do
-    button.visible = bool
-    button.enabled = bool
-  end
-end
-
 function delete_preview_gui(player)
 
   local frame = script_data.gui_elements.preview_frame[player.index]
-  if frame and frame.valid then frame.destroy() end
+  if frame and frame.valid then
+    deregister_gui(frame)
+    frame.destroy()
+  end
   script_data.gui_elements.preview_frame[player.index] = nil
 
 end
@@ -830,6 +730,7 @@ function refresh_preview_gui(player)
 
   local frame = script_data.gui_elements.preview_frame[player.index]
   if not (frame and frame.valid) then return end
+  deregister_gui(frame)
   frame.clear()
 
 
@@ -871,7 +772,7 @@ function make_preview_gui(player)
   local gui = player.gui.center
   local frame = script_data.gui_elements.preview_frame[player.index]
   if frame and frame.valid then
-    frame.destroy()
+    return refresh_preview_gui(player)
   end
   frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
   frame.style.horizontal_align = "right"
@@ -882,12 +783,11 @@ end
 function gui_init(player)
 
   if not script_data.in_round then
-    make_preview_gui(player)
-    return
+    return make_preview_gui(player)
   end
 
   delete_preview_gui(player)
-  create_wave_frame(player)
+  toggle_wave_frame(player)
 
   local button_flow = mod_gui.get_button_flow(player)
   local button = script_data.gui_elements.wave_frame_button[player.index]
@@ -900,7 +800,7 @@ function gui_init(player)
       tooltip = {"visibility-button-tooltip"}
     }
     script_data.gui_elements.wave_frame_button[player.index] = button
-    register_gui_action(button, {type = "wave_defense_visibility_button"})
+    register_gui_action(button, {type = "wave_frame_button"})
   end
 
   local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
@@ -932,17 +832,19 @@ local wave_frame =
   direction = "vertical"
 }
 
-function create_wave_frame(player)
+function toggle_wave_frame(player)
 
   local frame = script_data.gui_elements.wave_frame[player.index]
 
-  if not (frame and frame.valid) then
-    frame = mod_gui.get_frame_flow(player).add(wave_frame)
-    script_data.gui_elements.wave_frame[player.index] = frame
+  if (frame and frame.valid) then
+    deregister_gui(frame)
+    script_data.gui_elements.wave_frame[player.index] = nil
+    frame.destroy()
+    return
   end
 
-  frame.clear()
-  frame.visible = true
+  frame = mod_gui.get_frame_flow(player).add(wave_frame)
+  script_data.gui_elements.wave_frame[player.index] = frame
 
   local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
   insert(script_data.gui_elements.round_label, round)
@@ -955,17 +857,6 @@ function create_wave_frame(player)
   local cash = money_table.add{type = "label", caption = get_money()}
   insert(script_data.gui_elements.money_label, cash)
   cash.style.font_color = cash_font_color
-  local button = frame.add
-  {
-    type = "button",
-    caption = {"send-next-wave"},
-    tooltip = {"send-next-wave-tooltip"},
-    style = "play_tutorial_button"
-  }
-  insert(script_data.gui_elements.next_round_button, button)
-  register_gui_action(button, {type = "send_next_wave"})
-  button.style.font = "default"
-  button.visible = script_data.round_button_visible
 end
 
 
@@ -1113,29 +1004,6 @@ function get_upgrades()
   end
   bonus.caption = {"bounty-bonus"}
   list["bounty_bonus"] = bonus
-  local sat = {}
-  sat.modifier = ""
-  sat.sprite = "technology/rocket-silo"
-  sat.price = function(x) return 500000 end
-  sat.hide_level = true
-  sat.effect = {}
-  sat.effect[1] = function(event)
-    if not (script_data.silo and script_data.silo.valid) then return end
-    local inventory = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket)
-    if inventory then
-      local contents = script_data.silo.get_inventory(defines.inventory.rocket_silo_rocket).get_contents()
-      if #contents == 0 then
-        inventory.insert("satellite")
-        game.print({"satellite-purchase", players(event.player_index).name})
-        return false
-      end
-    end
-    increment(script_data, "money", 500000)
-    players(event.player_index).print({"satellite-refund"})
-    return false
-  end
-  sat.caption = {"buy-satellite"}
-  list["buy-satellite"] = sat
   return list
 end
 
@@ -1171,9 +1039,6 @@ function update_connected_players(tick)
     caption = {"time-to-wave-end", time_left}
   elseif script_data.wave_tick then
     caption = {"time-to-next-wave", time_left}
-  end
-  if script_data.send_satellite_round then
-    caption = {"send-satellite"}
   end
 
   update_label_list(script_data.gui_elements.time_label, caption)
@@ -1232,13 +1097,14 @@ local init_map_settings = function()
   settings.pollution.enabled = false
   settings.enemy_expansion.enabled = false
   settings.path_finder.use_path_cache = false
+  settings.path_finder.max_steps_worked_per_tick = 300
 end
 
 local on_init = function()
-  init_globals()
   init_map_settings()
-  init_forces()
+  init_force(game.forces.player)
   create_battle_surface(initial_seed)
+
 end
 
 local on_entity_died = function(event)
@@ -1255,14 +1121,7 @@ end
 
 local on_rocket_launched = function(event)
   local rocket = event.rocket
-  if rocket.get_item_count("satellite") > 0 then
-    game.set_game_state{game_finished = true, player_won = true, can_continue = true}
-    script_data.send_satellite_round = false
-    wave_end()
-    update_connected_players()
-  else
-    game.print({"no-satellite"})
-  end
+  game.print("WOOP DE DOO YOU WIN")
 end
 
 
@@ -1306,9 +1165,8 @@ local gui_functions =
   upgrade_button = function(event)
     toggle_upgrade_frame(players(event.player_index))
   end,
-  wave_defense_visibility_button = function(event)
-    local frame = script_data.gui_elements.wave_frame[event.player_index]
-    frame.visible = not frame.visible
+  wave_frame_button = function(event)
+    toggle_wave_frame(players(event.player_index))
   end,
   purchase_button = function(event, param)
     local name = param.name
