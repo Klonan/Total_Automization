@@ -754,7 +754,16 @@ function refresh_preview_gui(player)
 
   local surface = script_data.surface
   seed_input.text = surface.map_gen_settings.seed
-  local minimap = inner.add{type = "minimap", surface_index = surface.index, zoom = max / (surface.get_starting_area_radius() * 2), force = player.force.name, position = player.force.get_spawn_position(surface)}
+  local size = surface.get_starting_area_radius()
+  local position = player.force.get_spawn_position(surface)
+  local minimap = inner.add
+  {
+    type = "minimap",
+    surface_index = surface.index,
+    zoom = max / (size * 2),
+    force = player.force.name,
+    position = position
+  }
   minimap.style.width = max
   minimap.style.height = max
 
@@ -861,6 +870,8 @@ function toggle_wave_frame(player)
   frame = mod_gui.get_frame_flow(player).add(wave_frame)
   script_data.gui_elements.wave_frame[player.index] = frame
 
+  frame.style.vertically_stretchable = false
+
   local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
   insert(script_data.gui_elements.round_label, round)
 
@@ -905,9 +916,6 @@ function toggle_upgrade_frame(player)
   update_upgrade_listing(player)
 end
 
-local on_gui_closed = function(event)
-end
-
 function update_upgrade_listing(player)
   local gui = script_data.gui_elements.upgrade_table[player.index]
   if not (gui and gui.valid) then return end
@@ -919,7 +927,7 @@ function update_upgrade_listing(player)
     local sprite = gui.add{type = "sprite-button", name = name, sprite = upgrade.sprite, tooltip = {"purchase"}, style = "play_tutorial_button"}
     sprite.style.minimal_height = 75
     sprite.style.minimal_width = 75
-    --sprite.number = upgrade.price(level)
+    sprite.number = upgrade.price(level)
     register_gui_action(sprite, {type = "purchase_button", name = name})
     local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
     flow.style.maximal_height = 75
@@ -928,9 +936,7 @@ function update_upgrade_listing(player)
     local label = another_table.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
     label.style.font = "default-bold"
     another_table.add{type = "label", name = name.."_price", caption = {"upgrade-price", format_number(upgrade.price(level))}}
-    if not upgrade.hide_level then
-      local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
-    end
+    local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
   end
 end
 
