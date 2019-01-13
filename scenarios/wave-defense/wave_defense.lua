@@ -780,15 +780,7 @@ function make_preview_gui(player)
   refresh_preview_gui(player)
 end
 
-function gui_init(player)
-
-  if not script_data.in_round then
-    return make_preview_gui(player)
-  end
-
-  delete_preview_gui(player)
-  toggle_wave_frame(player)
-
+local add_gui_buttons= function(player)
   local button_flow = mod_gui.get_button_flow(player)
   local button = script_data.gui_elements.wave_frame_button[player.index]
   if not button then
@@ -807,7 +799,7 @@ function gui_init(player)
   if not upgrade_button then
     upgrade_button = button_flow.add
     {
-      type = "sprite-button",
+      type = "button",
       caption = {"upgrade-button"},
       tooltip = {"upgrade-button-tooltip"},
       style = mod_gui.button_style
@@ -816,8 +808,31 @@ function gui_init(player)
     register_gui_action(upgrade_button, {type = "upgrade_button"})
   end
 
+  if player.admin then
+    local admin_button = button_flow.add
+    {
+      type = "button",
+      caption = "ADMIN",
+      tooltip = {"upgrade-button-tooltip"},
+      style = mod_gui.button_style
+    }
+    register_gui_action(admin_button, {type = "admin_button"})
+  end
+end
+
+function gui_init(player)
+
+  if not script_data.in_round then
+    return make_preview_gui(player)
+  end
+
+  delete_preview_gui(player)
+  add_gui_buttons(player)
+  toggle_wave_frame(player)
+
   local upgrade_frame = script_data.gui_elements.upgrade_frame[player.index]
   if upgrade_frame and upgrade_frame.valid then
+    deregister_gui(upgrade_frame)
     upgrade_frame.destroy()
   end
   script_data.gui_elements.upgrade_frame[player.index] = nil
@@ -904,6 +919,7 @@ function update_upgrade_listing(player)
     local sprite = gui.add{type = "sprite-button", name = name, sprite = upgrade.sprite, tooltip = {"purchase"}, style = "play_tutorial_button"}
     sprite.style.minimal_height = 75
     sprite.style.minimal_width = 75
+    --sprite.number = upgrade.price(level)
     register_gui_action(sprite, {type = "purchase_button", name = name})
     local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
     flow.style.maximal_height = 75
@@ -1048,6 +1064,11 @@ function update_round_number()
   update_label_list(script_data.gui_elements.round_label, {"current-wave", script_data.wave_number})
 end
 
+local toggle_admin_frame = function(player)
+  if not (player and player.valid) then return end
+
+end
+
 function set_research(force)
   force.research_all_technologies()
   local tech = force.technologies
@@ -1110,12 +1131,10 @@ end
 local on_entity_died = function(event)
   local entity_type = event.entity.type
   if entity_type == "unit" then
-    unit_died(event)
-    return
+    return unit_died(event)
   end
   if entity_type == "rocket-silo" then
-    rocket_died(event)
-    return
+    return rocket_died(event)
   end
 end
 
@@ -1167,6 +1186,9 @@ local gui_functions =
   end,
   wave_frame_button = function(event)
     toggle_wave_frame(players(event.player_index))
+  end,
+  admin_button = function(event)
+    toggle_admin_frame(players(event.player_index))
   end,
   purchase_button = function(event, param)
     local name = param.name
