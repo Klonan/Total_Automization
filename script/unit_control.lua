@@ -1307,19 +1307,19 @@ local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
-  game.map_settings.path_finder.max_steps_worked_per_tick = 10000
-  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  game.map_settings.path_finder.short_request_max_steps = 200
-  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
-  game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
-  game.map_settings.path_finder.use_path_cache = false
-  game.map_settings.path_finder.short_cache_size = 0
-  game.map_settings.path_finder.long_cache_size = 0
-  game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  game.map_settings.steering.moving.radius = 0
-  game.map_settings.steering.moving.default = 0
-  game.map_settings.max_failed_behavior_count = 5
+  --game.map_settings.path_finder.max_steps_worked_per_tick = 10000
+  --game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  --game.map_settings.path_finder.short_request_max_steps = 200
+  --game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
+  --game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  --game.map_settings.path_finder.use_path_cache = false
+  --game.map_settings.path_finder.short_cache_size = 0
+  --game.map_settings.path_finder.long_cache_size = 0
+  --game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  --game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  --game.map_settings.steering.moving.radius = 0
+  --game.map_settings.steering.moving.default = 0
+  --game.map_settings.max_failed_behavior_count = 5
   register_events()
   unit_control.on_event = handler(events)
 end

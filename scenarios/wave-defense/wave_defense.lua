@@ -31,7 +31,8 @@ local script_data =
     upgrade_frame_button = {},
   },
   gui_actions = {},
-  random
+  random,
+  spawners = {}
 }
 
 local max_seed = 2^32 - 2
@@ -491,14 +492,16 @@ local get_all_spawn_chunks = function()
 end
 
 function get_spawn_chunks()
-  --TOdo track on chunk generated etc....
-  local spawners = script_data.surface.find_entities_filtered{type = "unit-spawner"}
-  local chunks = {}
+  local spawners = script_data.spawners
+  local positions = {}
   for k, spawner in pairs (spawners) do
-    local position = spawner.position
-    insert(chunks, position)
+    if not spawner.valid then
+      spawners[k] = nil
+    else
+      insert(positions, spawner.position)
+    end
   end
-  return chunks
+  return positions
 end
 
 
@@ -509,7 +512,7 @@ function spawn_units()
   local surface = script_data.surface
   local silo = script_data.silo
   if not (silo and silo.valid) then return end
-  if surface.count_entities_filtered{type = "unit"} > 1000 then return end
+  --if surface.count_entities_filtered{type = "unit"} > 1000 then return end
   local command =
   {
     type = defines.command.compound,
@@ -518,29 +521,30 @@ function spawn_units()
     commands =
     {
       {
+        type = defines.command.go_to_location,
+        destination_entity = silo,
+        distraction = defines.distraction.by_enemy,
+        radius = 20,
+        pathfind_flags = path_find_flags
+      },
+      {
         type = defines.command.attack,
         target = silo,
         distraction = defines.distraction.by_enemy
       },
-      {
-        type = defines.command.go_to_location,
-        destination_entity = silo,
-        distraction = defines.distraction.by_enemy,
-        radius = surface.get_starting_area_radius(),
-        pathfind_flags = path_find_flags
-      },
     }
   }
-  local power = 1000 or script_data.wave_power
+  local power = 10000 or script_data.wave_power
   local spawns = get_spawn_chunks()
   local spawns_count = #spawns
+  if spawns_count == 0 then return end
   local units = get_wave_units(script_data.wave_number)
   local units_length = #units
   local unit_count = 0
   local random = script_data.random
   local random_chunk_position = function(position)
-    local x = (position[1] or position.x) + random(-16, 16)
-    local y = (position[2] or position.y) + random(-16, 16)
+    local x = (position[1] or position.x) + random(-8, 8)
+    local y = (position[2] or position.y) + random(-8, 8)
     return {x, y}
   end
   local spawn = spawns[random(spawns_count)]
@@ -562,7 +566,7 @@ function spawn_units()
       local unit = surface.create_entity{name = biter.name, position = position}
       unit.ai_settings.allow_try_return_to_spawner = false
       unit.set_command(command)
-      unit.ai_settings.path_resolution_modifier = -script_data.random(2,4)
+      unit.ai_settings.path_resolution_modifier = -2
       power = power - cost
       unit_count = unit_count + 1
     end
@@ -1136,12 +1140,21 @@ local init_map_settings = function()
   settings.enemy_expansion.enabled = false
   settings.path_finder.use_path_cache = false
   settings.path_finder.max_steps_worked_per_tick = 300
+  settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 5
+  settings.steering.default.radius = 5
+  settings.steering.moving.separation_force = 0.05
+  settings.steering.moving.separation_factor = 3
+  settings.steering.default.separation_force = -0.02
+  settings.steering.moving.separation_factor = 3
+  settings.path_finder.max_steps_worked_per_tick = 10000
 end
 
 local on_init = function()
   init_map_settings()
   init_force(game.forces.player)
-  create_battle_surface(initial_seed)
 
 end
 
@@ -1163,6 +1176,9 @@ end
 
 local on_player_joined_game = function(event)
   local player = players(event.player_index)
+  if not (script_data.surface and script_data.surface.valid) then
+    create_battle_surface(initial_seed)
+  end
   gui_init(player)
 end
 
@@ -1291,6 +1307,15 @@ local on_player_died = function(event)
   game.set_game_state(oh_no_you_dont)
 end
 
+local on_chunk_generated = function(event)
+  local area = event.area
+  local surface = event.surface
+  if not (surface and surface.valid and surface == script_data.surface) then return end
+  for k, spawner in pairs (surface.find_entities_filtered{area = area, type = "unit-spawner"}) do
+    script_data.spawners[spawner.unit_number] = spawner
+  end
+end
+
 local events =
 {
   [defines.events.on_entity_died] = on_entity_died,
@@ -1302,6 +1327,7 @@ local events =
   [defines.events.on_gui_text_changed] = generic_gui_event,
   [defines.events.on_gui_click] = generic_gui_event,
   [defines.events.on_player_died] = on_player_died,
+  [defines.events.on_chunk_generated] = on_chunk_generated,
   [defines.events.on_gui_closed] = on_gui_closed
 }
 

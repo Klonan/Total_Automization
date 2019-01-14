@@ -23,8 +23,8 @@ local make_killcam = function(player, cause)
   frame.style.horizontally_stretchable = false
   frame.style.vertically_stretchable = false
   local camera = frame.add{type = "camera", position = cause.position, zoom = 1}
-  camera.style.width = player.display_resolution.width * 0.8
-  camera.style.height = player.display_resolution.height * 0.8
+  camera.style.width = math.floor(player.display_resolution.width * 0.8)
+  camera.style.height = math.floor(player.display_resolution.height * 0.8)
   local cams = data.killcams
   cams[player.index] = {gui = camera, cause = cause, frame = outer}
 end
