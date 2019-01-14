@@ -804,42 +804,49 @@ function make_preview_gui(player)
   refresh_preview_gui(player)
 end
 
+local wave_button_param =
+{
+  type = "sprite-button",
+  style = mod_gui.button_style,
+  sprite = "entity/behemoth-spitter",
+  tooltip = {"visibility-button-tooltip"}
+}
+
+local upgrade_button_param =
+{
+  type = "button",
+  caption = {"upgrade-button"},
+  tooltip = {"upgrade-button-tooltip"},
+  style = mod_gui.button_style
+}
+
+local admin_button _param =
+{
+  type = "button",
+  caption = "ADMIN",
+  tooltip = {"upgrade-button-tooltip"},
+  style = mod_gui.button_style
+}
+
 local add_gui_buttons= function(player)
   local button_flow = mod_gui.get_button_flow(player)
-  local button = script_data.gui_elements.wave_frame_button[player.index]
-  if not button then
-    button = button_flow.add
-    {
-      type = "sprite-button",
-      style = mod_gui.button_style,
-      sprite = "entity/behemoth-spitter",
-      tooltip = {"visibility-button-tooltip"}
-    }
-    script_data.gui_elements.wave_frame_button[player.index] = button
-    register_gui_action(button, {type = "wave_frame_button"})
+
+  local wave_button = script_data.gui_elements.wave_frame_button[player.index]
+  if not wave_button then
+    wave_button = button_flow.add(wave_button_param)
+    script_data.gui_elements.wave_frame_button[player.index] = wave_button
+    register_gui_action(wave_button, {type = "wave_frame_button"})
   end
 
   local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
   if not upgrade_button then
-    upgrade_button = button_flow.add
-    {
-      type = "button",
-      caption = {"upgrade-button"},
-      tooltip = {"upgrade-button-tooltip"},
-      style = mod_gui.button_style
-    }
+    upgrade_button = button_flow.add(upgrade_button_param)
     script_data.gui_elements.upgrade_frame_button[player.index] = upgrade_button
     register_gui_action(upgrade_button, {type = "upgrade_button"})
   end
 
   if player.admin then
-    local admin_button = button_flow.add
-    {
-      type = "button",
-      caption = "ADMIN",
-      tooltip = {"upgrade-button-tooltip"},
-      style = mod_gui.button_style
-    }
+    local admin_button = button_flow.add(admin_button_param)
     register_gui_action(admin_button, {type = "admin_button"})
   end
 end
@@ -950,7 +957,6 @@ function update_upgrade_listing(player)
     another_table.style.vertical_spacing = 2
     local label = another_table.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
     label.style.font = "default-bold"
-    another_table.add{type = "label", name = name.."_price", caption = {"upgrade-price", format_number(upgrade.price(level))}}
     local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
   end
 end
@@ -1143,8 +1149,8 @@ local init_map_settings = function()
   settings.path_finder.max_clients_to_accept_any_new_request = 1000
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 5
-  settings.steering.default.radius = 5
+  settings.steering.moving.radius = 2
+  settings.steering.default.radius = 2
   settings.steering.moving.separation_force = 0.05
   settings.steering.moving.separation_factor = 3
   settings.steering.default.separation_force = -0.02
