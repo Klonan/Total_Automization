@@ -1374,8 +1374,8 @@ local chart_base_area = function(tick)
   force.chart(surface,
   {
     {
-      origin.x - (size + 1) ,
-      origin.y - (size + 1)
+      origin.x - (size + 32),
+      origin.y - (size + 32)
     },
     {
       origin.x + size,
