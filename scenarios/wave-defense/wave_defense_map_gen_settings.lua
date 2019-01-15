@@ -90,7 +90,7 @@ return
   starting_points =
   {
     {
-      x = 400,
+      x = (1024 / 2) - 64,
       y = 0
     }
   },

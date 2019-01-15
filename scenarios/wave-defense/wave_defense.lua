@@ -1362,20 +1362,40 @@ function generic_gui_event(event)
   if not action then return end
 
   gui_functions[action.type](event, action)
-  return true
 end
 
-local on_gui_click = function(event)
-  if generic_gui_event(event) then return end
+local chart_base_area = function(tick)
+  if tick % 12 ~= 0 then return end
+  local surface = script_data.surface
+  if not (surface and surface.valid) then return end
+  local force = game.forces.player
+  local origin = force.get_spawn_position(surface)
+  local size = get_base_radius()
+  force.chart(surface,
+  {
+    {
+      origin.x - (size + 1) ,
+      origin.y - (size + 1)
+    },
+    {
+      origin.x + size,
+      origin.y + size
+    }
+  })
 end
+
 
 local on_tick = function(event)
   local tick = event.tick
-  check_next_wave(tick)
-  check_spawn_units(tick)
-  update_connected_players(tick)
-  --local print = {tick = game.tick, seed = get_random_seed()}
-  --log(serpent.block(print))
+
+  if script_data.state == game_state.in_round then
+    check_next_wave(tick)
+    check_spawn_units(tick)
+    update_connected_players(tick)
+    chart_base_area(tick)
+    return
+  end
+
 end
 
 local oh_no_you_dont = {game_finished = false}
