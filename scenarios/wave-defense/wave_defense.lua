@@ -1143,12 +1143,12 @@ local init_map_settings = function()
   settings.path_finder.max_clients_to_accept_any_new_request = 1000
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 5
-  settings.steering.default.radius = 5
-  settings.steering.moving.separation_force = 0.05
-  settings.steering.moving.separation_factor = 3
-  settings.steering.default.separation_force = -0.02
-  settings.steering.moving.separation_factor = 3
+  settings.steering.moving.radius = 4
+  settings.steering.default.radius = 4
+  settings.steering.moving.separation_force = 0.02
+  settings.steering.moving.separation_factor = 2
+  settings.steering.default.separation_force = 0.02
+  settings.steering.default.separation_factor  = 1
   settings.path_finder.max_steps_worked_per_tick = 10000
 end
 
