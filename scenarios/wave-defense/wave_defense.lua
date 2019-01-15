@@ -6,12 +6,17 @@ local format_number = util.format_number
 local format_time = util.formattime
 local insert = table.insert
 
+local game_state =
+{
+  in_round = 1,
+  in_preview = 2,
+  defeat = 3,
+  victory = 4
+}
+
 local script_data =
 {
   wave_number = 0,
-  wave_tick = nil,
-  spawn_time = 2500,
-  wave_time = 10000,
   spawn_interval = {300, 500},
   force_bounty_modifier = 0.5,
   bounty_bonus = 1,
@@ -21,18 +26,27 @@ local script_data =
   gui_elements =
   {
     preview_frame = {},
+    wave_frame_button = {},
     wave_frame = {},
+    upgrade_frame_button = {},
     upgrade_frame = {},
     upgrade_table = {},
+    admin_frame_button = {},
+    admin_frame = {},
+  },
+  gui_labels =
+  {
     money_label = {},
     time_label = {},
-    round_label = {},
-    wave_frame_button = {},
-    upgrade_frame_button = {},
+    round_label = {}
   },
   gui_actions = {},
-  random,
-  spawners = {}
+  spawners = {},
+  state = game_state.in_preview,
+  random = nil,
+  wave_tick = nil,
+  spawn_time = nil,
+  wave_time = nil,
 }
 
 local max_seed = 2^32 - 2
@@ -114,8 +128,10 @@ function start_round()
   local surface = script_data.surface
   surface.daytime = 0
   surface.always_day = false
-  script_data.in_round = true
+  script_data.state = game_state.in_round
   local tick = game.tick
+  script_data.money = 0
+  script_data.wave_number = 0
   script_data.wave_time = surface.ticks_per_day
   script_data.spawn_time = math.floor(surface.ticks_per_day * (surface.morning - surface.evening))
   script_data.wave_tick = tick + math.ceil(surface.ticks_per_day * surface.evening)
@@ -403,11 +419,11 @@ end
 
 function next_wave()
   increment(script_data, "wave_number")
+  update_label_list(script_data.gui_labels.round_label, {"current-wave", script_data.wave_number})
   make_next_wave_tick()
   make_next_spawn_tick()
   local exponent = math.min(#game.connected_players, 8)
   script_data.force_bounty_modifier = (0.5 * (1.15 / (1.15 ^ exponent)))
-  update_round_number()
   script_data.wave_power = calculate_wave_power(script_data.wave_number)
   spawn_units()
 end
@@ -564,9 +580,11 @@ function spawn_units()
     else
       local position = surface.find_non_colliding_position(biter.name, random_chunk_position(spawn), 0, 4)
       local unit = surface.create_entity{name = biter.name, position = position}
-      unit.ai_settings.allow_try_return_to_spawner = false
+      local ai_settings = unit.ai_settings
+      ai_settings.allow_try_return_to_spawner = false
+      ai_settings.path_resolution_modifier = -3
+
       unit.set_command(command)
-      unit.ai_settings.path_resolution_modifier = -2
       power = power - cost
       unit_count = unit_count + 1
     end
@@ -604,11 +622,17 @@ end
 function rocket_died(event)
   if not (script_data.silo and script_data.silo.valid) then return end
   local silo = event.entity
-  if silo == script_data.silo then
-    --game.set_game_state{game_finished = true, player_won = false, can_continue = false}
-    game.print("BOO HOO YOU LOSE")
-    script_data.silo = nil
+  if not silo == script_data.silo then
+    return
   end
+  script_data.state = game_state.defeat
+  script_data.silo = nil
+  for k, player in pairs (players()) do
+    player.set_controller({type = defines.controllers.spectator})
+    player.teleport(silo.position)
+  end
+  game.print("GAME OVER, tell admin to start a new round or soemthing.")
+
 end
 
 local color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}
@@ -621,7 +645,7 @@ function unit_died(event)
   local cash = math.floor(get_bounty_price(died.name) * script_data.force_bounty_modifier * script_data.bounty_bonus)
   increment(script_data, "money", cash)
   surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = color}
-  update_label_list(script_data.gui_elements.money_label, get_money())
+  update_label_list(script_data.gui_labels.money_label, get_money())
 end
 
 function get_bounty_price(name)
@@ -730,25 +754,12 @@ function give_spawn_equipment(player)
   end
 end
 
-function delete_preview_gui(player)
-
-  local frame = script_data.gui_elements.preview_frame[player.index]
-  if frame and frame.valid then
-    deregister_gui(frame)
-    frame.destroy()
-  end
-  script_data.gui_elements.preview_frame[player.index] = nil
-
-end
-
 function refresh_preview_gui(player)
 
   local frame = script_data.gui_elements.preview_frame[player.index]
   if not (frame and frame.valid) then return end
   deregister_gui(frame)
   frame.clear()
-
-
 
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
@@ -820,7 +831,7 @@ local upgrade_button_param =
   style = mod_gui.button_style
 }
 
-local admin_button _param =
+local admin_button_param =
 {
   type = "button",
   caption = "ADMIN",
@@ -847,26 +858,37 @@ local add_gui_buttons= function(player)
 
   if player.admin then
     local admin_button = button_flow.add(admin_button_param)
+    script_data.gui_elements.admin_frame_button[player.index] = admin_button
     register_gui_action(admin_button, {type = "admin_button"})
+  end
+end
+
+local delete_game_gui = function(player)
+  local index = player.index
+  for k, gui_list in pairs(script_data.gui_elements) do
+    local element = gui_list[index]
+    if (element and element.valid) then
+      deregister_gui(element)
+      element.destroy()
+    end
+    gui_list[index] = nil
   end
 end
 
 function gui_init(player)
 
-  if not script_data.in_round then
-    return make_preview_gui(player)
+  delete_game_gui(player)
+
+  if script_data.state == game_state.in_preview then
+    make_preview_gui(player)
+    return
   end
 
-  delete_preview_gui(player)
-  add_gui_buttons(player)
-  toggle_wave_frame(player)
-
-  local upgrade_frame = script_data.gui_elements.upgrade_frame[player.index]
-  if upgrade_frame and upgrade_frame.valid then
-    deregister_gui(upgrade_frame)
-    upgrade_frame.destroy()
+  if script_data.state == game_state.in_round then
+    add_gui_buttons(player)
+    toggle_wave_frame(player)
+    return
   end
-  script_data.gui_elements.upgrade_frame[player.index] = nil
 
 end
 
@@ -895,15 +917,15 @@ function toggle_wave_frame(player)
   frame.style.vertically_stretchable = false
 
   local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
-  insert(script_data.gui_elements.round_label, round)
+  insert(script_data.gui_labels.round_label, round)
 
   local time = frame.add{type = "label", caption = {"time-to-next-wave", time_to_next_wave()}}
-  insert(script_data.gui_elements.time_label, time)
+  insert(script_data.gui_labels.time_label, time)
 
   local money_table = frame.add{type = "table", column_count = 2}
   money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
   local cash = money_table.add{type = "label", caption = get_money()}
-  insert(script_data.gui_elements.money_label, cash)
+  insert(script_data.gui_labels.money_label, cash)
   cash.style.font_color = cash_font_color
 end
 
@@ -927,7 +949,7 @@ function toggle_upgrade_frame(player)
   local label = money_table.add{type = "label", caption = {"force-money"}}
   label.style.font = "default-semibold"
   local cash = money_table.add{type = "label", caption = get_money()}
-  insert(script_data.gui_elements.money_label, cash)
+  insert(script_data.gui_labels.money_label, cash)
   cash.style.font_color = {r = 0.8, b = 0.5, g = 0.8}
   local scroll = frame.add{type = "scroll-pane"}
   scroll.style.maximal_height = 450
@@ -1084,15 +1106,45 @@ function update_connected_players(tick)
     caption = {"time-to-next-wave", time_left}
   end
 
-  update_label_list(script_data.gui_elements.time_label, caption)
+  update_label_list(script_data.gui_labels.time_label, caption)
 end
 
-function update_round_number()
-  update_label_list(script_data.gui_elements.round_label, {"current-wave", script_data.wave_number})
-end
+local admin_frame_param =
+{
+  type = "frame",
+  caption = "Admin stuff",
+  direction = "vertical"
+}
+
+local admin_buttons =
+{
+  {
+    param = {type = "button", caption = "End round"},
+    action = {type = "end_round"}
+  },
+  {
+    param = {type = "button", caption = "Send wave"},
+    action = {type = "send_wave"}
+  },
+
+}
 
 local toggle_admin_frame = function(player)
   if not (player and player.valid) then return end
+  local frame = script_data.gui_elements.admin_frame[player.index]
+  if (frame and frame.valid) then
+    deregister_gui(frame)
+    frame.destroy()
+    script_data.gui_elements.admin_frame[player.index] = nil
+    return
+  end
+  local gui = mod_gui.get_frame_flow(player)
+  frame = gui.add(admin_frame_param)
+  script_data.gui_elements.admin_frame[player.index] = frame
+  for k, button in pairs (admin_buttons) do
+    local butt = frame.add(button.param)
+    register_gui_action(butt, button.action)
+  end
 
 end
 
@@ -1147,12 +1199,14 @@ local init_map_settings = function()
   settings.path_finder.use_path_cache = false
   settings.path_finder.max_steps_worked_per_tick = 300
   settings.path_finder.max_clients_to_accept_any_new_request = 1000
+
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 8
+  settings.steering.moving.separation_force = 0.01
+  settings.steering.moving.separation_factor = 8
+  
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 4
   settings.steering.default.radius = 4
-  settings.steering.moving.separation_force = 0.02
-  settings.steering.moving.separation_factor = 2
   settings.steering.default.separation_force = 0.02
   settings.steering.default.separation_factor  = 1
   settings.path_finder.max_steps_worked_per_tick = 10000
@@ -1179,7 +1233,6 @@ local on_rocket_launched = function(event)
   game.print("WOOP DE DOO YOU WIN")
 end
 
-
 local on_player_joined_game = function(event)
   local player = players(event.player_index)
   if not (script_data.surface and script_data.surface.valid) then
@@ -1202,6 +1255,20 @@ local is_reasonable_seed = function(string)
   return true
 end
 
+local end_round = function(player)
+  script_data.state = game_state.in_preview
+  script_data.wave_tick = nil
+  script_data.spawn_tick = nil
+  local seed = script_data.surface.map_gen_settings.seed
+  game.delete_surface(script_data.surface)
+  create_battle_surface(script_data.surface.map_gen_settings.seed)
+  for k, player in pairs (players()) do
+    if player.character then player.character.destroy() end
+    player.teleport({0,0}, game.surfaces[1])
+    gui_init(player)
+  end
+end
+
 local gui_functions =
 {
   send_next_wave = function(event)
@@ -1211,7 +1278,7 @@ local gui_functions =
     local player = players(event.player_index)
     local skipped = math.floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
     increment(script_data, "money", skipped)
-    update_label_list(script_data.gui_elements.money_label, get_money())
+    update_label_list(script_data.gui_labels.money_label, get_money())
     next_wave()
     if player.name == "" then
       game.print({"next-wave"})
@@ -1248,7 +1315,7 @@ local gui_functions =
       for k, player in pairs (game.connected_players) do
         update_upgrade_listing(player)
       end
-      update_label_list(script_data.gui_elements.money_label, get_money())
+      update_label_list(script_data.gui_labels.money_label, get_money())
     else
       player.print({"not-enough-money"})
     end
@@ -1275,6 +1342,12 @@ local gui_functions =
   end,
   start_round = function(event, param)
     start_round()
+  end,
+  send_wave = function(event, param)
+    spawn_units()
+  end,
+  end_round = function(event, param)
+    end_round()
   end
 }
 
