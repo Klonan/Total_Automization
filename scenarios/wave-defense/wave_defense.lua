@@ -50,7 +50,7 @@ local script_data =
 }
 
 local max_seed = 2^32 - 2
-local initial_seed = 314159265 -- Something nice?
+local initial_seed = 829296663 -- Something nice?
 
 local players = function(index)
   local player_list = game.players
@@ -188,7 +188,13 @@ function create_silo(starting_point)
   local silo = surface.create_entity{name = silo_name, position = silo_position, force = force, raise_built = true, create_build_effect_smoke = false}
 
   if not (silo and silo.valid) then return end
-
+  rendering.draw_light
+  {
+    sprite = "utility/light_medium",
+    target = silo,
+    surface = silo.surface,
+    scale = 4
+  }
   silo.minable = false
   if silo.supports_backer_name() then
     silo.backer_name = ""
@@ -776,7 +782,7 @@ function refresh_preview_gui(player)
   register_gui_action(shuffle_button, {type = "shuffle_button"})
   local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
   register_gui_action(refresh_button, {type = "refresh_button", textfield = seed_input})
-  local max = math.min(player.display_resolution.width, player.display_resolution.height) * 0.6
+  local max = math.floor(math.min(player.display_resolution.width, player.display_resolution.height) * 0.75)
 
   local surface = script_data.surface
   seed_input.text = surface.map_gen_settings.seed
@@ -1204,7 +1210,7 @@ local init_map_settings = function()
   settings.steering.moving.radius = 8
   settings.steering.moving.separation_force = 0.01
   settings.steering.moving.separation_factor = 8
-  
+
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
   settings.steering.default.radius = 4
   settings.steering.default.separation_force = 0.02

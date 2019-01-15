@@ -40,7 +40,7 @@ local on_tick = function(event)
   local cams = data.killcams
   for k, cam in pairs (cams) do
     local player = game.players[k]
-    if player.character then
+    if not player.ticks_to_respawn then
       cam.frame.destroy()
       cams[k] = nil
     elseif cam.cause.valid then

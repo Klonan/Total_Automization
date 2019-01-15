@@ -86,13 +86,13 @@ return
   property_expression_names =
   {},
   research_queue_from_the_start = "after-victory",
-  starting_area = 1.8,
+  starting_area = 1.2,
   starting_points =
   {
     {
-      x = (1024 / 2) - 64,
+      x = 0, --(1024 / 2) - 64,
       y = 0
-    }
+    },
   },
   terrain_segmentation = 2,
   water = 1.3,
