@@ -14,6 +14,14 @@ local game_state =
   victory = 4
 }
 
+local difficulty =
+{
+  easy = 1,
+  normal = 2,
+  hard = 3,
+  expert = 4
+}
+
 local script_data =
 {
   wave_number = 0,
@@ -43,6 +51,7 @@ local script_data =
   gui_actions = {},
   spawners = {},
   state = game_state.in_preview,
+  difficulty = difficulty.normal,
   random = nil,
   wave_tick = nil,
   spawn_time = nil,
@@ -147,8 +156,21 @@ function get_map_gen_settings()
   return map_gen_settings
 end
 
-local get_map_size = function()
-  return script_data.map_size or 160
+local get_starting_area_radius = function()
+  local selected_difficulty = script_data.difficulty
+  if selected_difficulty == difficulty.easy then
+    return 2
+  end
+  if selected_difficulty == difficulty.normal then
+    return 1.5
+  end
+  if selected_difficulty == difficulty.hard then
+    return 1
+  end
+  if selected_difficulty == difficulty.expert then
+    return 0.75
+  end
+  error("WOW")
 end
 
 function create_battle_surface(seed)
@@ -161,6 +183,7 @@ function create_battle_surface(seed)
   end
   local settings = get_map_gen_settings()
   settings.seed = seed or get_random_seed()
+  settings.starting_area = get_starting_area_radius()
   local surface = game.create_surface(name, settings)
   local size = surface.get_starting_area_radius()
   script_data.surface = surface
@@ -791,12 +814,24 @@ function refresh_preview_gui(player)
   if not (frame and frame.valid) then return end
   deregister_gui(frame)
   frame.clear()
-
+  
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
   subheader.style.horizontally_stretchable = true
-  subheader.style.horizontal_align = "right"
+  --subheader.style.vertical_align = "center"
   subheader.style.bottom_padding = 1
+  local label = subheader.add{type = "label", caption = "Difficulty", style = "caption_label"}
+  label.style.vertically_stretchable = true
+  label.style.vertical_align = "center"
+  label.style.right_padding = 3
+  local config = subheader.add{type = "drop-down"}
+  --config.style.left_padding = 2
+  config.add_item("Easy")
+  config.add_item("Normal")
+  config.add_item("Hard")
+  config.add_item("Expert")
+  config.selected_index = script_data.difficulty
+  register_gui_action(config, {type = "difficulty_changed"})
   local pusher = subheader.add{type = "flow"}
   pusher.style.horizontally_stretchable = true
   local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
@@ -837,12 +872,11 @@ end
 function make_preview_gui(player)
   local gui = player.gui.center
   local frame = script_data.gui_elements.preview_frame[player.index]
-  if frame and frame.valid then
-    return refresh_preview_gui(player)
+  if not (frame and frame.valid) then
+    frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
+    frame.style.horizontal_align = "right"
+    script_data.gui_elements.preview_frame[player.index] = frame
   end
-  frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
-  frame.style.horizontal_align = "right"
-  script_data.gui_elements.preview_frame[player.index] = frame
   refresh_preview_gui(player)
 end
 
@@ -1379,6 +1413,16 @@ local gui_functions =
   end,
   end_round = function(event, param)
     end_round()
+  end,
+  difficulty_changed = function(event, param)
+    local gui = event.element
+    if not (gui and gui.valid) then return end
+    if not (event.name == defines.events.on_gui_selection_state_changed) then return end
+    script_data.difficulty = gui.selected_index
+    if true then return create_battle_surface(script_data.surface.map_gen_settings.seed) end
+    for k, player in pairs (game.connected_players) do
+      refresh_preview_gui(player)
+    end
   end
 }
 
@@ -1465,6 +1509,7 @@ local events =
   [defines.events.on_rocket_launched] = on_rocket_launched,
   [defines.events.on_gui_text_changed] = generic_gui_event,
   [defines.events.on_gui_click] = generic_gui_event,
+  [defines.events.on_gui_selection_state_changed] = generic_gui_event,
   [defines.events.on_player_died] = on_player_died,
   [defines.events.on_chunk_generated] = on_chunk_generated,
   [defines.events.on_gui_closed] = on_gui_closed
