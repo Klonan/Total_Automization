@@ -1,4 +1,4 @@
-return
+return function() return
 {
   autoplace_controls =
   {
@@ -98,3 +98,4 @@ return
   water = 1.3,
   width = 1024
 }
+end

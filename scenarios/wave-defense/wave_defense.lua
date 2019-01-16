@@ -153,7 +153,7 @@ local get_random_seed = function()
 end
 
 function get_map_gen_settings()
-  return map_gen_settings
+  return map_gen_settings()
 end
 
 local get_starting_area_radius = function()
