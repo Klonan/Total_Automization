@@ -186,7 +186,6 @@ function create_silo(starting_point)
   local silo_name = "rocket-silo"
   if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
   local silo = surface.create_entity{name = silo_name, position = silo_position, force = force, raise_built = true, create_build_effect_smoke = false}
-
   if not (silo and silo.valid) then return end
   rendering.draw_light
   {
@@ -390,6 +389,13 @@ function create_turrets(starting_point)
   if ammo_name and game.item_prototypes[ammo_name] then
     stack = {name = ammo_name, count = 50}
   end
+  local direction_offset =
+  {
+    [direction.north] = {0, -13},
+    [direction.east] = {13, 0},
+    [direction.south] = {0, 13},
+    [direction.west] = {-13, 0},
+  }
   local find_entities_filtered = surface.find_entities_filtered
   local neutral = game.forces.neutral
   local destroy_params = {do_cliff_correction = true}
@@ -398,7 +404,17 @@ function create_turrets(starting_point)
   local can_place_entity = surface.can_place_entity
   for k, position in pairs (positions) do
     if is_in_map(width, height, position) and can_place_entity{name = turret_name, position = position, force = force, build_check_type = defines.build_check_type.ghost_place, forced = true} then
-      local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}
+      local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}    
+      rendering.draw_light
+      {
+        sprite = "utility/light_cone",
+        target = turret,
+        surface = turret.surface,
+        scale = 4,
+        orientation = turret.orientation,
+        target_offset = direction_offset[position.direction],
+        minimum_darkness = 0.3
+      }
       local box = turret.bounding_box
       for k, entity in pairs (find_entities_filtered{area = turret.bounding_box, force = neutral}) do
         entity.destroy(destroy_params)
@@ -586,6 +602,15 @@ function spawn_units()
     else
       local position = surface.find_non_colliding_position(biter.name, random_chunk_position(spawn), 0, 4)
       local unit = surface.create_entity{name = biter.name, position = position}
+      --rendering.draw_light
+      --{
+      --  sprite = "utility/light_small",
+      --  target = unit,
+      --  surface = unit.surface,
+      --  scale = 1,
+      --  intensity = 0.5,   
+      --  color = {g = 1}
+      --}
       local ai_settings = unit.ai_settings
       ai_settings.allow_try_return_to_spawner = false
       ai_settings.path_resolution_modifier = -3
@@ -1418,6 +1443,15 @@ local on_chunk_generated = function(event)
   if not (surface and surface.valid and surface == script_data.surface) then return end
   for k, spawner in pairs (surface.find_entities_filtered{area = area, type = "unit-spawner"}) do
     script_data.spawners[spawner.unit_number] = spawner
+    rendering.draw_light
+    {
+      sprite = "utility/light_medium",
+      target = spawner,
+      surface = surface,
+      scale = 2,
+      intensity = 1,   
+      color = {r = 0.5, a = 1}
+    }
   end
 end
 

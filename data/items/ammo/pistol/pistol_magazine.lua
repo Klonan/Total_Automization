@@ -48,6 +48,14 @@ projectile.localised_name = name
 projectile.force_condition = "not-same"
 projectile.piercing_damage = 0
 projectile.hit_at_collision_position = true
+projectile.light = 
+{
+  minimum_darkness = 0,
+  intensity = 1,
+  size = 1,
+  color = {r=1.0, g=1.0, b=1.0},
+  shift = {0, -1}
+}
 projectile.action =
 {
   type = "direct",

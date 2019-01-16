@@ -44,7 +44,7 @@ pellet.action =
 
 local animation = pellet.animation
 animation.tint = nil
-animation.blend_mode = "additive-soft"
+animation.blend_mode = "additive"
 local animations = {}
 local make_animation = function(scale)
   local new = util.copy(animation)
@@ -82,7 +82,7 @@ piercing_pellet.action =
 
 local animation = piercing_pellet.animation
 animation.tint = nil
-animation.blend_mode = "additive-soft"
+animation.blend_mode = "additive"
 local animations = {}
 local make_animation = function(scale)
   local new = util.copy(animation)
