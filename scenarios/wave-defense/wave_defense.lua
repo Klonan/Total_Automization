@@ -330,7 +330,7 @@ function create_silo(starting_point)
 end
 
 local get_base_radius = function()
-  return (32 * (math.floor(((script_data.surface.get_starting_area_radius() / 32) - 0) / (2^0.5))))
+  return (32 * (math.floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
 end
 
 local is_in_map = function(width, height, position)
@@ -511,7 +511,7 @@ function create_turrets(starting_point)
   for k, position in pairs (positions) do
     if is_in_map(width, height, position) and can_place_entity{name = turret_name, position = position, force = force, build_check_type = defines.build_check_type.ghost_place, forced = true} then
       local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}
-      rendering.draw_light
+      poop = --rendering.draw_light
       {
         sprite = "utility/light_cone",
         target = turret,
@@ -1167,40 +1167,30 @@ function get_upgrades()
           local cat = effect.ammo_category
           upgrade.effect[k] = function(event)
             local force = players(event.player_index).force
-            force.set_ammo_damage_modifier(cat, force.get_ammo_damage_modifier(cat)+mod)
-            increment(script_data.team_upgrades, name)
-            return true
+            force.set_ammo_damage_modifier(cat, force.get_ammo_damage_modifier(cat) + mod)
           end
         elseif type == "turret-attack" then
           local id = effect.turret_id
           upgrade.effect[k] = function(event)
             local force = players(event.player_index).force
-            force.set_turret_attack_modifier(id, force.get_turret_attack_modifier(id)+mod)
-            increment(script_data.team_upgrades, name)
-            return true
+            force.set_turret_attack_modifier(id, force.get_turret_attack_modifier(id) + mod)
           end
         elseif type == "gun-speed" then
           local cat = effect.ammo_category
           upgrade.effect[k] = function(event)
             local force = players(event.player_index).force
-            force.set_gun_speed_modifier(cat, force.get_gun_speed_modifier(cat)+mod)
-            increment(script_data.team_upgrades, name)
-            return true
+            force.set_gun_speed_modifier(cat, force.get_gun_speed_modifier(cat) + mod)
           end
         elseif type == "maximum-following-robots-count" then
           upgrade.modifier = "+"..tostring(mod)
           upgrade.effect[k] = function(event)
             local force = players(event.player_index).force
             increment(force, "maximum_following_robot_count", mod)
-            increment(script_data.team_upgrades, name)
-            return true
           end
         elseif type == "mining-drill-productivity-bonus" then
           upgrade.effect[k] = function(event)
             local force = players(event.player_index).force
             increment(force, "mining_drill_productivity_bonus", mod)
-            increment(script_data.team_upgrades, name)
-            return true
           end
         else error(name.." - This tech has no relevant upgrade effect") end
       end
@@ -1455,23 +1445,23 @@ local gui_functions =
     local upgrades = script_data.team_upgrades
     local player = players(event.player_index)
     local price = list[name].price(upgrades[name])
-    if script_data.money >= price then
-      increment(script_data, "money", -price)
-      local sucess = false
-      for k, effect in pairs (list[name].effect) do
-        sucess = effect(event)
-      end
-      if sucess and game.is_multiplayer() then
-        game.print({"purchased-team-upgrade", player.name, list[name].caption,upgrades[name]})
-      end
-      update_connected_players()
-      for k, player in pairs (game.connected_players) do
-        update_upgrade_listing(player)
-      end
-      update_label_list(script_data.gui_labels.money_label, get_money())
-    else
+    if script_data.money < price then
       player.print({"not-enough-money"})
+      return
     end
+
+    increment(script_data, "money", -price)
+    for k, effect in pairs (list[name].effect) do
+      effect(event)
+    end
+    increment(script_data.team_upgrades, name)
+    game.print({"purchased-team-upgrade", player.name, list[name].caption, upgrades[name]})
+    update_connected_players()
+    for k, player in pairs (game.connected_players) do
+      update_upgrade_listing(player)
+    end
+    update_label_list(script_data.gui_labels.money_label, get_money())
+
   end,
   shuffle_button = function(event, param)
     create_battle_surface()
@@ -1481,7 +1471,7 @@ local gui_functions =
     if not (input and input.valid) then return end
     local seed = input.text
     if is_reasonable_seed(seed) then
-      create_battle_surface(tonumber(seed))
+      create_battle_surface(seed)
     end
   end,
   check_seed_input = function(event, param)
@@ -1507,10 +1497,7 @@ local gui_functions =
     if not (gui and gui.valid) then return end
     if not (event.name == defines.events.on_gui_selection_state_changed) then return end
     script_data.difficulty = gui.selected_index
-    if true then return create_battle_surface(script_data.surface.map_gen_settings.seed) end
-    for k, player in pairs (game.connected_players) do
-      refresh_preview_gui(player)
-    end
+    create_battle_surface(script_data.surface.map_gen_settings.seed)
   end
 }
 
