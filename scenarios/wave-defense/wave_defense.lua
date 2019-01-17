@@ -1,6 +1,6 @@
 local util = require "util"
 local mod_gui = require "mod-gui"
-local map_gen_settings = require "wave_defense_map_gen_settings"
+local get_map_gen_settings = require "wave_defense_map_gen_settings"
 local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
@@ -22,6 +22,84 @@ local difficulty =
   expert = 4
 }
 
+local difficulty_variables =
+{
+  {
+    --easy
+    starting_area_size = 2,
+    day_settings =
+    {
+      ticks_per_day = 25000,
+      dusk = 0.25,
+      evening = 0.45,
+      morning = 0.50,
+      dawn = 0.70
+    },
+    starting_points =
+    {
+      {x = 512 - 128, y = 512 - 128},
+      {x = -512 + 128, y = 512 - 128},
+      {x = 512 - 128, y = -512 + 128},
+      {x = -512 + 128, y = -512 + 128}
+    }
+  },
+  {
+    --normal
+    starting_area_size = 1.5,
+    day_settings =
+    {
+      ticks_per_day = 25000,
+      dusk = 0.25,
+      evening = 0.45,
+      morning = 0.55,
+      dawn = 0.75
+    },
+    starting_points =
+    {
+      {x = 512 - 96, y = 512 - 96},
+      {x = -512 + 96, y = 512 - 96},
+      {x = 512 - 96, y = -512 + 96},
+      {x = -512 + 96, y = -512 + 96}
+    },
+
+  },
+  {
+    --hard
+    starting_area_size = 1,
+    day_settings =
+    {
+      ticks_per_day = 25000,
+      dusk = 0.2,
+      evening = 0.40,
+      morning = 0.55,
+      dawn = 0.75
+    },
+    starting_points =
+    {
+      {x = 512 - 64, y = 0},
+      {x = -512 + 64, y = 0},
+      {x = 0, y = -512 + 64},
+      {x = 0, y = 512 - 64}
+    },
+  },
+  {
+    --expert
+    starting_area_size = 0.75,
+    day_settings =
+    {
+      ticks_per_day = 25000,
+      dusk = 0.2,
+      evening = 0.4,
+      morning = 0.6,
+      dawn = 0.8
+    },
+    starting_points =
+    {
+      {x = 0, y = 0}
+    },
+  },
+
+}
 
 local script_data =
 {
@@ -59,80 +137,15 @@ local script_data =
   wave_time = nil,
 }
 
-local starting_points =
-{
-  {
-    --easy, so the corners of the map
-    {x = 512 - 128, y = 512 - 128},
-    {x = -512 + 128, y = 512 - 128},
-    {x = 512 - 128, y = -512 + 128},
-    {x = -512 + 128, y = -512 + 128}
-  },
-  {
-    --normal, also the corners of the map
-    {x = 512 - 96, y = 512 - 96},
-    {x = -512 + 96, y = 512 - 96},
-    {x = 512 - 96, y = -512 + 96},
-    {x = -512 + 96, y = -512 + 96}
-  },
-  {
-    --hard, along the edges
-    {x = 512 - 64, y = 0},
-    {x = -512 + 64, y = 0},
-    {x = 0, y = -512 + 64},
-    {x = 0, y = 512 - 64}
-  },
-  {
-    --expert, in the middle
-    {x = 0, y = 0}
-  },
-}
-
-local get_starting_points = function()
-  local points = starting_points[script_data.difficulty]
-  return {points[script_data.random(#points)]}
+local get_starting_point = function()
+  local points = difficulty_variables[script_data.difficulty].starting_points
+  return points[script_data.random(#points)]
 end
-
-local day_settings =
-{
-  {
-    --easy
-    ticks_per_day = 25000,
-    dusk = 0.25,
-    evening = 0.45,
-    morning = 0.50,
-    dawn = 0.70
-  },
-  {
-    --normal
-    ticks_per_day = 25000,
-    dusk = 0.25,
-    evening = 0.45,
-    morning = 0.55,
-    dawn = 0.75
-  },
-  {
-    --hard
-    ticks_per_day = 25000,
-    dusk = 0.2,
-    evening = 0.40,
-    morning = 0.55,
-    dawn = 0.75
-  },
-  {
-    --expert
-    ticks_per_day = 25000,
-    dusk = 0.2,
-    evening = 0.4,
-    morning = 0.6,
-    dawn = 0.8
-  }
-}
 
 local set_daytime_settings = function()
   local surface = script_data.surface
   if not (surface and surface.valid) then return end
-  local settings = day_settings[script_data.difficulty]
+  local settings = difficulty_variables[script_data.difficulty].day_settings
   for name, value in pairs (settings) do
     surface[name] = value
   end
@@ -235,46 +248,30 @@ local get_random_seed = function()
   return (32452867 * game.tick) % max_seed
 end
 
-function get_map_gen_settings()
-  return map_gen_settings()
-end
-
 local get_starting_area_radius = function()
-  local selected_difficulty = script_data.difficulty
-  if selected_difficulty == difficulty.easy then
-    return 2
-  end
-  if selected_difficulty == difficulty.normal then
-    return 1.5
-  end
-  if selected_difficulty == difficulty.hard then
-    return 1
-  end
-  if selected_difficulty == difficulty.expert then
-    return 0.75
-  end
-  error("WOW")
+  local settings = difficulty_variables[script_data.difficulty]
+  return settings.starting_area_size
 end
 
 function create_battle_surface(seed)
   local name = "battle_surface"
   for k, surface in pairs (game.surfaces) do
     if surface.name ~= "nauvis" then
+      name = name..k
       game.delete_surface(surface.name)
     end
-    name = name..k
   end
   local settings = get_map_gen_settings()
   local seed = seed or get_random_seed()
   script_data.random = game.create_random_generator(seed)
   settings.seed = seed
   settings.starting_area = get_starting_area_radius()
-  settings.starting_points = get_starting_points()
+  local starting_point = get_starting_point()
+  settings.starting_points = {starting_point}
   local surface = game.create_surface(name, settings)
   local size = surface.get_starting_area_radius()
   script_data.surface = surface
   set_daytime_settings()
-  local starting_point = settings.starting_points[1]
   surface.request_to_generate_chunks(starting_point, math.ceil(size / 32))
   surface.force_generate_chunk_requests()
   game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
