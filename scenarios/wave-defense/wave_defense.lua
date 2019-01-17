@@ -22,6 +22,7 @@ local difficulty =
   expert = 4
 }
 
+
 local script_data =
 {
   wave_number = 0,
@@ -58,6 +59,39 @@ local script_data =
   wave_time = nil,
 }
 
+local starting_points =
+{
+  {
+    --easy, so the corners of the map
+    {x = 512 - 128, y = 512 - 128},
+    {x = -512 + 128, y = 512 - 128},
+    {x = 512 - 128, y = -512 + 128},
+    {x = -512 + 128, y = -512 + 128}
+  },
+  {
+    --normal, also the corners of the map
+    {x = 512 - 96, y = 512 - 96},
+    {x = -512 + 96, y = 512 - 96},
+    {x = 512 - 96, y = -512 + 96},
+    {x = -512 + 96, y = -512 + 96}
+  },
+  {
+    --hard, along the edges
+    {x = 512 - 64, y = 0},
+    {x = -512 + 64, y = 0},
+    {x = 0, y = -512 + 64},
+    {x = 0, y = 512 - 64}
+  },
+  {
+    --expert, in the middle
+    {x = 0, y = 0}
+  },
+}
+
+local get_starting_points = function()
+  local points = starting_points[script_data.difficulty]
+  return {points[script_data.random(#points)]}
+end
 local max_seed = 2^32 - 2
 local initial_seed = 829296663 -- Something nice?
 
@@ -135,15 +169,18 @@ end
 
 function start_round()
   local surface = script_data.surface
-  surface.daytime = 0
+  surface.daytime = surface.dawn
   surface.always_day = false
   script_data.state = game_state.in_round
   local tick = game.tick
   script_data.money = 0
   script_data.wave_number = 0
+  --How often waves are sent
   script_data.wave_time = surface.ticks_per_day
+  --How long waves last
   script_data.spawn_time = math.floor(surface.ticks_per_day * (surface.morning - surface.evening))
-  script_data.wave_tick = tick + math.ceil(surface.ticks_per_day * surface.evening)
+  --First spawn
+  script_data.wave_tick = tick + math.ceil(surface.ticks_per_day * surface.evening) + math.ceil((1 - surface.dawn) * surface.ticks_per_day)
   set_up_players()
 end
 
@@ -182,8 +219,11 @@ function create_battle_surface(seed)
     name = name..k
   end
   local settings = get_map_gen_settings()
-  settings.seed = seed or get_random_seed()
+  local seed = seed or get_random_seed()
+  script_data.random = game.create_random_generator(seed)
+  settings.seed = seed
   settings.starting_area = get_starting_area_radius()
+  settings.starting_points = get_starting_points()
   local surface = game.create_surface(name, settings)
   local size = surface.get_starting_area_radius()
   script_data.surface = surface
@@ -198,7 +238,6 @@ function create_battle_surface(seed)
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
-  script_data.random = game.create_random_generator(settings.seed)
 end
 
 function create_silo(starting_point)
@@ -427,7 +466,7 @@ function create_turrets(starting_point)
   local can_place_entity = surface.can_place_entity
   for k, position in pairs (positions) do
     if is_in_map(width, height, position) and can_place_entity{name = turret_name, position = position, force = force, build_check_type = defines.build_check_type.ghost_place, forced = true} then
-      local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}    
+      local turret = create_entity{name = turret_name, position = position, force = force, direction = position.direction, create_build_effect_smoke = false}
       rendering.draw_light
       {
         sprite = "utility/light_cone",
@@ -631,7 +670,7 @@ function spawn_units()
       --  target = unit,
       --  surface = unit.surface,
       --  scale = 1,
-      --  intensity = 0.5,   
+      --  intensity = 0.5,
       --  color = {g = 1}
       --}
       local ai_settings = unit.ai_settings
@@ -639,6 +678,8 @@ function spawn_units()
       ai_settings.path_resolution_modifier = -3
 
       unit.set_command(command)
+      unit.speed = unit.speed * (0.8 + math.random()/5)
+      game.print(unit.speed)
       power = power - cost
       unit_count = unit_count + 1
     end
@@ -814,7 +855,7 @@ function refresh_preview_gui(player)
   if not (frame and frame.valid) then return end
   deregister_gui(frame)
   frame.clear()
-  
+
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
   subheader.style.horizontally_stretchable = true
@@ -1255,6 +1296,7 @@ local on_player_created = function(event)
   if player.character then
     player.character.destroy()
   end
+  player.spectator = true
 end
 
 local init_map_settings = function()
@@ -1493,7 +1535,7 @@ local on_chunk_generated = function(event)
       target = spawner,
       surface = surface,
       scale = 2,
-      intensity = 1,   
+      intensity = 1,
       color = {r = 0.5, a = 1}
     }
   end
