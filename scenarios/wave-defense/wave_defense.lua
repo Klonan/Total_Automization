@@ -92,6 +92,52 @@ local get_starting_points = function()
   local points = starting_points[script_data.difficulty]
   return {points[script_data.random(#points)]}
 end
+
+local day_settings =
+{
+  {
+    --easy
+    ticks_per_day = 25000,
+    dusk = 0.25,
+    evening = 0.45,
+    morning = 0.50,
+    dawn = 0.70
+  },
+  {
+    --normal
+    ticks_per_day = 25000,
+    dusk = 0.25,
+    evening = 0.45,
+    morning = 0.55,
+    dawn = 0.75
+  },
+  {
+    --hard
+    ticks_per_day = 25000,
+    dusk = 0.2,
+    evening = 0.40,
+    morning = 0.55,
+    dawn = 0.75
+  },
+  {
+    --expert
+    ticks_per_day = 25000,
+    dusk = 0.2,
+    evening = 0.4,
+    morning = 0.6,
+    dawn = 0.8
+  }
+}
+
+local set_daytime_settings = function()
+  local surface = script_data.surface
+  if not (surface and surface.valid) then return end
+  local settings = day_settings[script_data.difficulty]
+  for name, value in pairs (settings) do
+    surface[name] = value
+  end
+end
+
 local max_seed = 2^32 - 2
 local initial_seed = 829296663 -- Something nice?
 
@@ -227,14 +273,14 @@ function create_battle_surface(seed)
   local surface = game.create_surface(name, settings)
   local size = surface.get_starting_area_radius()
   script_data.surface = surface
-  for k, starting_point in pairs (settings.starting_points) do
-    surface.request_to_generate_chunks(starting_point, math.ceil(size / 32))
-    surface.force_generate_chunk_requests()
-    game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
-    create_silo(starting_point)
-    create_wall(starting_point)
-    create_turrets(starting_point)
-  end
+  set_daytime_settings()
+  local starting_point = settings.starting_points[1]
+  surface.request_to_generate_chunks(starting_point, math.ceil(size / 32))
+  surface.force_generate_chunk_requests()
+  game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
+  create_silo(starting_point)
+  create_wall(starting_point)
+  create_turrets(starting_point)
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
@@ -261,6 +307,7 @@ function create_silo(starting_point)
     silo.backer_name = ""
   end
   script_data.silo = silo
+  --force.set_spawn_position(silo.position, surface)
 
   local tile_name = "concrete"
   if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
@@ -604,7 +651,10 @@ function get_spawn_chunks()
   return positions
 end
 
-
+local get_wave_power = function()
+  local level = script_data.wave_number
+  return (1 + level) * 1000
+end
 
 function spawn_units()
 
@@ -634,7 +684,7 @@ function spawn_units()
       },
     }
   }
-  local power = 10000 or script_data.wave_power
+  local power = get_wave_power() --script_data.wave_power
   local spawns = get_spawn_chunks()
   local spawns_count = #spawns
   if spawns_count == 0 then return end
@@ -679,7 +729,6 @@ function spawn_units()
 
       unit.set_command(command)
       unit.speed = unit.speed * (0.8 + math.random()/5)
-      game.print(unit.speed)
       power = power - cost
       unit_count = unit_count + 1
     end
