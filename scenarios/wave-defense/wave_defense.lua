@@ -5,6 +5,8 @@ local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
 local insert = table.insert
+local floor = math.floor
+local ceil = math.ceil
 
 local game_state =
 {
@@ -26,7 +28,7 @@ local difficulty_variables =
 {
   {
     --easy
-    starting_area_size = 2,
+    starting_area_size = 1.8,
     day_settings =
     {
       ticks_per_day = 25000,
@@ -45,7 +47,7 @@ local difficulty_variables =
   },
   {
     --normal
-    starting_area_size = 1.5,
+    starting_area_size = 1.6,
     day_settings =
     {
       ticks_per_day = 25000,
@@ -65,7 +67,7 @@ local difficulty_variables =
   },
   {
     --hard
-    starting_area_size = 1,
+    starting_area_size = 1.4,
     day_settings =
     {
       ticks_per_day = 25000,
@@ -84,7 +86,7 @@ local difficulty_variables =
   },
   {
     --expert
-    starting_area_size = 0.75,
+    starting_area_size = 1.2,
     day_settings =
     {
       ticks_per_day = 25000,
@@ -269,9 +271,9 @@ function start_round()
   --How often waves are sent
   script_data.wave_time = surface.ticks_per_day
   --How long waves last
-  script_data.spawn_time = math.floor(surface.ticks_per_day * (surface.morning - surface.evening))
+  script_data.spawn_time = floor(surface.ticks_per_day * (surface.morning - surface.evening))
   --First spawn
-  script_data.wave_tick = tick + math.ceil(surface.ticks_per_day * surface.evening) + math.ceil((1 - surface.dawn) * surface.ticks_per_day)
+  script_data.wave_tick = tick + ceil(surface.ticks_per_day * surface.evening) + ceil((1 - surface.dawn) * surface.ticks_per_day)
   set_up_players()
 end
 
@@ -304,7 +306,7 @@ function create_battle_surface(seed)
   local size = surface.get_starting_area_radius()
   script_data.surface = surface
   set_daytime_settings()
-  surface.request_to_generate_chunks(starting_point, math.ceil(size / 32))
+  surface.request_to_generate_chunks(starting_point, ceil(size / 32))
   surface.force_generate_chunk_requests()
   game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
   create_silo(starting_point)
@@ -344,10 +346,10 @@ function create_silo(starting_point)
   local tiles_2 = {}
   local box = silo.bounding_box
   local x1, x2, y1, y2 =
-    math.floor(box.left_top.x) - 1,
-    math.floor(box.right_bottom.x) + 1,
-    math.floor(box.left_top.y) - 1,
-    math.floor(box.right_bottom.y) + 1
+    floor(box.left_top.x) - 1,
+    floor(box.right_bottom.x) + 1,
+    floor(box.left_top.y) - 1,
+    floor(box.right_bottom.y) + 1
   for X = x1, x2 do
     for Y = y1, y2 do
       insert(tiles_2, {name = tile_name, position = {X, Y}})
@@ -362,7 +364,7 @@ function create_silo(starting_point)
 end
 
 local get_base_radius = function()
-  return (32 * (math.floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
+  return (32 * (floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
 end
 
 local is_in_map = function(width, height, position)
@@ -537,7 +539,7 @@ function create_turrets(starting_point)
   local find_entities_filtered = surface.find_entities_filtered
   local neutral = game.forces.neutral
   local destroy_params = {do_cliff_correction = true}
-  local floor = math.floor
+  local floor = floor
   local create_entity = surface.create_entity
   local can_place_entity = surface.can_place_entity
   for k, position in pairs (positions) do
@@ -662,7 +664,7 @@ function get_wave_units()
   local units = {}
   for name, first_wave in pairs (unit_first_waves) do
     if wave >= first_wave then
-      insert(units, {name = name, amount = math.floor(((wave - first_wave) + 1) ^ 1.25)})
+      insert(units, {name = name, amount = floor(((wave - first_wave) + 1) ^ 1.25)})
     end
   end
   game.print(serpent.block(units))
@@ -680,20 +682,20 @@ function spawn_units()
   {
     type = defines.command.compound,
     structure_type = defines.compound_command.return_last,
-    distraction = defines.distraction.by_enemy,
+    distraction = defines.distraction.by_anything,
     commands =
     {
       {
         type = defines.command.go_to_location,
         destination_entity = silo,
-        distraction = defines.distraction.by_enemy,
+        distraction = defines.distraction.by_anything,
         radius = 20,
         pathfind_flags = path_find_flags
       },
       {
         type = defines.command.attack,
         target = silo,
-        distraction = defines.distraction.by_enemy
+        distraction = defines.distraction.by_anything
       },
     }
   }
@@ -705,12 +707,16 @@ function spawn_units()
   local units_length = #units
   local unit_count = 0
   local random = script_data.random
-  local random_chunk_position = function(position)
+  local random_chunk_position = function(spawns)
+    local position = spawns[random(#spawns)]
     local x = (position[1] or position.x) + random(-8, 8)
     local y = (position[2] or position.y) + random(-8, 8)
     return {x, y}
   end
-  local spawn = spawns[random(spawns_count)]
+  local some_spawns = {}
+  for k = 1, floor((1 + script_data.wave_number) ^ 0.5) do
+    insert(some_spawns, spawns[random(spawns_count)])
+  end
   local prices = bounties
   while units_length > 0 do
     local k = rand(units_length)
@@ -722,7 +728,8 @@ function spawn_units()
         units_length = units_length - 1
         break
       else
-        local position = surface.find_non_colliding_position(unit.name, random_chunk_position(spawn), 0, 4)
+        local position = surface.find_non_colliding_position(unit.name, random_chunk_position(some_spawns), 16, 1.5)
+        if not position then return end
         local entity = surface.create_entity{name = unit.name, position = position}
         --rendering.draw_light
         --{
@@ -776,29 +783,6 @@ function rocket_died(event)
   end
   game.print("GAME OVER, tell admin to start a new round or soemthing.")
 
-end
-
-
-function setup_waypoints()
-  local surface = game.surfaces[1]
-  local w = surface.map_gen_settings.width
-  local threshold = -((5*w)/8)
-  local spawns = {}
-  local waypoints = {}
-  for k, entity in pairs (surface.find_entities_filtered{name = "big-worm-turret"}) do
-    local position = entity.position
-    local X = position.x
-    local Y = position.y
-    local I = Y-X
-    if I > threshold then
-      table.insert(waypoints, position)
-    else
-      table.insert(spawns, position)
-    end
-    entity.destroy()
-  end
-  script_data.waypoints = waypoints
-  script_data.spawns = spawns
 end
 
 function insert_items(entity, array)
@@ -913,7 +897,7 @@ function refresh_preview_gui(player)
   register_gui_action(shuffle_button, {type = "shuffle_button"})
   local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
   register_gui_action(refresh_button, {type = "refresh_button", textfield = seed_input})
-  local max = math.floor(math.min(player.display_resolution.width, player.display_resolution.height) * 0.75)
+  local max = floor((math.min(player.display_resolution.width, player.display_resolution.height) / player.display_scale) * 0.75)
 
   local surface = script_data.surface
   seed_input.text = surface.map_gen_settings.seed
@@ -1141,7 +1125,7 @@ function get_upgrades()
       local upgrade = {}
       local mod = base.effects[1].modifier
       upgrade.modifier = "+"..tostring(mod * 100).."%"
-      upgrade.price = function(x) return math.floor((1 + x)) * price end
+      upgrade.price = function(x) return floor((1 + x)) * price end
       upgrade.sprite = "technology/"..append
       upgrade.caption = {"technology-name."..name}
       upgrade.effect = {}
@@ -1186,7 +1170,7 @@ function get_upgrades()
   local bonus = {}
   bonus.modifier = "+10%"
   bonus.sprite = "technology/energy-shield-equipment"
-  bonus.price = function(x) return math.floor((1 + x)) * 2500 end
+  bonus.price = function(x) return floor((1 + x)) * 2500 end
   bonus.effect = {}
   bonus.effect[1] =  function (event)
     increment(script_data, "bounty_bonus", 0.1)
@@ -1328,12 +1312,12 @@ local init_map_settings = function()
   settings.path_finder.max_clients_to_accept_any_new_request = 100
 
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 4
+  settings.steering.moving.radius = 6
   settings.steering.moving.separation_force = 0.01
   settings.steering.moving.separation_factor = 8
 
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.default.radius = 4
+  settings.steering.default.radius = 1
   settings.steering.default.separation_force = 0.02
   settings.steering.default.separation_factor  = 1
 end
@@ -1351,7 +1335,7 @@ local on_entity_died = function(event)
 
   local bounty = bounties[died.name]
   if bounty and (event.force and event.force.name == "player") then
-    local cash = math.floor(bounty * script_data.bounty_bonus)
+    local cash = floor(bounty * script_data.bounty_bonus)
     increment(script_data, "money", cash)
     died.surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = bounty_color}
     update_label_list(script_data.gui_labels.money_label, get_money())
@@ -1410,7 +1394,7 @@ local gui_functions =
     if not (element and element.valid and element.enabled) then return end
     if script_data.end_spawn_tick then return end
     local player = players(event.player_index)
-    local skipped = math.floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
+    local skipped = floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
     increment(script_data, "money", skipped)
     update_label_list(script_data.gui_labels.money_label, get_money())
     next_wave()
