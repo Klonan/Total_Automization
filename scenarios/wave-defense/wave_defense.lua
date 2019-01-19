@@ -101,11 +101,43 @@ local difficulty_variables =
 
 }
 
+local unit_first_waves =
+{
+  ["small-biter"] =      0,
+  ["medium-biter"] =     6,
+  ["big-biter"] =        12,
+  ["behemoth-biter"] =   18,
+
+  ["small-spitter"] =    3,
+  ["medium-spitter"] =   9,
+  ["big-spitter"] =      15,
+  ["behemoth-spitter"] = 20
+}
+
+local bounties =
+{
+  ["small-biter"] = 25,
+  ["medium-biter"] = 125,
+  ["big-biter"] = 350,
+  ["behemoth-biter"] = 800,
+
+  ["small-spitter"] = 35,
+  ["medium-spitter"] = 140,
+  ["big-spitter"] = 400,
+  ["behemoth-spitter"] = 1000,
+
+  ["small-worm-turret"] = 50,
+  ["medium-worm-turret"] = 150,
+  ["big-worm-turret"] = 450,
+
+  ["biter-spawner"] = 1000,
+  ["spitter-spawner"] = 1500
+}
+
 local script_data =
 {
   wave_number = 0,
   spawn_interval = {300, 500},
-  force_bounty_modifier = 0.5,
   bounty_bonus = 1,
   skipped_multiplier = 0.1,
   money = 0,
@@ -463,7 +495,7 @@ function create_turrets(starting_point)
   local turret_name = "gun-turret"
   if not game.entity_prototypes[turret_name] then return end
   local surface = script_data.surface
-  local ammo_name = "uranium-rounds-magazine"
+  local ammo_name = --[["firearm-magazine"]]"uranium-rounds-magazine"
   local direction = defines.direction
   local surface = script_data.surface
   local height = surface.map_gen_settings.height / 2
@@ -550,22 +582,7 @@ function next_wave()
   update_label_list(script_data.gui_labels.round_label, {"current-wave", script_data.wave_number})
   make_next_wave_tick()
   make_next_spawn_tick()
-  local exponent = math.min(#game.connected_players, 8)
-  script_data.force_bounty_modifier = (0.5 * (1.15 / (1.15 ^ exponent)))
-  script_data.wave_power = calculate_wave_power(script_data.wave_number)
   spawn_units()
-end
-
-function calculate_wave_power(x)
-  local c = 1.65
-  local p = math.min(#game.connected_players, 8)
-  if x % 4 == 0 then
-    return math.floor((1.15 ^ p) * (x ^ c) * 60)
-  elseif x % 2 == 0 then
-    return math.floor((1.15 ^ p) * (x ^ c) * 50)
-  else
-    return math.floor((1.15 ^ p) * (x ^ c) * 40)
-  end
 end
 
 function wave_end()
@@ -591,19 +608,6 @@ function check_spawn_units(tick)
     spawn_units()
     make_next_spawn_tick()
   end
-
-end
-
-function get_wave_units(x)
-  local units = {}
-  local k = 1
-  for unit_name, unit in pairs (unit_config) do
-    if unit.in_wave(x) then
-      units[k] = {name = unit_name, cost = unit.cost}
-      k = k + 1
-    end
-  end
-  return units
 end
 
 local get_all_spawn_chunks = function()
@@ -650,11 +654,23 @@ end
 
 local get_wave_power = function()
   local level = script_data.wave_number
-  return (1 + level) * 1000
+  return (1.15 ^ level) * 400
+end
+
+function get_wave_units()
+  local wave = script_data.wave_number
+  local units = {}
+  for name, first_wave in pairs (unit_first_waves) do
+    if wave >= first_wave then
+      insert(units, {name = name, amount = math.floor(((wave - first_wave) + 1) ^ 1.25)})
+    end
+  end
+  game.print(serpent.block(units))
+  return units
 end
 
 function spawn_units()
-
+  game.speed = 1
   local rand = script_data.random
   local surface = script_data.surface
   local silo = script_data.silo
@@ -681,11 +697,11 @@ function spawn_units()
       },
     }
   }
-  local power = get_wave_power() --script_data.wave_power
+  local power = get_wave_power()
   local spawns = get_spawn_chunks()
   local spawns_count = #spawns
   if spawns_count == 0 then return end
-  local units = get_wave_units(script_data.wave_number)
+  local units = get_wave_units()
   local units_length = #units
   local unit_count = 0
   local random = script_data.random
@@ -695,55 +711,41 @@ function spawn_units()
     return {x, y}
   end
   local spawn = spawns[random(spawns_count)]
+  local prices = bounties
   while units_length > 0 do
     local k = rand(units_length)
-    local biter = units[k]
-    local cost = biter.cost
+    local unit = units[k]
+    local cost = prices[unit.name]
+    for j = 1, unit.amount do
+      if cost > power then
+        table.remove(units, k)
+        units_length = units_length - 1
+        break
+      else
+        local position = surface.find_non_colliding_position(unit.name, random_chunk_position(spawn), 0, 4)
+        local entity = surface.create_entity{name = unit.name, position = position}
+        --rendering.draw_light
+        --{
+        --  sprite = "utility/light_small",
+        --  target = unit,
+        --  surface = unit.surface,
+        --  scale = 1,
+        --  intensity = 0.5,
+        --  color = {g = 1}
+        --}
+        local ai_settings = entity.ai_settings
+        ai_settings.allow_try_return_to_spawner = false
+        ai_settings.path_resolution_modifier = -2
 
-    if unit_count > 20 then
-      spawn = spawns[random(spawns_count)]
-      unit_count = 0
-    end
-
-    if cost > power then
-      table.remove(units, k)
-      units_length = units_length - 1
-    else
-      local position = surface.find_non_colliding_position(biter.name, random_chunk_position(spawn), 0, 4)
-      local unit = surface.create_entity{name = biter.name, position = position}
-      --rendering.draw_light
-      --{
-      --  sprite = "utility/light_small",
-      --  target = unit,
-      --  surface = unit.surface,
-      --  scale = 1,
-      --  intensity = 0.5,
-      --  color = {g = 1}
-      --}
-      local ai_settings = unit.ai_settings
-      ai_settings.allow_try_return_to_spawner = false
-      ai_settings.path_resolution_modifier = -3
-
-      unit.set_command(command)
-      unit.speed = unit.speed * (0.8 + math.random()/5)
-      power = power - cost
-      unit_count = unit_count + 1
+        entity.set_command(command)
+        entity.speed = entity.speed * (0.8 + math.random()/5)
+        power = power - cost
+        unit_count = unit_count + 1
+      end
     end
 
   end
 end
-
-unit_config =
-  {
-    ["small-biter"] =      {bounty = 20, cost = 10, in_wave = function(x) return (x<=5) end},
-    ["small-spitter"] =    {bounty = 30, cost = 20, in_wave = function(x) return ((x>=3) and (x<=8)) end},
-    ["medium-biter"] =     {bounty = 120, cost = 80 , in_wave = function(x) return ((x>=5) and (x<=10)) end},
-    ["medium-spitter"] =   {bounty = 50, cost = 120, in_wave = function(x) return ((x>=7) and (x<=12)) end},
-    ["big-biter"] =        {bounty = 400, cost = 300, in_wave = function(x) return (x>=11) and (x<=19) end},
-    ["big-spitter"] =      {bounty = 200, cost = 400, in_wave = function(x) return (x>=13) and (x<=21) end},
-    ["behemoth-biter"] =   {bounty = 1200, cost = 800, in_wave = function(x) return (x>=15) end},
-    ["behemoth-spitter"] = {bounty = 500, cost = 650, in_wave = function(x) return (x>=17) end}
-  }
 
 function make_next_wave_tick()
   script_data.end_spawn_tick = game.tick + script_data.spawn_time
@@ -776,24 +778,6 @@ function rocket_died(event)
 
 end
 
-local color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}
-function unit_died(event)
-  local force = event.force
-  if not force then return end
-  if not force.valid then return end
-  local died = event.entity
-  local surface = died.surface
-  local cash = math.floor(get_bounty_price(died.name) * script_data.force_bounty_modifier * script_data.bounty_bonus)
-  increment(script_data, "money", cash)
-  surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = color}
-  update_label_list(script_data.gui_labels.money_label, get_money())
-end
-
-function get_bounty_price(name)
-  if not unit_config[name] then game.print(name.." not in config") return 0 end
-  if not unit_config[name].bounty then game.print(name.." not in bounty list") return 0 end
-  return unit_config[name].bounty
-end
 
 function setup_waypoints()
   local surface = game.surfaces[1]
@@ -1340,11 +1324,11 @@ local init_map_settings = function()
   settings.pollution.enabled = false
   settings.enemy_expansion.enabled = false
   settings.path_finder.use_path_cache = false
-  settings.path_finder.max_steps_worked_per_tick = 300
-  settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  settings.path_finder.max_steps_worked_per_tick = 500
+  settings.path_finder.max_clients_to_accept_any_new_request = 100
 
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 8
+  settings.steering.moving.radius = 4
   settings.steering.moving.separation_force = 0.01
   settings.steering.moving.separation_factor = 8
 
@@ -1352,7 +1336,6 @@ local init_map_settings = function()
   settings.steering.default.radius = 4
   settings.steering.default.separation_force = 0.02
   settings.steering.default.separation_factor  = 1
-  settings.path_finder.max_steps_worked_per_tick = 10000
 end
 
 local on_init = function()
@@ -1361,12 +1344,20 @@ local on_init = function()
 
 end
 
+local bounty_color = {r = 0.2, g = 0.8, b = 0.2, a = 0.2}
 local on_entity_died = function(event)
-  local entity_type = event.entity.type
-  if entity_type == "unit" then
-    return unit_died(event)
+  local died = event.entity
+  if not (died and died.valid) then return end
+
+  local bounty = bounties[died.name]
+  if bounty and (event.force and event.force.name == "player") then
+    local cash = math.floor(bounty * script_data.bounty_bonus)
+    increment(script_data, "money", cash)
+    died.surface.create_entity{name = "flying-text", position = died.position, text = "+"..cash, color = bounty_color}
+    update_label_list(script_data.gui_labels.money_label, get_money())
   end
-  if entity_type == "rocket-silo" then
+
+  if died.type == "rocket-silo" then
     return rocket_died(event)
   end
 end
