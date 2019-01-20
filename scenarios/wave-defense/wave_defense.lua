@@ -656,7 +656,7 @@ end
 
 local get_wave_power = function()
   local level = script_data.wave_number
-  return (1.15 ^ level) * 400
+  return (level ^ 1.15) * 400
 end
 
 function get_wave_units()
