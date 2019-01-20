@@ -7,6 +7,7 @@ local data =
   selected_units = {},
   open_frames = {},
   units = {},
+  unit_groups_to_disband = {},
   indicators = {},
   unit_unselectable = {},
   debug = false
@@ -52,6 +53,7 @@ local set_command = function(unit_data, command)
   unit_data.destination = command.destination
   unit_data.destination_entity = command.destination_entity
   unit_data.target = command.target
+  unit_data.in_group = nil
   unit.speed = command.speed or unit.prototype.speed
   unit.ai_settings.path_resolution_modifier = command.path_resolution_modifier or -2
   unit.set_command(command)
@@ -64,6 +66,8 @@ local retry_command = function(unit_data)
   unit.ai_settings.path_resolution_modifier = math.min(unit.ai_settings.path_resolution_modifier + 1, 3)
   return pcall(unit.set_command, unit_data.command)
 end
+
+local set_unit_idle
 
 local set_scout_command = function(unit_data, failure, delay)
   local unit = unit_data.entity
@@ -79,7 +83,7 @@ local set_scout_command = function(unit_data, failure, delay)
     {
       type = defines.command.stop,
       ticks_to_wait = delay
-    })    
+    })
   end
   --log(game.tick..": Issueing scout command for "..unit.name.." "..unit.unit_number)
   --unit.surface.create_entity{name = "explosion", position = unit.position}
@@ -228,6 +232,7 @@ add_unit_indicators = function(unit_data)
   end
   if not (player and player.valid and player.connected) then return end
   local indicators = {}
+  unit_data.indicators = indicators
   local unit = unit_data.entity
   local surface = unit.surface
   local create_entity = surface.create_entity
@@ -236,6 +241,19 @@ add_unit_indicators = function(unit_data)
   local position = unit.position
   local name = "highlight-box"
   local players = {player.index}
+  if unit_data.in_group then
+    insert(indicators,
+    rendering.draw_text
+    {
+      text="In group",
+      surface=surface,
+      target=unit,
+      color={g = 0.5},
+      scale_with_zoom=true
+    })
+    return
+  end
+  local box = unit.prototype.collision_box
   insert(indicators,
   rendering.draw_rectangle
   {
@@ -250,7 +268,6 @@ add_unit_indicators = function(unit_data)
     players = players
   })
 
-  local box = unit.prototype.collision_box
 
   if unit_data.destination then
     insert(indicators,
@@ -316,7 +333,7 @@ add_unit_indicators = function(unit_data)
         end
       end
     end
-    
+
   end
 
   if unit_data.target and unit_data.target.valid then
@@ -330,20 +347,13 @@ add_unit_indicators = function(unit_data)
       surface = unit.surface
     })
   end
-
-  unit_data.indicators = indicators
-
-  if true then
-    unit_data.indicators = indicators
-    return
-  end
 end
 
 local stop = {type = defines.command.stop}
 local idle_command = {type = defines.command.stop, radius = 1}
 local hold_position_command = {type = defines.command.stop, speed = 0}
 
-local set_unit_idle = function(unit_data, send_event)
+set_unit_idle = function(unit_data, send_event)
   unit_data.idle = true
   unit_data.command_queue = {}
   unit_data.destination = nil
@@ -891,7 +901,7 @@ local unit_follow = function(unit_data, next_command)
       type = defines.command.go_to_location,
       destination_entity = target,
       radius = follow_range
-    })    
+    })
     return
   end
 
@@ -1101,18 +1111,18 @@ process_command_queue = function(unit_data, result)
         return
       end
     end
-  end  
+  end
 
   local command_queue = unit_data.command_queue
   local next_command = command_queue[1]
-  
+
   if not (next_command) then
     if not unit_data.idle then
       set_unit_idle(unit_data)
     end
     return
   end
-  
+
   local type = next_command.command_type
 
   if type == next_command_type.move then
@@ -1136,7 +1146,7 @@ process_command_queue = function(unit_data, result)
       next_command.destination_index = 1
       next_destination = next_command.destinations[next_command.destination_index]
     end
-    set_command(unit_data, 
+    set_command(unit_data,
     {
       type = defines.command.go_to_location,
       destination = entity.surface.find_non_colliding_position(entity.name, next_destination, 0, 0.5) or entity.position,
@@ -1183,7 +1193,14 @@ local on_ai_command_completed = function(event)
   print("Ai command complete "..event.unit_number)
   local unit_data = data.units[event.unit_number]
   if unit_data then
-    process_command_queue(unit_data, event.result)
+    return process_command_queue(unit_data, event.result)
+  end
+  local group_to_disband = data.unit_groups_to_disband[event.unit_number]
+  if group_to_disband then
+    --This group finished what it was doing, so we kill it.
+    group_to_disband.destroy()
+    data.unit_groups_to_disband[event.unit_number] = nil
+    return
   end
 end
 
@@ -1262,6 +1279,38 @@ local on_player_removed = function(event)
   end
 end
 
+local on_unit_added_to_group = function(event)
+  local unit = event.unit
+  if not (unit and unit.valid) then return end
+  local group = event.group
+  if not (group and group.valid) then return end
+  local unit_data = data.units[unit.unit_number]
+  if not unit_data then
+    --We don't have anything to do with this unit, so we don't care
+    return
+  end
+  game.print("Unit added to group: "..unit.unit_number)
+  unit_data.in_group = true
+  add_unit_indicators(unit_data)
+  --He took control of one of our units! lets keep track of this group and set this guy a command when the group finishes its command
+  if data.unit_groups_to_disband[group.group_number] then
+    --He's already on the hit list.
+    return
+  end
+  data.unit_groups_to_disband[group.group_number] = group
+  game.print("Group added to hit list: "..group.group_number)
+end
+
+local on_unit_removed_from_group = function(event)
+  local unit = event.unit
+  if not (unit and unit.valid) then return end
+  local unit_data = data.units[unit.unit_number]
+  if unit_data and unit_data.in_group then
+    game.print("Unit removed from group: "..unit.unit_number)
+    return process_command_queue(unit_data)
+  end
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -1281,6 +1330,8 @@ local events =
   [defines.events.on_player_died] = on_player_removed,
   [defines.events.on_player_left_game] = on_player_removed,
   [defines.events.on_player_changed_force] = on_player_removed,
+  [defines.events.on_unit_added_to_group] = on_unit_added_to_group, --not merged
+  [defines.events.on_unit_removed_from_group] = on_unit_removed_from_group, --not merged
   [defines.events.on_player_changed_surface] = on_player_removed
 }
 
