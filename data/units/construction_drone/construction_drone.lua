@@ -1,7 +1,7 @@
 local path = util.path("data/units/construction_drone/")
 local name = names.units.construction_drone
 
-local scale = 2/3
+local scale = 1
 
 local animation =
 {
@@ -9,45 +9,28 @@ local animation =
   {
     walk =
     {
+      filename = path.."drone_walk.png",
+      line_length = 16,
       width = 78,
       height = 104,
-      frame_count = 2,
-      axially_symmetrical = false,
+      frame_count = 1,
       direction_count = 32,
-      shift = util.by_pixel(0.0 * scale, -14 * scale),
-      scale = 0.5 * scale,
-      stripes =
-      {
-        {
-          filename = path.."drone_walk_1.png",
-          width_in_frames = 2,
-          height_in_frames = 16
-        },
-        {
-          filename = path.."drone_walk_2.png",
-          width_in_frames = 2,
-          height_in_frames = 16
-        }
-      }
+      axially_symmetrical = false,
+      scale = 0.5,
+      shift = util.by_pixel(0, -14),
     },
     walk_shadow =
     {
+      filename = path.."drone_shadow.png",
       width = 142,
       height = 56,
-      frame_count = 2,
-      axially_symmetrical = false,
+      line_length = 1,
+      frame_count = 1,
       direction_count = 32,
-      shift = util.by_pixel(15.5 * scale, -0.5 * scale),
+      axially_symmetrical = false,
+      shift = util.by_pixel(15.5, -0.5),
       draw_as_shadow = true,
-      scale = 0.5 * scale,
-      stripes = util.multiplystripes(2,
-      {
-        {
-          filename = path.."drone_shadow.png",
-          width_in_frames = 1,
-          height_in_frames = 32
-        }
-      })
+      scale = 0.5,
     }
   }
 }
