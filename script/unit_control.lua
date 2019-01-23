@@ -1330,8 +1330,8 @@ local events =
   [defines.events.on_player_died] = on_player_removed,
   [defines.events.on_player_left_game] = on_player_removed,
   [defines.events.on_player_changed_force] = on_player_removed,
-  --[defines.events.on_unit_added_to_group] = on_unit_added_to_group, --not merged
-  --[defines.events.on_unit_removed_from_group] = on_unit_removed_from_group, --not merged
+  [defines.events.on_unit_added_to_group] = on_unit_added_to_group,
+  [defines.events.on_unit_removed_from_group] = on_unit_removed_from_group,
   [defines.events.on_player_changed_surface] = on_player_removed
 }
 

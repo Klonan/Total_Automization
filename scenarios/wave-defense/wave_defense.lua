@@ -19,7 +19,7 @@ local game_state =
 local difficulty =
 {
   easy = 1,
-  normal = 2,
+  medium = 2,
   hard = 3,
   expert = 4
 }
@@ -164,7 +164,7 @@ local script_data =
   gui_actions = {},
   spawners = {},
   state = game_state.in_preview,
-  difficulty = difficulty.normal,
+  difficulty = difficulty.medium,
   random = nil,
   wave_tick = nil,
   spawn_time = nil,
@@ -243,21 +243,49 @@ function set_tiles_safe(surface, tiles)
   surface.set_tiles(tiles)
 end
 
-function set_up_players()
-  local surface = script_data.surface
-  local force = game.forces.player
-  local spawn = force.get_spawn_position(surface)
-  local find = surface.find_non_colliding_position
-  local create = surface.create_entity
+local set_up_player = function(player)
 
-  for k, player in pairs (players()) do
-    player.teleport(spawn, surface)
-    player.character = create{name = "player", position = find("player", spawn, 0, 1), force = force}
-    give_starting_equipment(player)
-    give_spawn_equipment(player)
-    gui_init(player)
+  gui_init(player)
+
+  if script_data.state == game_state.in_preview then
+    if player.character then
+      player.character.destroy()
+    end
+    player.spectator = true
+    return
   end
 
+  if script_data.state == game_state.in_round then
+    local surface = script_data.surface
+    local force = game.forces.player
+    local spawn = force.get_spawn_position(surface)
+    player.teleport(spawn, surface)
+    player.character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
+    give_starting_equipment(player)
+    give_spawn_equipment(player)
+    return
+  end
+
+  if script_data.state == game_state.defeat then
+    local surface = script_data.surface
+    local force = game.forces.player
+    local position = script_data.silo and script_data.silo.valid and script_data.silo.position or force.get_spawn_position(surface)
+    player.set_controller({type = defines.controllers.spectator})
+    player.teleport(position, surface)
+    return
+  end
+
+  if script_data.state == game_state.victory then
+    --not sure tey
+    return
+  end
+
+end
+
+function set_up_players()
+  for k, player in pairs (players()) do
+    set_up_player(player)
+  end
 end
 
 function start_round()
@@ -777,9 +805,8 @@ function rocket_died(event)
   end
   script_data.state = game_state.defeat
   script_data.silo = nil
+  set_up_players()
   for k, player in pairs (players()) do
-    player.set_controller({type = defines.controllers.spectator})
-    player.teleport(silo.position)
   end
   game.print("GAME OVER, tell admin to start a new round or soemthing.")
 
@@ -864,43 +891,54 @@ function give_spawn_equipment(player)
 end
 
 function refresh_preview_gui(player)
-
   local frame = script_data.gui_elements.preview_frame[player.index]
   if not (frame and frame.valid) then return end
   deregister_gui(frame)
   frame.clear()
 
+
+  local admin = player.admin
   local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
+  local surface = script_data.surface
+  if not (surface and surface.valid) then return end
   subheader.style.horizontally_stretchable = true
   --subheader.style.vertical_align = "center"
   subheader.style.bottom_padding = 1
-  local label = subheader.add{type = "label", caption = "Difficulty", style = "caption_label"}
+  local label = subheader.add{type = "label", caption = {"gui-map-generator.difficulty"}, style = "caption_label"}
   label.style.vertically_stretchable = true
   label.style.vertical_align = "center"
   label.style.right_padding = 3
-  local config = subheader.add{type = "drop-down"}
-  --config.style.left_padding = 2
-  config.add_item("Easy")
-  config.add_item("Normal")
-  config.add_item("Hard")
-  config.add_item("Expert")
-  config.selected_index = script_data.difficulty
-  register_gui_action(config, {type = "difficulty_changed"})
+  if admin then
+    local config = subheader.add{type = "drop-down"}
+    config.add_item({"easy"})
+    config.add_item({"medium"})
+    config.add_item({"hard"})
+    config.add_item({"expert"})
+    config.selected_index = script_data.difficulty
+    register_gui_action(config, {type = "difficulty_changed"})
+  else
+    local key
+    for k, value in pairs (difficulty) do
+      if value == script_data.difficulty then key = k break end
+    end
+    subheader.add{type = "label", caption = {key}, style = "caption_label"}
+  end
   local pusher = subheader.add{type = "flow"}
   pusher.style.horizontally_stretchable = true
   local seed_flow = subheader.add{type = "flow", direction = "horizontal", style = "player_input_horizontal_flow"}
-  seed_flow.add{type = "label", style = "caption_label", caption = "Seed"}
-  local seed_input = seed_flow.add{type = "textfield", text = "", style = "long_number_textfield"}
-  register_gui_action(seed_input, {type = "check_seed_input"})
-  local shuffle_button = seed_flow.add{type = "sprite-button", sprite = "utility/shuffle", style = "tool_button"}
-  register_gui_action(shuffle_button, {type = "shuffle_button"})
-  local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
-  register_gui_action(refresh_button, {type = "refresh_button", textfield = seed_input})
-  local max = floor((math.min(player.display_resolution.width, player.display_resolution.height) / player.display_scale) * 0.75)
-
-  local surface = script_data.surface
-  seed_input.text = surface.map_gen_settings.seed
+  seed_flow.add{type = "label", style = "caption_label", caption = {"gui-map-generator.map-seed"}}
+  if admin then
+    local seed_input = seed_flow.add{type = "textfield", text = surface.map_gen_settings.seed, style = "long_number_textfield"}
+    register_gui_action(seed_input, {type = "check_seed_input"})
+    local shuffle_button = seed_flow.add{type = "sprite-button", sprite = "utility/shuffle", style = "tool_button"}
+    register_gui_action(shuffle_button, {type = "shuffle_button"})
+    local refresh_button = seed_flow.add{type = "sprite-button", sprite = "utility/refresh", style = "tool_button"}
+    register_gui_action(refresh_button, {type = "refresh_button", textfield = seed_input})
+  else
+    seed_flow.add{type = "label", style = "caption_label", caption = surface.map_gen_settings.seed}
+  end
+  local max = (math.min(player.display_resolution.width, player.display_resolution.height) / player.display_scale) * 0.75
   local size = surface.get_starting_area_radius()
   local position = player.force.get_spawn_position(surface)
   local minimap = inner.add
@@ -920,7 +958,7 @@ function refresh_preview_gui(player)
   local button_flow = frame.add{type = "flow"}
   button_flow.style.horizontal_align = "right"
   button_flow.style.horizontally_stretchable = true
-  local start_round = button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button"}
+  local start_round = button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button", enabled = admin}
   register_gui_action(start_round, {type = "start_round"})
 end
 
@@ -1295,14 +1333,6 @@ function set_recipes(force)
   end
 end
 
-local on_player_created = function(event)
-  local player = players(event.player_index)
-  if player.character then
-    player.character.destroy()
-  end
-  player.spectator = true
-end
-
 local init_map_settings = function()
   local settings = game.map_settings
   settings.pollution.enabled = false
@@ -1325,6 +1355,23 @@ end
 local on_init = function()
   init_map_settings()
   init_force(game.forces.player)
+end
+
+local round_won = function()
+  game.print("YOU WIN Wow ok")
+  game.print("This round will end in 60 seconds")
+end
+
+local spawner_died = function(event)
+  local spawner = event.entity
+  if not (spawner and spawner.valid) then return end
+  script_data.spawners[spawner.unit_number] = nil
+
+  --If there are still spawners in this list, they haven't won
+  if next(script_data.spawners) then return end
+
+  --All spawners are dead, player wins!
+  round_won()
 
 end
 
@@ -1344,11 +1391,14 @@ local on_entity_died = function(event)
   if died.type == "rocket-silo" then
     return rocket_died(event)
   end
+
+  if died.type == "unit-spawner" then
+    return spawner_died(event)
+  end
 end
 
 local on_rocket_launched = function(event)
-  local rocket = event.rocket
-  game.print("WOOP DE DOO YOU WIN")
+  round_won()
 end
 
 local on_player_joined_game = function(event)
@@ -1356,7 +1406,7 @@ local on_player_joined_game = function(event)
   if not (script_data.surface and script_data.surface.valid) then
     create_battle_surface(initial_seed)
   end
-  gui_init(player)
+  set_up_player(player)
 end
 
 local on_player_respawned = function(event)
@@ -1549,10 +1599,13 @@ local on_chunk_generated = function(event)
   end
 end
 
+local refresh_player_gui_event = function(event)
+  return gui_init(players(event.player_index))
+end
+
 local events =
 {
   [defines.events.on_entity_died] = on_entity_died,
-  [defines.events.on_player_created] = on_player_created,
   [defines.events.on_tick] = on_tick,
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_player_joined_game] = on_player_joined_game,
@@ -1562,7 +1615,12 @@ local events =
   [defines.events.on_gui_selection_state_changed] = generic_gui_event,
   [defines.events.on_player_died] = on_player_died,
   [defines.events.on_chunk_generated] = on_chunk_generated,
-  [defines.events.on_gui_closed] = on_gui_closed
+  [defines.events.on_gui_closed] = on_gui_closed,
+  [defines.events.on_player_promoted] = refresh_player_gui_event,
+  [defines.events.on_player_display_resolution_changed] = refresh_player_gui_event,
+  [defines.events.on_player_display_scale_changed] = refresh_player_gui_event,
+  [defines.events.on_player_demoted] = refresh_player_gui_event,
+
 }
 
 local lib = {}
