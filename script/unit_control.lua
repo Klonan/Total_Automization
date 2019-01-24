@@ -1311,7 +1311,7 @@ local on_unit_removed_from_group = function(event)
   end
 end
 
-local on_surface_deleted = function(event)
+local validate_some_stuff = function()
   local units = data.units
   for unit_number, unit_data in pairs (units) do
     local entity = unit_data.entity
@@ -1349,7 +1349,8 @@ local events =
   [defines.events.on_unit_added_to_group] = on_unit_added_to_group,
   [defines.events.on_unit_removed_from_group] = on_unit_removed_from_group,
   [defines.events.on_player_changed_surface] = on_player_removed,
-  [defines.events.on_surface_deleted] = on_surface_deleted,
+  [defines.events.on_surface_deleted] = validate_some_stuff,
+  [defines.events.on_surface_cleared] = validate_some_stuff,
 
 }
 

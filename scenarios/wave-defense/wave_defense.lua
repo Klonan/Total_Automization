@@ -1359,7 +1359,6 @@ end
 
 local round_won = function()
   game.print("YOU WIN Wow ok")
-  game.print("This round will end in 60 seconds")
 end
 
 local spawner_died = function(event)
