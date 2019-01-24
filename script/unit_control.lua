@@ -1311,6 +1311,22 @@ local on_unit_removed_from_group = function(event)
   end
 end
 
+local on_surface_deleted = function(event)
+  local units = data.units
+  for unit_number, unit_data in pairs (units) do
+    local entity = unit_data.entity
+    if not (entity and entity.valid) then
+      units[unit_number] = nil
+    end
+  end
+  local groups = data.unit_groups_to_disband
+  for group_number, group in pairs (groups) do
+    if not (group and group.valid) then
+      groups[group_number] = nil
+    end
+  end
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -1332,7 +1348,9 @@ local events =
   [defines.events.on_player_changed_force] = on_player_removed,
   [defines.events.on_unit_added_to_group] = on_unit_added_to_group,
   [defines.events.on_unit_removed_from_group] = on_unit_removed_from_group,
-  [defines.events.on_player_changed_surface] = on_player_removed
+  [defines.events.on_player_changed_surface] = on_player_removed,
+  [defines.events.on_surface_deleted] = on_surface_deleted,
+
 }
 
 remote.add_interface("unit_control", {

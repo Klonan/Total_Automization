@@ -1216,6 +1216,7 @@ local check_repair = function(entity)
   local surface = entity.surface
   local force = entity.force
   local networks = surface.find_logistic_networks_by_construction_area(entity.position, force)
+  if not next(networks) then print("No networks for this entity") return end
   local repair_items = get_repair_items()
   local repair_item
   local pickup_target
@@ -1261,7 +1262,7 @@ end
 local check_repair_lists = function()
 
   local remaining_checks = check_priority_list(data.repair_to_be_checked, data.repair_to_be_checked_again, check_repair, max_checks_per_tick)
-  data.repair_check_index = check_list(data.repair_to_be_checked, data.repair_check_index, check_repair, remaining_checks)
+  data.repair_check_index = check_list(data.repair_to_be_checked_again, data.repair_check_index, check_repair, remaining_checks)
 
 end
 
@@ -2521,7 +2522,13 @@ end
 
 local on_entity_damaged = function(event)
   local entity = event.entity
-  insert(data.repair_to_be_checked, entity)
+  local unit_number = entity.unit_number
+  --For now, why would you want to repair trees and things? If it doens't have a unit number, no repairs.
+  --Maybe I will change this in the future.
+  if not unit_number then return end
+  if data.targets[unit_number] then return end
+  if data.repair_to_be_checked[unit_number] then return end
+  data.repair_to_be_checked[unit_number] = entity
 end
 
 local shoo = function(event)
