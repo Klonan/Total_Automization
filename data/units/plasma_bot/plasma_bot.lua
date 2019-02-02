@@ -49,7 +49,7 @@ local bot =
     range = 56,
     min_attack_distance = 46,
     projectile_creation_distance = 0.5,
-    sound = 
+    sound =
     {
       {
         filename = "__base__/sound/fight/laser-1.ogg",
@@ -92,7 +92,7 @@ local bot =
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
-  
+
   minable = {result = name, mining_time = 2},
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
@@ -120,7 +120,7 @@ local bot =
 util.recursive_hack_make_hr(bot)
 util.recursive_hack_scale(bot, 3)
 
-local projectile = util.copy(data.raw.projectile["acid-projectile-purple"])
+local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.collision_box = {{-0.25, -0.25}, {0.25, 0.25}}
@@ -174,7 +174,7 @@ projectile.final_action = nil
         entity_name = name.." Splash"
       },
       {
-        type = "damage",  
+        type = "damage",
         damage = {amount = 30 , type = util.damage_type("plasma_bot")}
       },
       {
@@ -202,11 +202,23 @@ projectile.final_action = nil
     }
   }
 }]]
-projectile.animation.filename = path.."plasma_bot_projectile.png"
-projectile.animation.blend_mode = "additive-soft"
-projectile.animation.animation_speed = SD(3)
-projectile.acceleration = SA(0.02)
-util.recursive_hack_scale(projectile, 2)
+projectile.animation =
+{
+  filename = path.."plasma_bot_projectile.png",
+  line_length = 5,
+  frame_count = 33,
+  width = 16,
+  height = 18,
+  animation_speed = 3,
+  scale = 2,
+  blend_mode = "additive-soft"
+
+}
+--projectile.animation.filename = path.."plasma_bot_projectile.png"
+--projectile.animation.blend_mode =
+--projectile.animation.animation_speed = 3
+--projectile.animation.scale = 2
+projectile.acceleration = 0.02
 
 
 local small_projectile = util.copy(projectile)
@@ -216,8 +228,8 @@ small_projectile.force_condition = "not-same"
 small_projectile.collision_box = nil
 small_projectile.direction_only = true
 small_projectile.height = 0
-small_projectile.max_speed = SD(1)
-small_projectile.acceleration = SA(-0.02)
+small_projectile.max_speed = 1
+small_projectile.acceleration = -0.02
 small_projectile.action =
 {
   type = "direct",
@@ -244,7 +256,7 @@ small_projectile.action =
             target_effects =
             {
               {
-                type = "damage",  
+                type = "damage",
                 damage = {amount = 1 , type = util.damage_type(name)}
               }
             }
@@ -296,7 +308,7 @@ small_projectile.shadow =
 }
 
 
-local splash = 
+local splash =
 {
   type = "explosion",
   name = name.." Splash",
@@ -341,7 +353,7 @@ local make_animation = function(scale, speed)
   return data
 end
 
-local small_splash = 
+local small_splash =
 {
   type = "explosion",
   name = name.." Small Splash",
