@@ -1,8 +1,28 @@
 local path = util.path("data/units/tazer_bot/")
 local name = names.units.tazer_bot
+
 local base = util.copy(data.raw["combat-robot"]["distractor"])
+--for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
+--  layer.frame_count = 1
+--end
+util.recursive_hack_make_hr(base)
+util.recursive_hack_scale(base, 2)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
+
+local sprite_shift = {0, 0}
+for k, layer in pairs (base.idle.layers) do
+  util.shift_layer(layer, sprite_shift)
+end
+for k, layer in pairs (base.in_motion.layers) do
+  util.shift_layer(layer, sprite_shift)
+end
+local shadow_shift = {2, 4}
+util.shift_layer(base.shadow_in_motion, shadow_shift)
+base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
+util.shift_layer(base.shadow_idle, shadow_shift)
+base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
+
 local bot =
 {
   type = "unit",
@@ -13,7 +33,7 @@ local bot =
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 120,
+  max_health = 80,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -22,13 +42,13 @@ local bot =
   collision_mask = util.flying_unit_collision_mask(),
   render_layer = "air-object",
   max_pursue_distance = 64,
-  min_persue_time = SU(60 * 15),
+  min_persue_time = 60 * 15,
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = SU(15),
-  move_while_shooting = false,
-  can_open_gates = true,
+  move_while_shooting = true,
+  can_open_gates = false,
   minable = {result = name, mining_time = 2},
   ai_settings =
   {
@@ -64,7 +84,7 @@ local bot =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.22),
+  movement_speed = 0.15,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -94,8 +114,6 @@ local bot =
   },
   run_animation = base.in_motion
 }
-util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 2)
 
 local beam = util.copy(data.raw.beam["electric-beam"])
 

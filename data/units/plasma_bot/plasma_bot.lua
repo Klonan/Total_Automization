@@ -7,10 +7,20 @@ local base = util.copy(data.raw["logistic-robot"]["logistic-robot"])
 --end
 --table.insert(base.idle.layers, base.shadow_idle)
 --table.insert(base.in_motion.layers, base.shadow_in_motion)}
-local idle_mask = util.copy(base.idle_with_cargo.hr_version)
+util.recursive_hack_make_hr(base)
+util.recursive_hack_scale(base, 3)
+local idle_mask = util.copy(base.idle_with_cargo)
 idle_mask.apply_runtime_tint = true
-local in_motion_mask = util.copy(base.in_motion.hr_version)
+local in_motion_mask = util.copy(base.in_motion)
 in_motion_mask.apply_runtime_tint = true
+
+local shadow_shift = {2, 4}
+util.shift_layer(base.shadow_idle_with_cargo, shadow_shift)
+base.shadow_idle_with_cargo.scale = (base.shadow_idle_with_cargo.scale or 1) * 0.8
+util.shift_layer(base.shadow_in_motion, shadow_shift)
+base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
+
+
 local bot =
 {
   type = "unit",
@@ -21,8 +31,8 @@ local bot =
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 180,
-  radar_range = 2,
+  max_health = 120,
+  radar_range = 3,
   order="b-b-b",
   subgroup="enemies",
   resistances = nil,
@@ -30,13 +40,13 @@ local bot =
   collision_mask = util.flying_unit_collision_mask(),
   render_layer = "air-object",
   max_pursue_distance = 64,
-  min_persue_time = SU(60 * 15),
+  min_persue_time = 60 * 15,
   selection_box = {{-2.0, -2.0}, {2.0, 2.0}},
   collision_box = {{-1.5, -1.5}, {1.5, 1.5}},
   sticker_box = {{-1.5, -1.5}, {1.5, 1.5}},
-  distraction_cooldown = SU(15),
-  move_while_shooting = false,
-  can_open_gates = true,
+  distraction_cooldown = 15,
+  move_while_shooting = true,
+  can_open_gates = false,
   ai_settings =
   {
     do_separation = true
@@ -45,8 +55,9 @@ local bot =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(150),
+    cooldown = 150,
     cooldown_deviation = 0.2,
+    lead_target_for_projectile_speed = 1.5,--tricky...
     range = 56,
     min_attack_distance = 46,
     projectile_creation_distance = 0.5,
@@ -68,7 +79,7 @@ local bot =
     ammo_type =
     {
       category = util.ammo_category(name),
-      target_type = "direction",
+      target_type = "position",
       action =
       {
         type = "direct",
@@ -77,7 +88,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(-0.2),
+          starting_speed = 0,
           direction_deviation = 0.05,
           range_deviation = 0.05,
           max_range = 60
@@ -87,12 +98,11 @@ local bot =
     },
     animation = {layers = {base.idle_with_cargo, base.shadow_idle_with_cargo, idle_mask}}
   },
-  vision_distance = 40,
+  vision_distance = 64,
   has_belt_immunity = true,
-  movement_speed = SD(0.15),
+  movement_speed = 0.15,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
-  destroy_when_commands_fail = false,
 
   minable = {result = name, mining_time = 2},
   --corpse = name.." Corpse",
@@ -118,14 +128,12 @@ local bot =
   },
   run_animation = {layers = {base.in_motion, base.shadow_in_motion, in_motion_mask}}
 }
-util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 3)
 
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
-projectile.collision_box = {{-0.25, -0.25}, {0.25, 0.25}}
-projectile.direction_only = true
+projectile.collision_box = nil --{{-0.25, -0.25}, {0.25, 0.25}}
+projectile.direction_only = false
 projectile.height = 0.5
 projectile.max_speed = 0.75
 projectile.hit_at_collision_position = true

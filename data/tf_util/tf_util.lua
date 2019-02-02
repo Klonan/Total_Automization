@@ -243,4 +243,12 @@ util.shift_box = function(box, shift)
   return box
 end
 
+
+util.shift_layer = function(layer, shift)
+  layer.shift = layer.shift or {0,0}
+  layer.shift[1] = layer.shift[1] + shift[1]
+  layer.shift[2] = layer.shift[2] + shift[2]
+  return layer
+end
+
 return util

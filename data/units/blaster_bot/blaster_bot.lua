@@ -1,12 +1,26 @@
 local path = util.path("data/units/smg_guy")
 local name = names.units.blaster_bot
 
+
 local base = util.copy(data.raw["combat-robot"]["defender"])
---for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
---  layer.frame_count = 1
---end
+util.recursive_hack_make_hr(base)
+util.recursive_hack_scale(base, 2)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
+
+local sprite_shift = {0, 0}
+for k, layer in pairs (base.idle.layers) do
+  util.shift_layer(layer, sprite_shift)
+end
+for k, layer in pairs (base.in_motion.layers) do
+  util.shift_layer(layer, sprite_shift)
+end
+local shadow_shift = {2, 4}
+util.shift_layer(base.shadow_in_motion, shadow_shift)
+base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
+util.shift_layer(base.shadow_idle, shadow_shift)
+base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
+
 local bot =
 {
   type = "unit",
@@ -17,8 +31,8 @@ local bot =
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 60,
-  radar_range = 2,
+  max_health = 45,
+  radar_range = 1,
   order="b-b-b",
   subgroup="enemies",
   resistances = nil,
@@ -30,9 +44,9 @@ local bot =
   min_persue_time = 60 * 15,
   selection_box = {{-1.0, -1.0}, {1.0, 1.0}},
   sticker_box = {{-0.3, -0.3}, {0.3, 0.3}},
-  distraction_cooldown = SU(15),
-  move_while_shooting = false,
-  can_open_gates = true,
+  distraction_cooldown = 15,
+  move_while_shooting = true,
+  can_open_gates = false,
   ai_settings =
   {
     do_separation = true
@@ -42,11 +56,12 @@ local bot =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(45),
+    cooldown = 45,
     cooldown_deviation = 0.5,
     range = 24,
     min_attack_distance = 18,
     projectile_creation_distance = 1,
+    lead_target_for_projectile_speed = 0.8,
     projectile_center = {0, 1.2},
     sound =
     {
@@ -75,7 +90,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(1.5),
+          starting_speed = 0.8,
           direction_deviation = 0.05,
           range_deviation = 0.05,
           max_range = 28
@@ -87,10 +102,9 @@ local bot =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.22),
+  movement_speed = 0.15,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
-  destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
   working_sound = {
@@ -114,8 +128,6 @@ local bot =
   },
   run_animation = base.in_motion
 }
-util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 2)
 
 local projectile = util.copy(data.raw.projectile["laser"])
 projectile.name = name.." Projectile"

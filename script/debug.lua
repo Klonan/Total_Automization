@@ -21,12 +21,12 @@ local on_player_created = function(event)
   player.force = "player"
   --player.insert(names.entities.buy_chest)
   --player.insert(names.entities.sell_chest)
-  if true then return end
-  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
-  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
-  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
-  player.surface.create_entity{name = "small-biter", position = {-10, 10}}
-  --if player.character then player.character.destroy() end
+  --if true then return end
+  --player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  --player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  --player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  --player.surface.create_entity{name = "small-biter", position = {-10, 10}}
+  if player.character then player.character.destroy() end
 
   --if true then return {} end
   local team1 = {
@@ -34,8 +34,8 @@ local on_player_created = function(event)
     --beetle = 80,
     --plasma_bot = 1,
     --tazer_bot = 20,
-    --blaster_bot = 50
-    shell_tank = 500,
+    blaster_bot = 50
+    --shell_tank = 500,
     --plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
@@ -52,7 +52,7 @@ local on_player_created = function(event)
     end
 
 
-    if true then return end
+    --if true then return end
 
   team2 = {
     --beetle = 200,
@@ -60,7 +60,7 @@ local on_player_created = function(event)
     --blaster_bot = 30,
     --laser_bot = 20,
     --tazer_bot = 100,
-    --smg_guy = 30,
+    smg_guy = 30,
     --scout_car = 30,
     --rocket_guy = 20,
     --shell_tank = 80
@@ -77,11 +77,7 @@ local on_player_created = function(event)
       player.surface.create_entity{name = names.units[name], position = {pos.x + vec[1], pos.y + vec[2]}, force = "enemy"}
     end
   end
-  player.get_quickbar().insert(names.unit_tools.unit_selection_tool)
-  player.get_quickbar().insert(names.unit_tools.deployer_selection_tool)
-  --player.surface.create_entity{name = "Tazer Bot", position = {-10, -10}, force = "enemy"}
-  --player.surface.create_entity{name = "Tazer Bot", position = {10, -10}, force = "player"}
-  player.insert(names.entities.teleporter)
+
 end
 
 local events =
