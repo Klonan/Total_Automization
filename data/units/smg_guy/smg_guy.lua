@@ -24,7 +24,7 @@ local bot =
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   selection_box = {{-0.5, -1.6}, {0.5, 0.3}},
@@ -34,17 +34,18 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   attack_parameters =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = SU(15),
+    cooldown = 15,
     cooldown_deviation = 0.5,
     range = 24,
     min_attack_distance = 18,
     projectile_creation_distance = 0.5,
+    lead_target_for_projectile_speed = 1,
     sound =
     {
       variations =
@@ -78,8 +79,8 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(1),
-          starting_speed_deviation = SD(0.05),
+          starting_speed = 1,
+          starting_speed_deviation = 0.05,
           direction_deviation = 0.1,
           range_deviation = 0.1,
           max_range = 28
@@ -101,7 +102,7 @@ local bot =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.2),
+  movement_speed = 0.2,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -124,6 +125,8 @@ local bot =
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
+projectile.hit_at_collision_position = true
+projectile.hit_collision_mask = util.projectile_collision_mask()
 projectile.action =
 {
   type = "direct",

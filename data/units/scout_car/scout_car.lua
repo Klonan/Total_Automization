@@ -58,7 +58,7 @@ local unit =
   healing_per_tick = 0,
   collision_box = {{-0.7, -0.7}, {0.7, 0.7}},
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
@@ -67,7 +67,7 @@ local unit =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   minable = {result = name, mining_time = 2},
   attack_parameters =
@@ -77,6 +77,7 @@ local unit =
     cooldown = SU(100),
     cooldown_deviation = 0.1,
     range = 30,
+    lead_target_for_projectile_speed = 1,
     min_attack_distance = 25,
     projectile_creation_distance = 1.5,
     sound =
@@ -121,8 +122,8 @@ local unit =
             {
               type = "projectile",
               projectile = name.." Projectile",
-              starting_speed = SD(1),
-              starting_speed_deviation = SD(0.05),
+              starting_speed = 1,
+              starting_speed_deviation = 0.05,
               direction_deviation = 0.1,
               --range_deviation = 0.05,
               --starting_frame_deviation = 5,
@@ -146,7 +147,7 @@ local unit =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.35),
+  movement_speed = 0.35,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -180,6 +181,8 @@ projectile.name = name.." Projectile"
 projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
 projectile.force_condition = "not-same"
 projectile.height = 1
+projectile.hit_at_collision_position = true
+projectile.hit_collision_mask = util.projectile_collision_mask()
 projectile.action =
 {
   type = "direct",

@@ -220,4 +220,27 @@ end
 util.copy = util.table.deepcopy
 
 util.prototype = require("data/tf_util/prototype_util")
+
+util.flying_unit_collision_mask = function()
+  return {"not-colliding-with-itself", "layer-15"}
+end
+
+util.ground_unit_collision_mask = function()
+  return {"not-colliding-with-itself", "player-layer", "train-layer"}
+end
+
+util.projectile_collision_mask = function()
+  return {"layer-15", "player-layer", "train-layer"}
+end
+
+util.shift_box = function(box, shift)
+  local left_top = box[1]
+  local right_bottom = box[2]
+  left_top[1] = left_top[1] + shift[1]
+  left_top[2] = left_top[2] + shift[2]
+  right_bottom[1] = right_bottom[1] + shift[1]
+  right_bottom[2] = right_bottom[2] + shift[2]
+  return box
+end
+
 return util

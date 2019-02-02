@@ -258,7 +258,7 @@ add_unit_indicators = function(unit_data)
   rendering.draw_rectangle
   {
     color = {g = 1},
-    width = 3.5,
+    width = 1,
     filled = false,
     left_top = unit,
     left_top_offset = unit.prototype.selection_box.left_top,
@@ -274,11 +274,13 @@ add_unit_indicators = function(unit_data)
     rendering.draw_line
     {
       color = {b = 0.1, g = 0.5, a = 0.02},
-      width = 2,
-      from = unit,
-      to = unit_data.destination,
+      width = 1,
+      to = unit,
+      from = unit_data.destination,
       surface = unit.surface,
-      players = players
+      players = players,
+      gap_length = 0.5,
+      dash_length = 0.5
     })
   end
 
@@ -287,11 +289,13 @@ add_unit_indicators = function(unit_data)
     rendering.draw_line
     {
       color = {b = 0.1, g = 0.5, a = 0.02},
-      width = 2,
-      from = unit,
-      to = unit_data.destination_entity,
+      width = 1,
+      to = unit,
+      from = unit_data.destination_entity,
       surface = unit.surface,
-      players = players
+      players = players,
+      gap_length = 0.5,
+      dash_length = 0.5
     })
   end
 
@@ -303,34 +307,33 @@ add_unit_indicators = function(unit_data)
       rendering.draw_line
       {
         color = {b = 0.1, g = 0.5, a = 0.02},
-        width = 2,
-        from = position,
-        to = command.destination,
+        width = 1,
+        to = position,
+        from = command.destination,
         surface = unit.surface,
         players = players,
-        gap_length = 0.66,
-        gap_amount = distance(position, command.destination)
+        gap_length = 0.5,
+        dash_length = 0.5
       })
       position = command.destination
     end
 
     if command.command_type == next_command_type.patrol then
-      for k, destination in pairs (command.destinations) do
-        if k ~= 1 or command.destination_index ~= "initial" then
-          insert(indicators,
-          rendering.draw_line
-          {
-            color = {b = 0.1, g = 0.5, a = 0.02},
-            width = 2,
-            from = position or unit.position,
-            to = destination,
-            surface = unit.surface,
-            players = players,
-            gap_length = 0.66,
-            gap_amount = distance(position, command.destination)
-          })
-          position = destination
-        end
+      for k = 1, #command.destinations do
+        local to = command.destinations[k]
+        local from = command.destinations[k + 1] or command.destinations[1]
+        insert(indicators,
+        rendering.draw_line
+        {
+          color = {b = 0.5, g = 0.2, a = 0.05},
+          width = 1,
+          from = from,
+          to = to,
+          surface = unit.surface,
+          players = players,
+          gap_length = 0.5,
+          dash_length = 0.5
+        })
       end
     end
 
@@ -341,10 +344,12 @@ add_unit_indicators = function(unit_data)
     rendering.draw_line
     {
       color = {b = 0.1, r = 0.5, a = 0.02},
-      width = 2,
-      from = unit,
-      to = unit_data.target,
-      surface = unit.surface
+      width = 1,
+      to = unit,
+      from = unit_data.target,
+      surface = unit.surface,
+      gap_length = 0.5,
+      dash_length = 0.5
     })
   end
 end
@@ -1377,19 +1382,19 @@ local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
-  --game.map_settings.path_finder.max_steps_worked_per_tick = 10000
-  --game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  --game.map_settings.path_finder.short_request_max_steps = 200
-  --game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
-  --game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
-  --game.map_settings.path_finder.use_path_cache = false
-  --game.map_settings.path_finder.short_cache_size = 0
-  --game.map_settings.path_finder.long_cache_size = 0
-  --game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  --game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  --game.map_settings.steering.moving.radius = 0
-  --game.map_settings.steering.moving.default = 0
-  --game.map_settings.max_failed_behavior_count = 5
+  game.map_settings.path_finder.max_steps_worked_per_tick = 10000
+  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  game.map_settings.path_finder.short_request_max_steps = 200
+  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
+  game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  game.map_settings.path_finder.use_path_cache = false
+  game.map_settings.path_finder.short_cache_size = 0
+  game.map_settings.path_finder.long_cache_size = 0
+  game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  game.map_settings.steering.moving.radius = 0
+  game.map_settings.steering.moving.default = 0
+  game.map_settings.max_failed_behavior_count = 5
   register_events()
   unit_control.on_event = handler(events)
 end

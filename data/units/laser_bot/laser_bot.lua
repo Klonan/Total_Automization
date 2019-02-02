@@ -10,18 +10,23 @@ util.recursive_hack_scale(base, 2)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
 
-local shift = {0, 1}
-local shift_layer = function(layer)
+local shift_layer = function(layer, shift)
   layer.shift = layer.shift or {0,0}
   layer.shift[1] = layer.shift[1] + shift[1]
   layer.shift[2] = layer.shift[2] + shift[2]
 end
+local sprite_shift = {0, 1}
 for k, layer in pairs (base.idle.layers) do
-  shift_layer(layer)
+  shift_layer(layer, sprite_shift)
 end
 for k, layer in pairs (base.in_motion.layers) do
-  shift_layer(layer)
+  shift_layer(layer, sprite_shift)
 end
+local shadow_shift = {2, 4}
+shift_layer(base.shadow_in_motion, shadow_shift)
+base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
+shift_layer(base.shadow_idle, shadow_shift)
+base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
 local bot =
 {
   type = "unit",
@@ -38,7 +43,8 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.flying_unit_collision_mask(),
+  render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
@@ -49,7 +55,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   minable = {result = name, mining_time = 2},
 

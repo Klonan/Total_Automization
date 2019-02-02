@@ -96,7 +96,7 @@ local unit =
   minable = {result = name, mining_time = 2},
   collision_box = {{-1, -1}, {1, 1}},
   selection_box = {{-2, -2}, {2, 2}},
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   --sticker_box = {{-0.2, -0.2}, {0.2, 0.2}},
@@ -105,7 +105,7 @@ local unit =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   attack_parameters =
   {
@@ -116,6 +116,7 @@ local unit =
     cooldown_deviation = 0.1,
     range = 56,
     min_attack_distance = 40,
+    lead_target_for_projectile_speed = 1,
     --projectile_creation_distance = 1.5,
     --projectile_center = {0, -1.5},
     projectile_creation_distance = 1.6,
@@ -156,7 +157,7 @@ local unit =
   },
   vision_distance = 60,
   has_belt_immunity = true,
-  movement_speed = SD(0.12),
+  movement_speed = 0.12,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -270,6 +271,7 @@ stream.action =
   {
     type = "area",
     force = "not-same",
+    ignore_collision_condition = true,
     radius = 5,
     action_delivery =
     {
@@ -286,6 +288,7 @@ stream.action =
   {
     type = "area",
     force = "not-same",
+    ignore_collision_condition = true,
     radius = 3,
     action_delivery =
     {
@@ -309,8 +312,8 @@ stream.particle_buffer_size = 1
 stream.particle_spawn_interval = SU(100)
 stream.particle_spawn_timeout = SU(0)
 stream.particle_vertical_acceleration = SA(1.981 / 90)
-stream.particle_horizontal_speed = SD(1)
-stream.particle_horizontal_speed_deviation = SD(0.2)
+stream.particle_horizontal_speed = 1
+stream.particle_horizontal_speed_deviation = 0.2
 stream.particle_start_alpha = 1
 stream.particle_end_alpha = 1
 stream.particle_start_scale = 0.7

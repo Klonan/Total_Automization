@@ -22,7 +22,7 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   collision_box = {{-0.6, -0.6}, {0.6, 0.6}},
@@ -33,7 +33,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   minable = {result = name, mining_time = 2},
   attack_parameters =
@@ -42,6 +42,7 @@ local bot =
     ammo_category = util.ammo_category(name),
     cooldown = SU(125),
     cooldown_deviation = 0.25,
+    lead_target_for_projectile_speed = 0.5,
     range = 28,
     min_attack_distance = 24,
     projectile_creation_distance = 0.5,
@@ -62,7 +63,7 @@ local bot =
     ammo_type =
     {
       category = util.ammo_category(name),
-      target_type = "direction",
+      target_type = "position",
       action =
       {
         type = "direct",
@@ -132,7 +133,9 @@ projectile.acceleration = SD(0.01)
 projectile.max_speed = 0.5
 projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
 projectile.force_condition = "not-same"
-projectile.direction_only = true
+projectile.direction_only = false
+projectile.hit_at_collision_position = true
+projectile.hit_collision_mask = util.projectile_collision_mask()
 projectile.action =
 {
   type = "direct",
@@ -185,6 +188,7 @@ projectile.action =
             type = "area",
             radius = 2,
             force = "not-same",
+            ignore_collision_condition = true,
             action_delivery =
             {
               type = "instant",
@@ -200,6 +204,7 @@ projectile.action =
           {
             type = "area",
             radius = 1,
+            ignore_collision_condition = true,
             force = "not-same",
             action_delivery =
             {

@@ -698,7 +698,7 @@ local process_drone_command
 
 local set_drone_order = function(drone, drone_data)
   drone.ai_settings.path_resolution_modifier = -2
-  drone.ai_settings.do_separation = false
+  drone.ai_settings.do_separation = true
   remove_idle_drone(drone)
   data.drone_commands[drone.unit_number] = drone_data
   drone_data.entity = drone

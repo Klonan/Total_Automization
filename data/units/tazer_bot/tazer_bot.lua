@@ -19,7 +19,8 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.flying_unit_collision_mask(),
+  render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
@@ -31,7 +32,7 @@ local bot =
   minable = {result = name, mining_time = 2},
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   attack_parameters =
   {
@@ -177,7 +178,7 @@ sticker.damage_per_tick = {type = "electric", amount = SD(0.25)}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
-sticker.animation = 
+sticker.animation =
 {
   filename = path.."tazer_bot_sticker.png",
   width = 37,

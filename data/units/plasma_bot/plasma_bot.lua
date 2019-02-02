@@ -27,7 +27,8 @@ local bot =
   subgroup="enemies",
   resistances = nil,
   healing_per_tick = 0,
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.flying_unit_collision_mask(),
+  render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = SU(60 * 15),
   selection_box = {{-2.0, -2.0}, {2.0, 2.0}},
@@ -38,7 +39,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   attack_parameters =
   {
@@ -126,7 +127,9 @@ projectile.force_condition = "not-same"
 projectile.collision_box = {{-0.25, -0.25}, {0.25, 0.25}}
 projectile.direction_only = true
 projectile.height = 0.5
-projectile.max_speed = SD(0.75)
+projectile.max_speed = 0.75
+projectile.hit_at_collision_position = true
+projectile.hit_collision_mask = util.projectile_collision_mask()
 projectile.action =
 {
   {
@@ -248,6 +251,7 @@ small_projectile.action =
         {
           type = "area",
           radius = 1,
+          ignore_collision_condition = true,
           --collision_mode = "distance-from-center",
           force = "not-same",
           action_delivery =

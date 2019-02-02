@@ -24,7 +24,8 @@ local bot =
   resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
-  collision_mask = {"not-colliding-with-itself", "player-layer"},
+  collision_mask = util.flying_unit_collision_mask(),
+  render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
   selection_box = {{-1.0, -1.0}, {1.0, 1.0}},
@@ -34,7 +35,7 @@ local bot =
   can_open_gates = true,
   ai_settings =
   {
-    do_separation = false
+    do_separation = true
   },
   minable = {result = name, mining_time = 2},
   attack_parameters =
