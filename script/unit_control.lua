@@ -56,7 +56,7 @@ local set_command = function(unit_data, command)
   unit_data.in_group = nil
   unit.speed = command.speed or unit.prototype.speed
   unit.ai_settings.path_resolution_modifier = command.path_resolution_modifier or -2
-  unit.ai_settings.do_separation = true
+  unit.ai_settings.do_separation = false
   unit.set_command(command)
   return add_unit_indicators(unit_data)
 end
@@ -401,7 +401,7 @@ set_unit_idle = function(unit_data, send_event)
   unit_data.destination = nil
   unit_data.target = nil
   local unit = unit_data.entity
-  unit.ai_settings.do_separation = true
+  unit.ai_settings.do_separation = false
   set_command(unit_data, idle_command)
   if send_event then
     script.raise_event(script_events.on_unit_idle, {entity = unit})
@@ -515,28 +515,63 @@ local gui_actions =
     local group = get_selected_units(event.player_index)
     if not group then return end
     local right = (event.button == defines.mouse_button_type.right)
+    local left = (event.button == defines.mouse_button_type.left)
     local units = data.units
-    if event.control or right then
-      for unit_number, entity in pairs (group) do
-        if entity.name == unit_name then
-          deselect_units(units[unit_number])
-          group[unit_number] = nil
-          if right then break end
+
+    if right then
+      if event.shift then
+        local count = 0
+        for unit_number, entity in pairs (group) do
+          if entity.name == unit_name then
+            count = count + 1
+          end
         end
-      end
-    else
-      for unit_number, entity in pairs (group) do
-        if entity.name ~= unit_name then
-          deselect_units(units[unit_number])
-          group[unit_number] = nil
+        local to_leave = math.ceil(count / 2)
+        count = 0
+        for unit_number, entity in pairs (group) do
+          if entity.name == unit_name then
+            if count > to_leave then
+              deselect_units(units[unit_number])
+              group[unit_number] = nil
+            end
+            count = count + 1
+          end
+        end
+      else
+        for unit_number, entity in pairs (group) do
+          if entity.name == unit_name then
+            deselect_units(units[unit_number])
+            group[unit_number] = nil
+            break
+          end
         end
       end
     end
+
+    if left then
+      if event.shift then
+        for unit_number, entity in pairs (group) do
+          if entity.name == unit_name then
+            deselect_units(units[unit_number])
+            group[unit_number] = nil
+          end
+        end
+      else
+        for unit_number, entity in pairs (group) do
+          if entity.name ~= unit_name then
+            deselect_units(units[unit_number])
+            group[unit_number] = nil
+          end
+        end
+      end
+    end
+
     local frame = data.open_frames[event.player_index]
     if not (frame and frame.valid) then
       data.open_frames[event.player_index] = nil
       return
     end
+
     make_unit_gui(frame)
   end
 }
@@ -710,8 +745,31 @@ end
 --16-28 = 3
 local make_move_positions = function(group)
   --so, a rectangle, 6 times longer than wide...
-  row_length = math.ceil(table_size(group) / 6)
-
+  local size = table_size(group)
+  local number_of_rows = math.floor((size ^ 0.5) / 1.5)
+  local max_on_row = math.ceil(size / number_of_rows)
+  local positions = {}
+  local row_number = 0
+  local remaining = size
+  while remaining > 0 do
+    local number_on_row = math.min(remaining, max_on_row)
+    for k = 0, number_on_row - 1 do
+      local something
+      if k % 2 == 0 then
+        something = k / 2
+      else
+        something = (- 1 - k) / 2
+      end
+      if number_on_row % 2 == 0 then
+        something = something + 0.5
+      end
+      local position = {x = something, y = row_number}
+      table.insert(positions, position)
+      remaining = remaining - 1
+    end
+    row_number = row_number + 1
+  end
+  return positions
 end
 
 local center_of_mass = function(group)
@@ -726,7 +784,7 @@ local center_of_mass = function(group)
 end
 
 local make_move_command = function(param)
-  local position = param.position
+  local origin = param.position
   local distraction = param.distraction or defines.distraction.by_enemy
   local group = param.group
   local player = param.player
@@ -737,47 +795,91 @@ local make_move_command = function(param)
   local find = surface.find_non_colliding_position
   local index
   local offset, radius, speed = get_offset(group)
+  --local positions = make_move_positions(group)
+
+  local size = table_size(group)
+  local number_of_rows = math.floor((size ^ 0.5) / 1.5)
+  local max_on_row = math.ceil(size / number_of_rows)
+  local angle = util.angle(origin, center_of_mass(group)) - (0.25 * 2 * math.pi)
+  cos = math.cos(angle)
+  sin = math.sin(angle)
+
+  local rotate = function(position)
+   local x = (position.x * cos) - (position.y * sin)
+   local y = (position.x * sin) + (position.y * cos)
+   return {x = x, y = y}
+  end
+
+  local should_ajar = {}
+  local remaining = size
+  for k = 0, number_of_rows - 1 do
+    if remaining < (max_on_row) then
+      should_ajar[k] = remaining % 2 == 0
+    else
+      should_ajar[k] = max_on_row % 2 == 0
+    end
+    remaining = remaining - (max_on_row)
+  end
+
+  local y_adjust = 0.5 + (-0.5 * size) / max_on_row
+
   local insert = table.insert
-  for x = -radius / 2, radius / 2, offset do
-    for y = -radius / 2, radius / 2, offset do
-      local entity
-      index, entity = next(group, index)
-      if entity then
-        local destination = {position.x + x, position.y + y}
-        --log(entity.unit_number.." = "..serpent.line(destination))
-        local unit = (entity.type == "unit")
-        local destination = find(entity.name, destination, 0, 0.5) or entity.position
-        local command = {
-          command_type = next_command_type.move,
-          type = type, distraction = distraction,
-          radius = 0.5,
-          destination = destination,
-          speed = speed,
-          pathfind_flags =
-          {
-            allow_destroy_friendly_entities = false,
-            cache = false
-          }
-        }
-        local unit_data = data.units[entity.unit_number]
-        if append then
-          if unit_data.idle and unit then
-            set_command(unit_data, command)
-          end
-          insert(unit_data.command_queue, command)
-        else
-          unit_data.command_queue = {command}
-          if unit then
-            set_command(unit_data, command)
-            unit_data.command_queue = {}
-          else
-            unit_data.command_queue = {command}
-          end
-        end
-        set_unit_not_idle(unit_data)
-      else
-        return
+  local current_row = 0
+  local current_column = 0
+  for unit_number, entity in pairs (group) do
+    local position = {}
+    position.y = current_row + y_adjust
+    local something
+    if current_column % 2 == 0 then
+      something = current_column / 2
+    else
+      something = (- 1 - current_column) / 2
+    end
+    if should_ajar[current_row] then
+      something = something + 0.5
+    end
+    position.x = something
+    position.x = position.x * offset
+    position.y = position.y * offset
+    position = rotate(position)
+    local destination = {origin.x + position.x, origin.y + position.y}
+    --log(entity.unit_number.." = "..serpent.line(destination))
+    local unit = (entity.type == "unit")
+    local destination = find(entity.name, destination, 0, 0.5)
+    local command = {
+      command_type = next_command_type.move,
+      type = type, distraction = distraction,
+      radius = 0.5,
+      destination = destination,
+      speed = speed,
+      pathfind_flags =
+      {
+        allow_destroy_friendly_entities = false,
+        cache = false
+      }
+    }
+    local unit_data = data.units[entity.unit_number]
+    if append then
+      if unit_data.idle and unit then
+        set_command(unit_data, command)
       end
+      insert(unit_data.command_queue, command)
+    else
+      unit_data.command_queue = {command}
+      if unit then
+        set_command(unit_data, command)
+        unit_data.command_queue = {}
+      else
+        unit_data.command_queue = {command}
+      end
+    end
+    set_unit_not_idle(unit_data)
+
+    if current_column == (max_on_row - 1) then
+      current_row = current_row + 1
+      current_column = 0
+    else
+      current_column = current_column + 1
     end
   end
 end
@@ -831,7 +933,7 @@ end
 local process_command_queue
 
 local make_patrol_command = function(param)
-  local position = param.position
+  local origin = param.position
   local distraction = param.distraction or defines.distraction.by_enemy
   local group = param.group
   local player = param.player
@@ -843,42 +945,88 @@ local make_patrol_command = function(param)
   local index
   local offset, radius, speed = get_offset(group)
   local insert = table.insert
-  for x = -radius / 2, radius / 2, offset do
-    for y = -radius / 2, radius / 2, offset do
-      index, entity = next(group, index)
-      if entity then
-        local unit = (entity.type == "unit")
-        local unit_data = data.units[entity.unit_number]
-        local next_destination = find(entity.name, {position.x + x, position.y + y}, 0, 0.5) or entity.position
-        local patrol_command = find_patrol_comand(unit_data.command_queue)
-        if patrol_command and append then
-          insert(patrol_command.destinations, next_destination)
-        else
-          command =
-          {
-            command_type = next_command_type.patrol,
-            destinations = {entity.position, next_destination},
-            destination_index = "initial",
-            speed = speed
-          }
-        end
-        if not append then
-          unit_data.command_queue = {command}
-          set_unit_not_idle(unit_data)
-          if unit then
-            process_command_queue(unit_data)
-          end
-        end
-        if append and not patrol_command then
-          insert(unit_data.command_queue, command)
-          if unit_data.idle and unit then
-            process_command_queue(unit_data)
-          end
-        end
-        add_unit_indicators(unit_data)
-      else
-        return
+
+
+  local size = table_size(group)
+  local number_of_rows = math.floor((size ^ 0.5) / 1.5)
+  local max_on_row = math.ceil(size / number_of_rows)
+  local angle = util.angle(origin, center_of_mass(group)) - (0.25 * 2 * math.pi)
+  cos = math.cos(angle)
+  sin = math.sin(angle)
+
+  local rotate = function(position)
+   local x = (position.x * cos) - (position.y * sin)
+   local y = (position.x * sin) + (position.y * cos)
+   return {x = x, y = y}
+  end
+
+  local should_ajar = {}
+  local remaining = size
+  for k = 0, number_of_rows - 1 do
+    if remaining < (max_on_row) then
+      should_ajar[k] = remaining % 2 == 0
+    else
+      should_ajar[k] = max_on_row % 2 == 0
+    end
+    remaining = remaining - (max_on_row)
+  end
+
+  local insert = table.insert
+  local current_row = 0
+  local current_column = 0
+  for unit_number, entity in pairs (group) do
+    local position = {}
+    position.y = current_row
+    local something
+    if current_column % 2 == 0 then
+      something = current_column / 2
+    else
+      something = (- 1 - current_column) / 2
+    end
+    if should_ajar[current_row] then
+      something = something + 0.5
+    end
+    position.x = something
+    position.x = position.x * offset
+    position.y = position.y * offset
+    position = rotate(position)
+    local destination = {origin.x + position.x, origin.y + position.y}
+    --log(entity.unit_number.." = "..serpent.line(destination))
+    local unit_data = data.units[unit_number]
+    local unit = (entity.type == "unit")
+    local next_destination = find(entity.name, destination, 0, 0.5)
+    local patrol_command = find_patrol_comand(unit_data.command_queue)
+    if patrol_command and append then
+      insert(patrol_command.destinations, next_destination)
+    else
+      command =
+      {
+        command_type = next_command_type.patrol,
+        destinations = {entity.position, next_destination},
+        destination_index = "initial",
+        speed = speed
+      }
+    end
+    if not append then
+      unit_data.command_queue = {command}
+      set_unit_not_idle(unit_data)
+      if unit then
+        process_command_queue(unit_data)
       end
+    end
+    if append and not patrol_command then
+      insert(unit_data.command_queue, command)
+      if unit_data.idle and unit then
+        process_command_queue(unit_data)
+      end
+    end
+    add_unit_indicators(unit_data)
+
+    if current_column == (max_on_row - 1) then
+      current_row = current_row + 1
+      current_column = 0
+    else
+      current_column = current_column + 1
     end
   end
 end
@@ -1179,7 +1327,7 @@ process_command_queue = function(unit_data, result)
   local next_command = command_queue[1]
 
   if not (next_command) then
-    entity.ai_settings.do_separation = true
+    entity.ai_settings.do_separation = false
     if not unit_data.idle then
       set_unit_idle(unit_data)
     end

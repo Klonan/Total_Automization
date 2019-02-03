@@ -15,6 +15,7 @@ end
 for k, layer in pairs (base.in_motion.layers) do
   util.shift_layer(layer, sprite_shift)
 end
+
 local shadow_shift = {2, 4}
 util.shift_layer(base.shadow_in_motion, shadow_shift)
 base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
