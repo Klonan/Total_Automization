@@ -155,12 +155,11 @@ local unit =
     },
     animation = sprite_base.animation
   },
-  vision_distance = 60,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = 0.12,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
-  destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
   vehicle_impact_sound =  { filename = "__base__/sound/car-metal-impact.ogg", volume = 0.65 },

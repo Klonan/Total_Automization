@@ -98,7 +98,7 @@ local bot =
     },
     animation = {layers = {base.idle_with_cargo, base.shadow_idle_with_cargo, idle_mask}}
   },
-  vision_distance = 64,
+  vision_distance = 40,
   has_belt_immunity = true,
   movement_speed = 0.15,
   distance_per_frame = 0.15,

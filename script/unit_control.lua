@@ -56,6 +56,7 @@ local set_command = function(unit_data, command)
   unit_data.in_group = nil
   unit.speed = command.speed or unit.prototype.speed
   unit.ai_settings.path_resolution_modifier = command.path_resolution_modifier or -2
+  unit.ai_settings.do_separation = true
   unit.set_command(command)
   return add_unit_indicators(unit_data)
 end
@@ -224,6 +225,12 @@ local shift_box = function(box, shift)
   return new
 end
 
+local get_attack_range = function(prototype)
+  local attack_parameters = prototype.attack_parameters
+  if not attack_parameters then return end
+  return attack_parameters.range
+end
+
 add_unit_indicators = function(unit_data)
   clear_indicators(unit_data)
   local player
@@ -257,7 +264,7 @@ add_unit_indicators = function(unit_data)
   insert(indicators,
   rendering.draw_rectangle
   {
-    color = {g = 1},
+    color = {g = 0.5, a = 0.5},
     width = 1,
     filled = false,
     left_top = unit,
@@ -268,6 +275,31 @@ add_unit_indicators = function(unit_data)
     players = players
   })
 
+  insert(indicators,
+  rendering.draw_circle
+  {
+    color = {g = 0.1, b = 0.1, a = 0.1},
+    width = 4,
+    radius = unit.prototype.vision_distance,
+    filled = false,
+    target = unit,
+    surface = unit.surface,
+    draw_on_ground = true,
+    players = players
+  })
+
+  insert(indicators,
+  rendering.draw_circle
+  {
+    color = {r = 0.2, a = 0.1},
+    width = 4,
+    radius = get_attack_range(unit.prototype),
+    filled = false,
+    target = unit,
+    surface = unit.surface,
+    draw_on_ground = true,
+    players = players
+  })
 
   if unit_data.destination then
     insert(indicators,
@@ -280,7 +312,8 @@ add_unit_indicators = function(unit_data)
       surface = unit.surface,
       players = players,
       gap_length = 0.5,
-      dash_length = 0.5
+      dash_length = 0.5,
+      draw_on_ground = true
     })
   end
 
@@ -295,7 +328,8 @@ add_unit_indicators = function(unit_data)
       surface = unit.surface,
       players = players,
       gap_length = 0.5,
-      dash_length = 0.5
+      dash_length = 0.5,
+      draw_on_ground = true
     })
   end
 
@@ -313,7 +347,8 @@ add_unit_indicators = function(unit_data)
         surface = unit.surface,
         players = players,
         gap_length = 0.5,
-        dash_length = 0.5
+        dash_length = 0.5,
+        draw_on_ground = true
       })
       position = command.destination
     end
@@ -332,7 +367,8 @@ add_unit_indicators = function(unit_data)
           surface = unit.surface,
           players = players,
           gap_length = 0.5,
-          dash_length = 0.5
+          dash_length = 0.5,
+          draw_on_ground = true,
         })
       end
     end
@@ -349,7 +385,8 @@ add_unit_indicators = function(unit_data)
       from = unit_data.target,
       surface = unit.surface,
       gap_length = 0.5,
-      dash_length = 0.5
+      dash_length = 0.5,
+      draw_on_ground = true
     })
   end
 end
@@ -364,7 +401,8 @@ set_unit_idle = function(unit_data, send_event)
   unit_data.destination = nil
   unit_data.target = nil
   local unit = unit_data.entity
-  set_command(unit_data, stop)
+  unit.ai_settings.do_separation = true
+  set_command(unit_data, idle_command)
   if send_event then
     script.raise_event(script_events.on_unit_idle, {entity = unit})
   end
@@ -666,6 +704,25 @@ local get_min_speed = function(entities)
     speed = min(speed, prototype.speed)
   end
   return speed
+end
+--1-6 = 1
+--7-15 = 2
+--16-28 = 3
+local make_move_positions = function(group)
+  --so, a rectangle, 6 times longer than wide...
+  row_length = math.ceil(table_size(group) / 6)
+
+end
+
+local center_of_mass = function(group)
+  local x, y, k = 0, 0, 0
+  for unit_number, unit in pairs (group) do
+    local p = unit.position
+    x = x + p.x
+    y = y + p.y
+    k = k + 1
+  end
+  return {x / k, y / k}
 end
 
 local make_move_command = function(param)
@@ -1122,6 +1179,7 @@ process_command_queue = function(unit_data, result)
   local next_command = command_queue[1]
 
   if not (next_command) then
+    entity.ai_settings.do_separation = true
     if not unit_data.idle then
       set_unit_idle(unit_data)
     end
@@ -1283,7 +1341,7 @@ local on_player_removed = function(event)
     end
   end
 end
-
+local NO_GROUP = true
 local on_unit_added_to_group = function(event)
   local unit = event.unit
   if not (unit and unit.valid) then return end
@@ -1292,6 +1350,13 @@ local on_unit_added_to_group = function(event)
   local unit_data = data.units[unit.unit_number]
   if not unit_data then
     --We don't have anything to do with this unit, so we don't care
+    return
+  end
+  if NO_GROUP then
+    --this is the 'fuckoff' function
+    game.print("Told group to die! "..group.group_number.." - "..unit.unit_number)
+    group.destroy()
+    process_command_queue(unit_data)
     return
   end
   game.print("Unit added to group: "..unit.unit_number)
@@ -1307,6 +1372,7 @@ local on_unit_added_to_group = function(event)
 end
 
 local on_unit_removed_from_group = function(event)
+  if NO_GROUP then return end
   local unit = event.unit
   if not (unit and unit.valid) then return end
   local unit_data = data.units[unit.unit_number]
@@ -1382,19 +1448,26 @@ local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
-  game.map_settings.path_finder.max_steps_worked_per_tick = 10000
-  game.map_settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  game.map_settings.path_finder.short_request_max_steps = 200
-  game.map_settings.path_finder.min_steps_to_check_path_find_termination = 500
-  game.map_settings.path_finder.max_clients_to_accept_any_new_request = 1000
-  game.map_settings.path_finder.use_path_cache = false
-  game.map_settings.path_finder.short_cache_size = 0
-  game.map_settings.path_finder.long_cache_size = 0
-  game.map_settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  game.map_settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  game.map_settings.steering.moving.radius = 0
-  game.map_settings.steering.moving.default = 0
-  game.map_settings.max_failed_behavior_count = 5
+  local settings = game.map_settings
+  settings.path_finder.max_steps_worked_per_tick = 10000
+  settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  settings.path_finder.short_request_max_steps = 200
+  settings.path_finder.min_steps_to_check_path_find_termination = 500
+  settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  settings.path_finder.use_path_cache = false
+  settings.path_finder.short_cache_size = 0
+  settings.path_finder.long_cache_size = 0
+  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 0
+  settings.steering.moving.default = 0
+  settings.max_failed_behavior_count = 5
+
+  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 1
+  settings.steering.moving.separation_force = 0.1
+  settings.steering.moving.separation_factor = 1
+
   register_events()
   unit_control.on_event = handler(events)
 end

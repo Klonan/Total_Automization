@@ -47,8 +47,7 @@ util.distance = function(p1, p2)
 end
 
 util.radius = function(area)
-  local center = util.center(area)
-  return util.distance(center, area.left_top)
+  return util.distance(area.right_bottom, area.left_top) / 2
 end
 
 util.clear_item = function(entity, item_name)

@@ -90,6 +90,14 @@ local move_confirm_sound =
   volume = 2
 }
 
+local light =
+{
+  name = "range_stencil",
+  type = "sprite",
+  filename = "__core__/sound/armor-insert.ogg",
+  volume = 2
+}
+
 local unit_attack_move_tool =
 {
   type = "selection-tool",
