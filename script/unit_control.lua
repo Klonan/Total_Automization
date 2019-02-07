@@ -1597,25 +1597,25 @@ local unit_control = {}
 unit_control.on_init = function()
   global.unit_control = data
   local settings = game.map_settings
-  settings.path_finder.max_steps_worked_per_tick = 10000
-  settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  settings.path_finder.short_request_max_steps = 200
-  settings.path_finder.min_steps_to_check_path_find_termination = 500
-  settings.path_finder.max_clients_to_accept_any_new_request = 1000
-  settings.path_finder.use_path_cache = false
-  settings.path_finder.short_cache_size = 0
-  settings.path_finder.long_cache_size = 0
-  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 0
-  settings.steering.moving.default = 0
-  settings.max_failed_behavior_count = 5
-
-  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 1
-  settings.steering.moving.separation_force = 0.1
-  settings.steering.moving.separation_factor = 1
-
+  --settings.path_finder.max_steps_worked_per_tick = 10000
+  --settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  --settings.path_finder.short_request_max_steps = 200
+  --settings.path_finder.min_steps_to_check_path_find_termination = 500
+  --settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  --settings.path_finder.use_path_cache = false
+  --settings.path_finder.short_cache_size = 0
+  --settings.path_finder.long_cache_size = 0
+  --settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  --settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  --settings.steering.moving.radius = 0
+  --settings.steering.moving.default = 0
+  --settings.max_failed_behavior_count = 5
+--
+  --settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  --settings.steering.moving.radius = 1
+  --settings.steering.moving.separation_force = 0.1
+  --settings.steering.moving.separation_factor = 1
+--
   register_events()
   unit_control.on_event = handler(events)
 end
