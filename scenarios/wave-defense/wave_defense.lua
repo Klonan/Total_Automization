@@ -136,6 +136,64 @@ local bounties =
   ["spitter-spawner"] = 1500
 }
 
+local default_starting_items = function()
+  return
+  {
+    ["iron-plate"] = 200,
+    ["pipe"] = 200,
+    ["pipe-to-ground"] = 50,
+    ["copper-plate"] = 200,
+    ["steel-plate"] = 200,
+    ["iron-gear-wheel"] = 250,
+    ["transport-belt"] = 600,
+    ["underground-belt"] = 40,
+    ["splitter"] = 40,
+    ["gun-turret"] = 8,
+    ["stone-wall"] = 50,
+    ["repair-pack"] = 20,
+    ["inserter"] = 100,
+    ["burner-inserter"] = 50,
+    ["small-electric-pole"] = 50,
+    ["medium-electric-pole"] = 50,
+    ["big-electric-pole"] = 15,
+    ["burner-mining-drill"] = 50,
+    ["electric-mining-drill"] = 50,
+    ["stone-furnace"] = 35,
+    ["steel-furnace"] = 20,
+    ["electric-furnace"] = 8,
+    ["assembling-machine-1"] = 50,
+    ["assembling-machine-2"] = 20,
+    ["assembling-machine-3"] = 8,
+    ["electronic-circuit"] = 200,
+    ["fast-inserter"] = 100,
+    ["long-handed-inserter"] = 100,
+    ["substation"] = 10,
+    ["boiler"] = 10,
+    ["offshore-pump"] = 1,
+    ["steam-engine"] = 20,
+    ["chemical-plant"] = 20,
+    ["oil-refinery"] = 5,
+    ["pumpjack"] = 10,
+    ["small-lamp"] = 20
+  }
+end
+
+local default_respawn_items = function()
+  return
+  {
+    ["submachine-gun"] = 1,
+    ["firearm-magazine"] = 40,
+    ["shotgun"] = 1,
+    ["shotgun-shell"] = 20,
+    ["power-armor"] = 1,
+    ["construction-robot"] = 20,
+    ["fusion-reactor-equipment"] = 1,
+    ["exoskeleton-equipment"] = 1,
+    ["personal-roboport-equipment"] = 1,
+    ["personal-roboport-equipment"] = 1
+  }
+end
+
 local script_data =
 {
   wave_number = 0,
@@ -169,7 +227,10 @@ local script_data =
   wave_tick = nil,
   spawn_time = nil,
   wave_time = nil,
+  starting_chest_items = default_starting_items(),
+  respawn_items = default_respawn_items()
 }
+
 
 local get_starting_point = function()
   local points = difficulty_variables[script_data.difficulty].starting_points
@@ -189,8 +250,7 @@ local max_seed = 2^32 - 2
 local initial_seed = 829296663 -- Something nice?
 
 local players = function(index)
-  local player_list = game.players
-  return index and player_list[index] or player_list
+  return (index and game.get_player(index)) or game.players
 end
 
 function deregister_gui(gui)
@@ -255,28 +315,30 @@ local set_up_player = function(player)
     return
   end
 
-  if script_data.state == game_state.in_round then
+  if script_data.state == game_state.in_round or script_data.state == game_state.victory then
     local surface = script_data.surface
+    if player.surface == surface then return end
+    if player.character then
+      player.character.destroy()
+    end
     local force = game.forces.player
     local spawn = force.get_spawn_position(surface)
     player.teleport(spawn, surface)
     player.character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
     give_starting_equipment(player)
-    give_spawn_equipment(player)
+    give_respawn_equipment(player)
     return
   end
 
   if script_data.state == game_state.defeat then
+    if player.character then
+      player.character.destroy()
+    end
     local surface = script_data.surface
     local force = game.forces.player
     local position = script_data.silo and script_data.silo.valid and script_data.silo.position or force.get_spawn_position(surface)
     player.set_controller({type = defines.controllers.spectator})
     player.teleport(position, surface)
-    return
-  end
-
-  if script_data.state == game_state.victory then
-    --not sure tey
     return
   end
 
@@ -305,8 +367,15 @@ function start_round()
   set_up_players()
 end
 
+function restart_round()
+  script_data.game_state = game_state.in_preview
+  set_up_players()
+  local seed = script_data.surface.map_gen_settings.seed
+  create_battle_surface(seed)
+  start_round()
+end
+
 local get_random_seed = function()
-  --Some random prime...
   return (32452867 * game.tick) % max_seed
 end
 
@@ -340,6 +409,7 @@ function create_battle_surface(seed)
   create_silo(starting_point)
   create_wall(starting_point)
   create_turrets(starting_point)
+  create_starting_chest(starting_point)
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
@@ -600,6 +670,86 @@ function create_turrets(starting_point)
   set_tiles_safe(surface, tiles)
 end
 
+local root_2 = 2 ^ 0.5
+
+function get_chest_offset(n)
+  local offset_x = 0
+  n = n / 2
+  if n % 1 == 0.5 then
+    offset_x = -1
+    n = n + 0.5
+  end
+  local root = n ^ 0.5
+  local nearest_root = math.floor(root + 0.5)
+  local upper_root = math.ceil(root)
+  local root_difference = math.abs(nearest_root ^ 2 - n)
+  if nearest_root == upper_root then
+    x = upper_root - root_difference
+    y = nearest_root
+  else
+    x = upper_root
+    y = root_difference
+  end
+  local orientation = 2 * math.pi * (45/360)
+  x = x * root_2
+  y = y * root_2
+  local rotated_x = math.floor(0.5 + x * math.cos(orientation) - y * math.sin(orientation))
+  local rotated_y = math.floor(0.5 + x * math.sin(orientation) + y * math.cos(orientation))
+  return {x = rotated_x + offset_x, y = rotated_y}
+end
+
+function create_starting_chest(starting_point)
+  local force = game.forces.player
+  local inventory = script_data.starting_chest_items
+  if not (table_size(inventory) > 0) then return end
+  local surface = script_data.surface
+  local chest_name = "iron-chest"
+  local prototype = game.entity_prototypes[chest_name]
+  if not prototype then
+    log("Starting chest "..chest_name.." is not a valid entity prototype, picking a new container from prototype list")
+    for name, chest in pairs (game.entity_prototypes) do
+      if chest.type == "container" then
+        chest_name = name
+        prototype = chest
+        break
+      end
+    end
+  end
+  local size = math.ceil(prototype.radius * 2)
+  local origin = {x = starting_point.x, y = starting_point.y - 10}
+  local index = 1
+  local position = {x = origin.x + get_chest_offset(index).x * size, y = origin.y + get_chest_offset(index).y * size}
+  local chest = surface.create_entity{name = chest_name, position = position, force = force, create_build_effect_smoke = false}
+  for k, v in pairs (surface.find_entities_filtered{force = "neutral", area = chest.bounding_box}) do
+    v.destroy()
+  end
+  local tiles = {}
+  local grass = {}
+  local tile_name = "refined-concrete"
+  if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
+  insert(tiles, {name = tile_name, position = {x = position.x, y = position.y}})
+  chest.destructible = false
+  local items = game.item_prototypes
+  for name, count in pairs (inventory) do
+    if items[name] then
+      local count_to_insert = math.ceil(count)
+      local difference = count_to_insert - chest.insert{name = name, count = count_to_insert}
+      while difference > 0 do
+        index = index + 1
+        position = {x = origin.x + get_chest_offset(index).x * size, y = origin.y + get_chest_offset(index).y * size}
+        chest = surface.create_entity{name = chest_name, position = position, force = force, create_build_effect_smoke = false}
+        for k, v in pairs (surface.find_entities_filtered{force = "neutral", area = chest.bounding_box}) do
+          v.destroy()
+        end
+        insert(tiles, {name = tile_name, position = {x = position.x, y = position.y}})
+        chest.destructible = false
+        difference = difference - chest.insert{name = name, count = difference}
+      end
+    end
+  end
+  set_tiles_safe(surface, tiles)
+end
+
 function check_next_wave(tick)
   if not script_data.wave_tick then return end
   if script_data.wave_tick ~= tick then return end
@@ -695,17 +845,20 @@ function get_wave_units()
       insert(units, {name = name, amount = floor(((wave - first_wave) + 1) ^ 1.25)})
     end
   end
-  game.print(serpent.block(units))
   return units
 end
 
+local get_speed_multiplier = function()
+  local level = script_data.wave_number
+  if level == 0 then return 0.8 end
+  return (level ^ 0.1) - 0.2
+end
+
 function spawn_units()
-  game.speed = 1
   local rand = script_data.random
   local surface = script_data.surface
   local silo = script_data.silo
   if not (silo and silo.valid) then return end
-  --if surface.count_entities_filtered{type = "unit"} > 1000 then return end
   local command =
   {
     type = defines.command.compound,
@@ -773,7 +926,7 @@ function spawn_units()
         ai_settings.path_resolution_modifier = -2
 
         entity.set_command(command)
-        entity.speed = entity.speed * (0.8 + math.random()/5)
+        entity.speed = entity.speed * get_speed_multiplier()
         power = power - cost
         unit_count = unit_count + 1
       end
@@ -806,87 +959,68 @@ function rocket_died(event)
   script_data.state = game_state.defeat
   script_data.silo = nil
   set_up_players()
-  for k, player in pairs (players()) do
-  end
-  game.print("GAME OVER, tell admin to start a new round or soemthing.")
+  game.print({"you-lose"})
 
 end
 
-function insert_items(entity, array)
-  for name, count in pairs (array) do
-    entity.insert({name = name, count = count})
-  end
-end
+local insert_items = util.insert_safe
 
 function give_starting_equipment(player)
-  local items =
-  {
-    ["iron-plate"] = 200,
-    ["pipe"] = 200,
-    ["pipe-to-ground"] = 50,
-    ["copper-plate"] = 200,
-    ["steel-plate"] = 200,
-    ["iron-gear-wheel"] = 250,
-    ["transport-belt"] = 600,
-    ["underground-belt"] = 40,
-    ["splitter"] = 40,
-    ["gun-turret"] = 8,
-    ["stone-wall"] = 50,
-    ["repair-pack"] = 20,
-    ["inserter"] = 100,
-    ["burner-inserter"] = 50,
-    ["small-electric-pole"] = 50,
-    ["medium-electric-pole"] = 50,
-    ["big-electric-pole"] = 15,
-    ["burner-mining-drill"] = 50,
-    ["electric-mining-drill"] = 50,
-    ["stone-furnace"] = 35,
-    ["steel-furnace"] = 20,
-    ["electric-furnace"] = 8,
-    ["assembling-machine-1"] = 50,
-    ["assembling-machine-2"] = 20,
-    ["assembling-machine-3"] = 8,
-    ["electronic-circuit"] = 200,
-    ["fast-inserter"] = 100,
-    ["long-handed-inserter"] = 100,
-    ["substation"] = 10,
-    ["boiler"] = 10,
-    ["offshore-pump"] = 1,
-    ["steam-engine"] = 20,
-    ["chemical-plant"] = 20,
-    ["oil-refinery"] = 5,
-    ["pumpjack"] = 10,
-    ["small-lamp"] = 20
-  }
+  local items = script_data.starting_equipment
   insert_items(player, items)
 end
 
-function give_spawn_equipment(player)
-  local items =
-    {
-      ["submachine-gun"] = 1,
-      ["firearm-magazine"] = 40,
-      ["shotgun"] = 1,
-      ["shotgun-shell"] = 20,
-      ["power-armor"] = 1,
-      ["construction-robot"] = 20,
-      ["blueprint"] = 3,
-      ["deconstruction-planner"] = 1
-    }
-  insert_items(player, items)
-  local equipment =
-    {
-      "fusion-reactor-equipment",
-      "exoskeleton-equipment",
-      "personal-roboport-equipment",
-      "personal-roboport-equipment"
-    }
-  local armor = player.get_inventory(5)[1].grid
-  for k, name in pairs (equipment) do
-    armor.put({name = name})
+give_respawn_equipment = function(player)
+  local equipment = script_data.respawn_items
+  local items = game.item_prototypes
+  local list = {items = {}, armor, equipment = {}}
+  for name, count in pairs (equipment) do
+    local item = items[name]
+    if item then
+      if item.type == "armor" then
+        local count = count
+        if not list.armor then
+          list.armor = item
+        end
+        count = count - 1
+        if count > 0 then
+          list.items[item] = (list.items[item] or 0) + count
+        end
+      elseif item.place_as_equipment_result then
+        list.equipment[item] = (list.equipment[item] or 0) + count
+      else
+        list.items[item] = (list.items[item] or 0) + count
+      end
+    else
+      equipment[name] = nil
+    end
   end
-  for k, equipment in pairs (armor.equipment) do
-    equipment.energy = equipment.max_energy
+  local put_equipment = false
+  if list.armor then
+    local stack = player.get_inventory(defines.inventory.player_armor)[1]
+    stack.set_stack{name = list.armor.name}
+    local grid = stack.grid
+    if grid then
+      put_equipment = true
+      for prototype, count in pairs (list.equipment) do
+        local equipment = prototype.place_as_equipment_result
+        for k = 1, count do
+          if not grid.put{name = equipment.name} then
+            player.insert{name = prototype.name}
+          end
+        end
+      end
+    end
+  end
+
+  if not put_equipment then
+    for prototype, count in pairs (list.equipment) do
+      player.insert{name = prototype.name, count = count}
+    end
+  end
+
+  for prototype, count in pairs (list.items) do
+    player.insert{name = prototype.name, count = count}
   end
 end
 
@@ -898,7 +1032,8 @@ function refresh_preview_gui(player)
 
 
   local admin = player.admin
-  local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}
+  local inner = frame.add{type = "frame", style = "inside_deep_frame", direction = "vertical"}.add{type = "flow", direction = "vertical"}
+  inner.style.vertical_spacing = 0
   local subheader = inner.add{type = "frame", style = "subheader_frame"}
   local surface = script_data.surface
   if not (surface and surface.valid) then return end
@@ -949,8 +1084,9 @@ function refresh_preview_gui(player)
     force = player.force.name,
     position = position
   }
-  minimap.style.width = max
-  minimap.style.height = max
+  minimap.style.natural_width = max
+  minimap.style.natural_height = max
+  --minimap.style.top_margin = 0
 
   --minimap.style.vertically_stretchable = true
   --minimap.style.horizontally_stretchable = true
@@ -958,7 +1094,7 @@ function refresh_preview_gui(player)
   local button_flow = frame.add{type = "flow"}
   button_flow.style.horizontal_align = "right"
   button_flow.style.horizontally_stretchable = true
-  local start_round = button_flow.add{type = "button", caption = "Looks good, lets go!", style = "confirm_button", enabled = admin}
+  local start_round = button_flow.add{type = "button", caption = {"start-round"}, style = "confirm_button", enabled = admin}
   register_gui_action(start_round, {type = "start_round"})
 end
 
@@ -966,7 +1102,7 @@ function make_preview_gui(player)
   local gui = player.gui.center
   local frame = script_data.gui_elements.preview_frame[player.index]
   if not (frame and frame.valid) then
-    frame = gui.add{type = "frame", caption = "Start round or something", direction = "vertical"}
+    frame = gui.add{type = "frame", caption = {"setup-frame"}, direction = "vertical"}
     frame.style.horizontal_align = "right"
     script_data.gui_elements.preview_frame[player.index] = frame
   end
@@ -992,7 +1128,7 @@ local upgrade_button_param =
 local admin_button_param =
 {
   type = "button",
-  caption = "ADMIN",
+  caption = {"admin"},
   tooltip = {"upgrade-button-tooltip"},
   style = mod_gui.button_style
 }
@@ -1132,6 +1268,7 @@ function update_upgrade_listing(player)
     sprite.number = upgrade.price(level)
     register_gui_action(sprite, {type = "purchase_button", name = name})
     local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
+    flow.style.horizontally_stretchable = true
     flow.style.maximal_height = 75
     local another_table = flow.add{type = "table", name = name.."_label_table", column_count = 1}
     another_table.style.vertical_spacing = 2
@@ -1260,18 +1397,22 @@ end
 local admin_frame_param =
 {
   type = "frame",
-  caption = "Admin stuff",
+  caption = {"admin"},
   direction = "vertical"
 }
 
 local admin_buttons =
 {
   {
-    param = {type = "button", caption = "End round"},
+    param = {type = "button", caption = {"end-round"}},
     action = {type = "end_round"}
   },
   {
-    param = {type = "button", caption = "Send wave"},
+    param = {type = "button", caption = {"restart-round"}},
+    action = {type = "restart_round"}
+  },
+  {
+    param = {type = "button", caption = "Dev only: Send wave"},
     action = {type = "send_wave"}
   },
 
@@ -1291,6 +1432,7 @@ local toggle_admin_frame = function(player)
   script_data.gui_elements.admin_frame[player.index] = frame
   for k, button in pairs (admin_buttons) do
     local butt = frame.add(button.param)
+    butt.style.horizontally_stretchable = true
     register_gui_action(butt, button.action)
   end
 
@@ -1358,7 +1500,7 @@ local on_init = function()
 end
 
 local round_won = function()
-  game.print("YOU WIN Wow ok")
+  game.print({"you-win"})
 end
 
 local spawner_died = function(event)
@@ -1410,7 +1552,7 @@ end
 
 local on_player_respawned = function(event)
   local player = players(event.player_index)
-  give_spawn_equipment(player)
+  give_respawn_equipment(player)
 end
 
 local is_reasonable_seed = function(string)
@@ -1515,6 +1657,9 @@ local gui_functions =
   end,
   end_round = function(event, param)
     end_round()
+  end,
+  restart_round = function(event, param)
+    restart_round()
   end,
   difficulty_changed = function(event, param)
     local gui = event.element
