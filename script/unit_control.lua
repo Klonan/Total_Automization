@@ -1620,6 +1620,8 @@ unit_control.on_init = function()
   unit_control.on_event = handler(events)
 end
 
+unit_control.get_events = function() return events end
+
 unit_control.on_load = function()
   data = global.unit_control
   register_events()

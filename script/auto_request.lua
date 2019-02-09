@@ -35,7 +35,7 @@ local get_category_items = function(categories)
 end
 
 local get_fuel_item = function(entity, burner)
-  local networks = entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force) 
+  local networks = entity.surface.find_logistic_networks_by_construction_area(entity.position, entity.force)
 
   local category_items = get_category_items(burner.fuel_categories)
   local item
@@ -73,7 +73,7 @@ local on_built_entity = function(event)
   if entity.type == ghost_type then
     return ghost_built(entity)
   end
-  
+
   local burner = get_burners()[entity.name]
   if not burner then return end
 
@@ -99,5 +99,5 @@ local events =
 
 local lib = {}
 lib.on_event = handler(events)
-
+lib.get_events = function() return events end
 return lib

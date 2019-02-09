@@ -1,4 +1,4 @@
-local data = 
+local data =
 {
   machines = {},
   tick_check = {}
@@ -11,7 +11,7 @@ local unit_deployment_events =
 
 local names = names.deployers
 local units = names.units
---todo allow other mods to add deployers 
+--todo allow other mods to add deployers
 local map = {}
 for k, deployer in pairs (names) do
   map[deployer] = true
@@ -108,6 +108,8 @@ local events =
 remote.add_interface("unit_deployment", {get_events = function() return util.copy(unit_deployment_events) end})
 
 local unit_deployment = {}
+
+unit_deployment.get_events = function() return events end
 
 unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data

@@ -31,4 +31,4 @@ local register_remote = function()
   remote.call("freeplay", "set_created_items", created_items())
 end
 
-return {on_init = register_remote}
+return {on_init = register_remote, get_events = function() return {} end}

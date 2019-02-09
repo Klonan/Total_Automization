@@ -67,4 +67,6 @@ pvp_interface.on_load = function()
   pvp_interface.on_event = handler(events)
 end
 
+pvp_interface.get_events = function() return events end
+
 return pvp_interface

@@ -31,7 +31,7 @@ local difficulty_variables =
     starting_area_size = 1.8,
     day_settings =
     {
-      ticks_per_day = 25000,
+      ticks_per_day = 27500,
       dusk = 0.25,
       evening = 0.45,
       morning = 0.50,
@@ -53,7 +53,7 @@ local difficulty_variables =
       ticks_per_day = 25000,
       dusk = 0.25,
       evening = 0.45,
-      morning = 0.55,
+      morning = 0.6,
       dawn = 0.75
     },
     starting_points =
@@ -70,10 +70,10 @@ local difficulty_variables =
     starting_area_size = 1.4,
     day_settings =
     {
-      ticks_per_day = 25000,
+      ticks_per_day = 22500,
       dusk = 0.2,
       evening = 0.40,
-      morning = 0.55,
+      morning = 0.6,
       dawn = 0.75
     },
     starting_points =
@@ -89,10 +89,10 @@ local difficulty_variables =
     starting_area_size = 1.2,
     day_settings =
     {
-      ticks_per_day = 25000,
+      ticks_per_day = 20000,
       dusk = 0.2,
       evening = 0.4,
-      morning = 0.6,
+      morning = 0.65,
       dawn = 0.8
     },
     starting_points =
@@ -189,8 +189,8 @@ local default_respawn_items = function()
     ["construction-robot"] = 20,
     ["fusion-reactor-equipment"] = 1,
     ["exoskeleton-equipment"] = 1,
-    ["personal-roboport-equipment"] = 1,
-    ["personal-roboport-equipment"] = 1
+    ["personal-roboport-mk2-equipment"] = 1,
+    ["energy-shield-equipment"] = 1
   }
 end
 
@@ -325,7 +325,6 @@ local set_up_player = function(player)
     local spawn = force.get_spawn_position(surface)
     player.teleport(spawn, surface)
     player.character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
-    give_starting_equipment(player)
     give_respawn_equipment(player)
     return
   end
@@ -365,6 +364,7 @@ function start_round()
   --First spawn
   script_data.wave_tick = tick + ceil(surface.ticks_per_day * surface.evening) + ceil((1 - surface.dawn) * surface.ticks_per_day)
   set_up_players()
+  game.print({"start-round-message"})
 end
 
 function restart_round()
@@ -964,11 +964,6 @@ function rocket_died(event)
 end
 
 local insert_items = util.insert_safe
-
-function give_starting_equipment(player)
-  local items = script_data.starting_equipment
-  insert_items(player, items)
-end
 
 give_respawn_equipment = function(player)
   local equipment = script_data.respawn_items
@@ -1747,6 +1742,37 @@ local refresh_player_gui_event = function(event)
   return gui_init(players(event.player_index))
 end
 
+local is_valid_map = function(map)
+  for string, number in pairs (map) do
+    if type(string) ~= "string" then return end
+    if type(number) ~= "number" then return end
+  end
+  return true
+end
+
+local add_remote_interface = function()
+  if remote.interfaces["wave-defense"] then return end
+  remote.add("wave_defense",
+  {
+    get_starting_chest_items = function()
+      return script_data.starting_chest_items
+    end,
+    set_starting_chest_items = function(map)
+      if not is_valid_map(map) then error("Map for starting chest items is not a valid item map") end
+      script_data.starting_chest_items = map
+    end,
+    get_respawn_items = function()
+      return script_data.respawn_items
+    end,
+    set_respawn_items = function(map)
+      if not is_valid_map(map) then error("Map for respawn items is not a valid item map") end
+      script_data.respawn_items = map
+    end,
+
+  }
+  )
+end
+
 local events =
 {
   [defines.events.on_entity_died] = on_entity_died,
@@ -1782,6 +1808,10 @@ end
 lib.on_init = function()
   global.wave_defense = global.wave_defense or script_data
   on_init()
+end
+
+lib.get_events = function()
+  return events
 end
 
 return lib

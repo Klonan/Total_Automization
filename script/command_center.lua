@@ -52,7 +52,7 @@ local create = function(surface, position, force)
     {-12,-12},
     {-12, 12},
     {12, 12},
-    {12, -12} 
+    {12, -12}
   }
   local command_center = surface.create_entity{name = names.command_center, position = position, force = force}
   local components = {}
@@ -88,6 +88,8 @@ end
 
 
 local command_center = {}
+
+command_center.get_events = function() return events end
 
 command_center.on_init = function()
   global.command_center = data

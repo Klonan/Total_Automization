@@ -42,7 +42,11 @@ local events =
 
 local lib = {}
 
+lib.get_events = function() return events end
+
 lib.on_event = handler(events)
+
+lib.get_events = function() return events end
 
 lib.on_init = function()
   global.logistic_beacon = global.logistic_beacon or data

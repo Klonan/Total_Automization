@@ -87,6 +87,8 @@ local events =
 
 local debug = {}
 
+debug.get_events = function() return events end
+
 debug.on_init = function()
   for k, surface in pairs (game.surfaces) do
     surface.always_day = true

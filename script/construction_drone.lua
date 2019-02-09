@@ -2629,4 +2629,6 @@ lib.on_configuration_changed = function()
   end
 end
 
+lib.get_events = function() return events end
+
 return lib

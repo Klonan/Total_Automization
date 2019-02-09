@@ -57,6 +57,8 @@ local events =
 
 local killcam = {}
 
+killcam.get_events = function() return events end
+
 killcam.on_init = function()
   global.killcam = data
   killcam.on_event = handler(events)
