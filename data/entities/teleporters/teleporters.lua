@@ -1,6 +1,6 @@
 local path = util.path("data/entities/teleporters/")
 local teleporter = util.copy(data.raw["land-mine"]["land-mine"])
-local name = require"shared".entities.teleporter
+local name = tf_require"shared".entities.teleporter
 
 teleporter.name = name
 teleporter.localised_name = name
@@ -22,7 +22,7 @@ teleporter.picture_safe =
   height = 77,
   scale = 1
 }
-teleporter.picture_set = 
+teleporter.picture_set =
 {
   filename = path.."teleporter-open.png",
   priority = "medium",
@@ -30,7 +30,7 @@ teleporter.picture_set =
   height = 77,
   scale = 1
 }
-teleporter.picture_set_enemy = 
+teleporter.picture_set_enemy =
 {
   filename = path.."teleporter-open.png",
   priority = "medium",
@@ -53,7 +53,7 @@ teleporter_item.icon_size = 97
 teleporter_item.subgroup = "circuit-network"
 
 
-local fire = require("data/tf_util/tf_fire_util")
+local fire = tf_require("data/tf_util/tf_fire_util")
 
 local teleporter_explosion = util.copy(data.raw.explosion.explosion)
 teleporter_explosion.name = "teleporter-explosion"
@@ -78,7 +78,7 @@ local recipe = {
     {"steel-plate", 45},
     {"electronic-circuit", 100},
   },
-  energy_required = 5,
+  energy_tf_required = 5,
   result = name
 }
 

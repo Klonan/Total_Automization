@@ -70,7 +70,7 @@ local recipe = {
     {"iron-gear-wheel", 5},
     {"electronic-circuit", 10},
   },
-  energy_required = 1,
+  energy_tf_required = 1,
   result = name
 }
 

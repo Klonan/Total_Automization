@@ -55,7 +55,7 @@ pvp_interface.on_init = function()
   --config.game_config.no_rush_time = nil
   --config.game_config.base_exclusion_time = nil
   --config.victory.space_race = nil
-  --config.victory.required_satellites_sent = nil
+  --config.victory.tf_required_satellites_sent = nil
   remote.call("pvp", "set_config", config)
   register_pvp_events()
   pvp_interface.on_event = handler(events)

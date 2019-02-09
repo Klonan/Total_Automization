@@ -1,7 +1,7 @@
-local util = require("script/script_util")
+local util = tf_require("script/script_util")
 hotkeys = names.hotkeys
 local names = names
-local loadouts = require("script/classes/loadouts")
+local loadouts = tf_require("script/classes/loadouts")
 
 local data =
 {

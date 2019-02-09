@@ -22,7 +22,7 @@ local recipe =
     --{type = "fluid", name = "water", amount = 200},
     {type = "item", name = "coal", amount = 5}
   },
-  energy_required = 5,
+  energy_tf_required = 5,
   result = name,
   result_count = 2,
   order = "z-"..name,

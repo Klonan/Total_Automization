@@ -1,11 +1,11 @@
-local require = function(str) return require("data/entities/turrets/"..str) end
+local tf_require = function(str) return tf_require("data/entities/turrets/"..str) end
 
-require("small_gun_turret")
-require("big_gun_turret")
-require("laser_turret")
-require("blaster_turret")
-require("tazer_turret/tazer_turret")
-require("rocket_turret/rocket_turret")
+tf_require("small_gun_turret")
+tf_require("big_gun_turret")
+tf_require("laser_turret")
+tf_require("blaster_turret")
+tf_require("tazer_turret/tazer_turret")
+tf_require("rocket_turret/rocket_turret")
 
 util.prototype.remove_entity_prototype(data.raw["ammo-turret"]["gun-turret"])
 util.prototype.remove_entity_prototype(data.raw["electric-turret"]["laser-turret"])

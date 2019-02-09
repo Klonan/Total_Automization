@@ -1,4 +1,4 @@
-local util = require("util")
+local util = tf_require("util")
 
 local deregister_gui_internal
 deregister_gui_internal = function(gui_element, data)

@@ -4,7 +4,7 @@ local turret = util.copy(data.raw["turret"]["small-worm-turret"])
 turret.name = name
 turret.localised_name = name
 turret.type = "turret"
-turret.max_health = 10000 
+turret.max_health = 10000
 turret.collision_box = {{-1.8, -1.8},{1.8, 1.8}}
 turret.selection_box = {{-2, -2},{2, 2}}
 --turret.minable = nil
@@ -52,7 +52,7 @@ local turret =
   prepared_animation = picture,
   folded_animation = picture,
   starting_attack_animation = picture,
-  starting_attack_sound = 
+  starting_attack_sound =
   {
     filename = path.."tazer_turret_beam.ogg",
     volume = 2
@@ -142,7 +142,7 @@ sticker.damage_per_tick = {type = "electric", amount = 1}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
-sticker.animation = 
+sticker.animation =
 {
   filename = path.."tazer_turret_sticker.png",
   width = 37,
@@ -176,7 +176,7 @@ local recipe = {
     {"battery", 10},
     {"copper-cable", 80}
   },
-  energy_required = 5,
+  energy_tf_required = 5,
   result = name
 }
 

@@ -22,7 +22,7 @@ turret.attack_parameters =
   range = 35,
   projectile_creation_distance = 1,
   projectile_center = {0, -0.8},
-  sound = 
+  sound =
   {
     {
       filename = "__base__/sound/fight/laser-1.ogg",
@@ -86,7 +86,7 @@ projectile.action =
   }
 }
 
-projectile.final_action = 
+projectile.final_action =
 {
   type = "direct",
   action_delivery =
@@ -126,9 +126,8 @@ local recipe = {
     {"electronic-circuit", 30},
     {"copper-cable", 20}
   },
-  energy_required = 15,
+  energy_tf_required = 15,
   result = name
 }
 
 data:extend{turret, projectile, item, recipe}
-
