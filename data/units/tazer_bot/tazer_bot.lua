@@ -231,7 +231,7 @@ local recipe = {
     {"electronic-circuit", 10},
     {"copper-cable", 20}
   },
-  energy_tf_required = 25,
+  energy_required = 25,
   result = name
 }
 

@@ -40,7 +40,7 @@ local recipe = {
   {
     {"stone-brick", 5}
   },
-  energy_tf_required = 2,
+  energy_required = 2,
   result = stone_wall
 }
 util.recursive_hack_tint(wall, stone_tint)
@@ -81,7 +81,7 @@ local recipe = {
   {
     {stone_wall, 1}
   },
-  energy_tf_required = 0.2,
+  energy_required = 0.2,
   result = stone_gate
 }
 
@@ -117,7 +117,7 @@ local recipe = {
   {
     {"concrete", 15}
   },
-  energy_tf_required = 2,
+  energy_required = 2,
   result = concrete_wall
 }
 
@@ -153,7 +153,7 @@ local recipe = {
   {
     {concrete_wall, 1}
   },
-  energy_tf_required = 0.2,
+  energy_required = 0.2,
   result = concrete_gate
 }
 
@@ -161,3 +161,4 @@ data:extend{gate, item, recipe}
 
 util.prototype.remove_entity_prototype(data.raw.wall["stone-wall"])
 util.prototype.remove_entity_prototype(data.raw.gate.gate)
+

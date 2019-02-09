@@ -1,4 +1,4 @@
-local tf_require = function(str) return tf_require("data/entities/deploy_machine/"..str) end
+local require = function(str) return require("data/entities/deploy_machine/"..str) end
 
 local group =
 {
@@ -12,6 +12,6 @@ local group =
 --data:extend{group}
 
 
-tf_require("iron_deploy_machine")
---tf_require("bio_deploy_machine")
-tf_require("circuit_deploy_machine")
+require("iron_deploy_machine")
+--require("bio_deploy_machine")
+require("circuit_deploy_machine")

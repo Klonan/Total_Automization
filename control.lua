@@ -1,8 +1,3 @@
-tf_require = function(path)
-  local new = path:gsub("/", ".")
-  return require(new)
-end
-
 SU = function(v)
   return v  -- * settings.startup["game-speed"].value
 end
@@ -12,31 +7,31 @@ SD = function(v)
 end
 
 
-handler = tf_require("script/event_handler")
-names = tf_require("shared")
-util = tf_require("script/script_util")
+handler = require("script/event_handler")
+names = require("shared")
+util = require("script/script_util")
 
 --error(serpent.block(defines.events))
 
 local libs = {
-  debug = tf_require "script/debug",
-  unit_deployment = tf_require("script/unit_deployment"),
-  unit_control = tf_require "script/unit_control",
-  command_center = tf_require("script/command_center"),
-  killcam = tf_require("script/killcam"),
-  pvp_interface = tf_require("script/pvp_interface"),
-  auto_request = tf_require("script/auto_request"),
-  construction_done = tf_require("script/construction_drone"),
-  freeplay_interface = tf_require("script/freeplay_interface"),
-  --logistic_beacon = tf_require("script/logistic_beacon"),
-  --teleporters = tf_require "script/teleporters",
-  --setup = tf_require("script/setup"),
-  --classes = tf_require "script/classes/classes",
-  --stickybomb_launcher = tf_require "script/stickybomb_launcher",
-  --setup_time = tf_require("script/setup_time"),
-  --ammo_pack = tf_require("script/ammo_pack"),
-  --damage_indicator = tf_require("script/damage_indicator"),
-  --trade_chests = tf_require("script/trade_chests")
+  debug = require "script/debug",
+  unit_deployment = require("script/unit_deployment"),
+  unit_control = require "script/unit_control",
+  command_center = require("script/command_center"),
+  killcam = require("script/killcam"),
+  pvp_interface = require("script/pvp_interface"),
+  auto_request = require("script/auto_request"),
+  construction_done = require("script/construction_drone"),
+  freeplay_interface = require("script/freeplay_interface"),
+  --logistic_beacon = require("script/logistic_beacon"),
+  --teleporters = require "script/teleporters",
+  --setup = require("script/setup"),
+  --classes = require "script/classes/classes",
+  --stickybomb_launcher = require "script/stickybomb_launcher",
+  --setup_time = require("script/setup_time"),
+  --ammo_pack = require("script/ammo_pack"),
+  --damage_indicator = require("script/damage_indicator"),
+  --trade_chests = require("script/trade_chests")
 }
 
 

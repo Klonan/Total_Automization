@@ -1,4 +1,4 @@
-local teleporter_name = tf_require"shared".entities.teleporter
+local teleporter_name = require"shared".entities.teleporter
 
 local data =
 {
@@ -270,7 +270,7 @@ local on_gui_closed = function(event)
   if not (element and element.valid) then return end
 
   local frame = get_frame(element)
-  if frame and frame.valid then
+  if frame and frame.valid then 
     close_frame(frame)
     return
   end
@@ -280,7 +280,7 @@ local on_gui_closed = function(event)
     close_teleporter_frame(param)
     return
   end
-
+  
 end
 
 local on_player_removed = function(event)
@@ -290,8 +290,8 @@ local on_player_removed = function(event)
 
   --So, fuck knows anyway to check this is a proper gui element, just pcall some shit
   if not pcall(function() local check = frame.index end) then return end
-
-  if get_frame(frame) then
+  
+  if get_frame(frame) then 
     close_frame(frame)
     return
   end

@@ -30,7 +30,7 @@ end
 local sound = util.copy(unit.attack_parameters.sound)
 animation.layers[2].apply_runtime_tint = true
 unit.run_animation.layers[2].apply_runtime_tint = true
-unit.attack_parameters =
+unit.attack_parameters = 
 {
   animation = animation,
   sound = sound,
@@ -46,7 +46,7 @@ unit.attack_parameters =
   {
     category = "biological",
     target_type = "entity",
-    action =
+    action = 
     {
       type = "direct",
       action_delivery =
@@ -131,7 +131,7 @@ projectile.action =
   }
 }
 
-local animation =
+local animation = 
 {
   filename = path.."scatter_spitter_projectile.png",
   line_length = 4,
@@ -201,7 +201,7 @@ sticker.duration_in_ticks = SU(1 * 60)
 sticker.target_movement_modifier = 1
 sticker.damage_per_tick = {type = "acid", amount = SD(1)}
 sticker.stickers_per_square_meter = 15
-sticker.animation =
+sticker.animation = 
 {
   filename = path.."scatter_spitter_splash.png",
   priority = "extra-high",
@@ -215,7 +215,7 @@ sticker.animation =
   scale = 1
 }
 
-local animation =
+local animation = 
 {
   filename = path.."scatter_spitter_splash.png",
   priority = "extra-high",
@@ -235,7 +235,7 @@ local make_animation = function(scale, speed)
   return data
 end
 
-local splash =
+local splash = 
 {
   type = "explosion",
   name = name.." Splash",
@@ -277,7 +277,7 @@ local recipe = {
     {"sulfur", 40},
     {type = "fluid", name = "water", amount = 600}
   },
-  energy_tf_required = 35,
+  energy_required = 35,
   result = name
 }
 
@@ -290,3 +290,5 @@ data:extend
   --item,
   --recipe
 }
+
+

@@ -278,7 +278,7 @@ local recipe = {
     {"iron-gear-wheel", 10},
     {"explosives", 15}
   },
-  energy_tf_required = 25,
+  energy_required = 25,
   result = name
 }
 

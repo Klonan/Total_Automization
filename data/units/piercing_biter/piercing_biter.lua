@@ -32,7 +32,7 @@ end
 local sound = util.copy(unit.attack_parameters.sound)
 animation.layers[2].apply_runtime_tint = true
 unit.run_animation.layers[2].apply_runtime_tint = true
-unit.attack_parameters =
+unit.attack_parameters = 
 {
   type = "projectile",
   range = 2,
@@ -87,7 +87,7 @@ local recipe = {
     {names.items.biological_structure, 60},
     {type = "fluid", name = "crude-oil", amount = 1200}
   },
-  energy_tf_required = 50,
+  energy_required = 50,
   result = name
 }
 
@@ -97,3 +97,5 @@ data:extend
   --item,
   --recipe
 }
+
+

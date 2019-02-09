@@ -102,7 +102,7 @@ projectile.action =
     }
   }
 }
-projectile.final_action =
+projectile.final_action = 
 {
   type = "direct",
   action_delivery =
@@ -145,7 +145,7 @@ local recipe = {
     {"steel-plate", 15},
     {"copper-plate", 10}
   },
-  energy_tf_required = 25,
+  energy_required = 25,
   result = name
 }
 

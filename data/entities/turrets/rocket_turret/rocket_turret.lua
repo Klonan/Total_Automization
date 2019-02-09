@@ -74,7 +74,7 @@ local turret =
       }
     }
   },
-  call_for_help_radius = 40
+  call_for_help_radius = 40 
 }
 
 local particle_gfx = util.copy(data.raw.projectile["rocket"])
@@ -161,7 +161,7 @@ local recipe = {
     {"iron-gear-wheel", 50},
     {"explosives", 40},
   },
-  energy_tf_required = 5,
+  energy_required = 5,
   result = name
 }
 

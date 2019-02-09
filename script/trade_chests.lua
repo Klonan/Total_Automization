@@ -1,8 +1,8 @@
 --TODO, would need to be fixed for player specific GUI indices if we wanted to use this.
 
-local production_score = tf_require("production-score")
+local production_score = require("production-score")
 
-local data =
+local data = 
 {
   sell_chests = {},
   buy_chests = {},

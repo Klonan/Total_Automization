@@ -148,7 +148,7 @@ local recipe = {
     {"iron-gear-wheel", 5},
     {"electronic-circuit", 10},
   },
-  energy_tf_required = 1,
+  energy_required = 1,
   result = name
 }
 
@@ -266,7 +266,7 @@ local simple_storage_chest_recipe = {
     {"iron-chest", 1},
     {"electronic-circuit", 5},
   },
-  energy_tf_required = 0.5,
+  energy_required = 0.5,
   result = simple_storage_chest_name
 }
 
@@ -308,7 +308,7 @@ local simple_provider_chest_recipe = {
     {"iron-chest", 1},
     {"electronic-circuit", 5},
   },
-  energy_tf_required = 0.5,
+  energy_required = 0.5,
   result = simple_provider_chest_name
 }
 
@@ -411,7 +411,7 @@ local equipment_recipe = {
     {"iron-gear-wheel", 15},
     {"electronic-circuit", 25},
   },
-  energy_tf_required = 1,
+  energy_required = 1,
   result = equipment_name
 }
 

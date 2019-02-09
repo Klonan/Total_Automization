@@ -1,5 +1,5 @@
 local path = util.path("data/entities/auto_miner")
-local p_util = tf_require("data/tf_util/prototype_util")
+local p_util = require("data/tf_util/prototype_util")
 
 local old_name = "electric-mining-drill"
 local big_miner = data.raw["mining-drill"][old_name]
@@ -60,3 +60,4 @@ small_miner.vector_to_place_result = {-1, -2.15}
 --miner.radius_visualisation_picture.scale = 1
 
 --data:extend{miner, item, recipe}
+

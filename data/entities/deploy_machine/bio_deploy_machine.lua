@@ -16,7 +16,7 @@ machine.ingredient_count = 100
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 5}
 machine.flags = {"placeable-neutral", "player-creation"}
-machine.animation =
+machine.animation = 
 {
 north = graphics.animations[1],
 east = graphics.animations[2],
@@ -50,7 +50,7 @@ machine.scale_entity_info_icon = true
 local item = {
   type = "item",
   name = name,
-  icon = machine.icon,
+  icon = machine.icon,  
   icon_size = machine.icon_size,
   flags = {},
   subgroup = "bio-units",
@@ -64,7 +64,7 @@ local category = {
   name = name
 }
 
-local subgroup =
+local subgroup = 
 {
   type = "item-subgroup",
   name = "bio-units",
@@ -81,7 +81,7 @@ local recipe = {
   {
     {names.items.biological_structure, 120},
   },
-  energy_tf_required = 100,
+  energy_required = 100,
   result = name
 }
 

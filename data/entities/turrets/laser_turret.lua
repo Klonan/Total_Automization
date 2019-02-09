@@ -87,8 +87,9 @@ local recipe = {
     {"electronic-circuit", 20},
     {"battery", 20}
   },
-  energy_tf_required = 15,
+  energy_required = 15,
   result = name
 }
 
 data:extend{turret, beam, item, recipe}
+

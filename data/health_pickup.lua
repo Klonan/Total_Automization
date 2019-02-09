@@ -1,4 +1,4 @@
-local util = tf_require "util"
+local util = require "util"
 
 local health_pack = util.table.deepcopy(data.raw["land-mine"]["land-mine"])
 health_pack.name = "health-pack"
@@ -32,3 +32,4 @@ health_pack.action =
 health_pack.picture_set_enemy = health_pack.picture_set
 health_pack.order = "zzz"
 data:extend{health_pack}
+

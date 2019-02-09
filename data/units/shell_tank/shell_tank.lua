@@ -72,7 +72,7 @@ for k, layer in pairs (cannon_pictures.cannon_base_pictures.layers) do
   table.insert(sprite_base.animation.layers, layer)
 end
 
-local shifts = tf_require(path.."shell_tank_creation_parameters")
+local shifts = require(path.."shell_tank_creation_parameters")
 for k, shift in pairs (shifts) do
   shift[2][2] = shift[2][2] - 1.3
 end
@@ -389,7 +389,7 @@ local recipe = {
     {"explosives", 20},
     {"rocket-fuel", 5}
   },
-  energy_tf_required = 45,
+  energy_required = 45,
   result = name
 }
 

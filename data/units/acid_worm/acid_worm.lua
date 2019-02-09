@@ -30,7 +30,7 @@ local bot =
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 200,
+  max_health = 200, 
   healing_per_tick = SD(4/60),
   radar_range = 2,
   order="b-b-b",
@@ -148,7 +148,7 @@ stream.spine_animation = nil
 stream.smoke_sources = nil
 stream.target_position_deviation = 3
 
-local splash =
+local splash = 
 {
   type = "explosion",
   name = name.." Splash",
@@ -194,7 +194,7 @@ local recipe = {
     {names.items.biological_structure, 125},
     {type = "fluid", name = "sulfuric-acid", amount = 600}
   },
-  energy_tf_required = 75,
+  energy_required = 75,
   result = name
 }
 

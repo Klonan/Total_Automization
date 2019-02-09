@@ -1,4 +1,4 @@
-local util = tf_require("util")
+local util = require("util")
 
 local is_sprite_def = function(array)
   return array.width and array.height and (array.filename or array.stripes or array.filenames)
@@ -219,7 +219,7 @@ end
 
 util.copy = util.table.deepcopy
 
-util.prototype = tf_require("data/tf_util/prototype_util")
+util.prototype = require("data/tf_util/prototype_util")
 
 util.flying_unit_collision_mask = function()
   return {"not-colliding-with-itself", "layer-15"}
