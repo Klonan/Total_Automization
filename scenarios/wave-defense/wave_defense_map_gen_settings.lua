@@ -4,21 +4,21 @@ return function() return
   {
     coal =
     {
-      frequency = 2,
-      richness = 1,
-      size = 1
+      frequency = 1,
+      richness = 2,
+      size = 2
     },
     ["copper-ore"] =
     {
-      frequency = 2,
+      frequency = 1,
       richness = 2,
-      size = 0.5
+      size = 2
     },
     ["crude-oil"] =
     {
-      frequency = 3,
+      frequency = 10,
       richness = 2,
-      size = 0.5
+      size = 2
     },
     desert =
     {
@@ -46,9 +46,9 @@ return function() return
     },
     ["iron-ore"] =
     {
-      frequency = 2,
+      frequency = 1,
       richness = 2,
-      size = 0.5
+      size = 2
     },
     sand =
     {
@@ -58,9 +58,9 @@ return function() return
     },
     stone =
     {
-      frequency = 2,
+      frequency = 1,
       richness = 2,
-      size = 0.5
+      size = 2
     },
     trees =
     {
@@ -78,8 +78,8 @@ return function() return
   autoplace_settings = {},
   cliff_settings =
   {
-    cliff_elevation_0 = 13.333333015441895,
-    cliff_elevation_interval = 1.6666666269302368,
+    cliff_elevation_0 = 20,
+    cliff_elevation_interval = 2,
     name = "cliff"
   },
   height = 1024,

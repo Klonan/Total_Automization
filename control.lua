@@ -42,7 +42,7 @@ libs.debug.libs = libs
 
 local on_event = function(event)
   --local tick = game.tick
-  --log(tick.. " | Control on_event triggered")
+  --log(tick.. " | Control on_event triggered")s
   for name, lib in pairs (libs) do
     if lib.on_event then
       --log(tick.. " | Running on_Event for lib "..name)
@@ -63,7 +63,7 @@ local register_events = function(libraries)
         all_events[k][lib_name] = handler
       end
     else
-      error(lib_name.." needs to have a get events function cmon lets be reasonable now ok I know its some boiler plate etc. but its alright its more efficient")
+      --error(lib_name.." needs to have a get events function cmon lets be reasonable now ok I know its some boiler plate etc. but its alright its more efficient")
     end
   end
 

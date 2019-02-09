@@ -185,12 +185,13 @@ local default_respawn_items = function()
     ["firearm-magazine"] = 40,
     ["shotgun"] = 1,
     ["shotgun-shell"] = 20,
-    ["power-armor"] = 1,
-    ["construction-robot"] = 20,
-    ["fusion-reactor-equipment"] = 1,
+    ["construction-robot"] = 10,
+    ["modular-armor"] = 1,
     ["exoskeleton-equipment"] = 1,
-    ["personal-roboport-mk2-equipment"] = 1,
-    ["energy-shield-equipment"] = 1
+    ["personal-roboport-equipment"] = 1,
+    ["battery-equipment"] = 1,
+    ["solar-panel-equipment"] = 11,
+
   }
 end
 
@@ -247,7 +248,7 @@ local set_daytime_settings = function()
 end
 
 local max_seed = 2^32 - 2
-local initial_seed = 829296663 -- Something nice?
+local initial_seed = 1383170748 -- Something nice?
 
 local players = function(index)
   return (index and game.get_player(index)) or game.players
@@ -304,14 +305,17 @@ function set_tiles_safe(surface, tiles)
 end
 
 local set_up_player = function(player)
-
+  if not player.connected then return end
   gui_init(player)
+
+  if player.ticks_to_respawn then player.ticks_to_respawn = nil end
 
   if script_data.state == game_state.in_preview then
     if player.character then
       player.character.destroy()
     end
     player.spectator = true
+    player.teleport({0,0}, game.surfaces.nauvis)
     return
   end
 
@@ -385,13 +389,18 @@ local get_starting_area_radius = function()
 end
 
 function create_battle_surface(seed)
-  local name = "battle_surface"
+  local index = 1
+  local name = "Surface "
+  while game.surfaces[name..index] do
+    index = index + 1
+  end
+  name = name..index
   for k, surface in pairs (game.surfaces) do
     if surface.name ~= "nauvis" then
-      name = name..k
       game.delete_surface(surface.name)
     end
   end
+
   local settings = get_map_gen_settings()
   local seed = seed or get_random_seed()
   script_data.random = game.create_random_generator(seed)
@@ -536,7 +545,6 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_left) then
         insert(tiles, {name = tile_name, position = {position.x + 2, position.y}})
         insert(tiles, {name = tile_name, position = {position.x + 1, position.y}})
-        insert(tiles, {name = tile_name, position = {position.x, position.y}})
       end
       if should_gate[position.y % 32] then
         create_entity{name = gate_name, position = position, direction = 0, force = force, create_build_effect_smoke = false}
@@ -550,7 +558,6 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_right) then
         insert(tiles, {name = tile_name, position = {position.x - 2, position.y}})
         insert(tiles, {name = tile_name, position = {position.x - 1, position.y}})
-        insert(tiles, {name = tile_name, position = {position.x, position.y}})
       end
       if should_gate[position.y % 32] then
         create_entity{name = gate_name, position = position, direction = 0, force = force, create_build_effect_smoke = false}
@@ -564,7 +571,6 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_top) then
         insert(tiles, {name = tile_name, position = {position.x, position.y + 2}})
         insert(tiles, {name = tile_name, position = {position.x, position.y + 1}})
-        insert(tiles, {name = tile_name, position = {position.x, position.y + 0}})
       end
       if should_gate[position.x % 32] then
         create_entity{name = gate_name, position = position, direction = 2, force = force, create_build_effect_smoke = false}
@@ -578,7 +584,6 @@ function create_wall(starting_point)
       if (k ~= 1) and (k ~= #perimeter_bottom) then
         insert(tiles, {name = tile_name, position = {position.x, position.y - 2}})
         insert(tiles, {name = tile_name, position = {position.x, position.y - 1}})
-        insert(tiles, {name = tile_name, position = {position.x, position.y - 0}})
       end
       if should_gate[position.x % 32] then
         create_entity{name = gate_name, position = position, direction = 2, force = force, create_build_effect_smoke = false}
@@ -595,7 +600,7 @@ function create_turrets(starting_point)
   local turret_name = "gun-turret"
   if not game.entity_prototypes[turret_name] then return end
   local surface = script_data.surface
-  local ammo_name = --[["firearm-magazine"]]"uranium-rounds-magazine"
+  local ammo_name = "firearm-magazine"
   local direction = defines.direction
   local surface = script_data.surface
   local height = surface.map_gen_settings.height / 2
@@ -1000,7 +1005,10 @@ give_respawn_equipment = function(player)
       for prototype, count in pairs (list.equipment) do
         local equipment = prototype.place_as_equipment_result
         for k = 1, count do
-          if not grid.put{name = equipment.name} then
+          local equipment = grid.put{name = equipment.name}
+          if equipment then
+            equipment.energy = equipment.max_energy
+          else
             player.insert{name = prototype.name}
           end
         end
@@ -1566,11 +1574,7 @@ local end_round = function(player)
   local seed = script_data.surface.map_gen_settings.seed
   game.delete_surface(script_data.surface)
   create_battle_surface(script_data.surface.map_gen_settings.seed)
-  for k, player in pairs (players()) do
-    if player.character then player.character.destroy() end
-    player.teleport({0,0}, game.surfaces[1])
-    gui_init(player)
-  end
+  set_up_players()
 end
 
 local gui_functions =
