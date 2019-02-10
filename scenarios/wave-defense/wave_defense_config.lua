@@ -116,7 +116,7 @@ config.difficulties =
     starting_area_size = 1.8,
     day_settings =
     {
-      ticks_per_day = 27500,
+      ticks_per_day = 28000,
       dusk = 0.25,
       evening = 0.45,
       morning = 0.50,
@@ -152,17 +152,19 @@ config.difficulties =
     starting_area_size = 1.4,
     day_settings =
     {
-      ticks_per_day = 22500,
-      dusk = 0.2,
+      ticks_per_day = 22000,
+      dusk = 0.20,
       evening = 0.40,
-      morning = 0.6,
-      dawn = 0.75
+      morning = 0.60,
+      dawn = 0.80
     },
     starting_chest_items = default_starting_items(),
     respawn_items = default_respawn_items(),
     bounties = default_bounties(),
     unit_first_waves = default_unit_first_waves(),
-    wave_power_function = default_wave_power_function(),
+    wave_power_function = function(level)
+      return (level ^ 1.2) * 500
+    end,
     speed_multiplier_function = default_speed_multiplier_function()
   }
 

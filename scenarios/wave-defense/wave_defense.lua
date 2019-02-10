@@ -185,6 +185,7 @@ function start_round()
   script_data.spawn_time = floor(surface.ticks_per_day * (surface.morning - surface.evening))
   --First spawn
   script_data.wave_tick = tick + ceil(surface.ticks_per_day * surface.evening) + ceil((1 - surface.dawn) * surface.ticks_per_day)
+  script_data.dawn_tick = nil
   set_up_players()
   game.print({"start-round-message"})
 end
@@ -1425,7 +1426,7 @@ local gui_functions =
   refresh_button = function(event, param)
     local input = param.textfield
     if not (input and input.valid) then return end
-    local seed = input.text
+    local seed = tonumber(input.text)
     if is_reasonable_seed(seed) then
       create_battle_surface(seed)
     end
