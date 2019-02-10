@@ -40,9 +40,12 @@ local print = function(string)
   game.print(tick.." | "..string)
 end
 
+local insert = table.insert
 
 local distance = function(position_1, position_2)
-  return (((position_2.x - position_1.x) * (position_2.x - position_1.x)) + ((position_2.y - position_1.y) * (position_2.y - position_1.y))) ^ 0.5
+  local d_x = position_2.x - position_1.x
+  local d_y = position_2.y - position_1.y
+  return ((d_x * d_x) + (d_y * d_y)) ^ 0.5
 end
 
 local add_unit_indicators
@@ -56,7 +59,7 @@ local set_command = function(unit_data, command)
   unit_data.in_group = nil
   unit.speed = command.speed or unit.prototype.speed
   unit.ai_settings.path_resolution_modifier = command.path_resolution_modifier or -2
-  unit.ai_settings.do_separation = false
+  unit.ai_settings.do_separation = true
   unit.set_command(command)
   return add_unit_indicators(unit_data)
 end
@@ -69,15 +72,15 @@ local retry_command = function(unit_data)
 end
 
 local set_unit_idle
-
+local scout_queue = {command_type = next_command_type.scout}
 local set_scout_command = function(unit_data, failure, delay)
+  unit_data.command_queue = {scout_queue}
   local unit = unit_data.entity
   if unit.type ~= "unit" then return end
   if failure and unit_data.fail_count > 10 then
     unit_data.fail_count = nil
     return set_unit_idle(unit_data, true)
   end
-  unit_data.command_queue = {{command_type = next_command_type.scout}}
   if delay and delay > 0 then
     print("Unit was delayed for some ticks: "..delay)
     return set_command(unit_data,
@@ -260,7 +263,8 @@ add_unit_indicators = function(unit_data)
     })
     return
   end
-  local box = unit.prototype.collision_box
+  local prototype = unit.prototype
+  local box = prototype.collision_box
   insert(indicators,
   rendering.draw_rectangle
   {
@@ -268,38 +272,42 @@ add_unit_indicators = function(unit_data)
     width = 1,
     filled = false,
     left_top = unit,
-    left_top_offset = unit.prototype.selection_box.left_top,
+    left_top_offset = prototype.selection_box.left_top,
     right_bottom = unit,
-    right_bottom_offset = unit.prototype.selection_box.right_bottom,
+    right_bottom_offset = prototype.selection_box.right_bottom,
     surface = unit.surface,
     players = players
   })
 
-  insert(indicators,
-  rendering.draw_circle
-  {
-    color = {g = 0.1, b = 0.1, a = 0.1},
-    width = 4,
-    radius = unit.prototype.vision_distance,
-    filled = false,
-    target = unit,
-    surface = unit.surface,
-    draw_on_ground = true,
-    players = players
-  })
+  if prototype.vision_distance then
+    insert(indicators,
+    rendering.draw_circle
+    {
+      color = {g = 0.1, b = 0.1, a = 0.1},
+      width = 4,
+      radius = prototype.vision_distance,
+      filled = false,
+      target = unit,
+      surface = unit.surface,
+      draw_on_ground = true,
+      players = players
+    })
+  end
 
-  insert(indicators,
-  rendering.draw_circle
-  {
-    color = {r = 0.2, a = 0.1},
-    width = 4,
-    radius = get_attack_range(unit.prototype),
-    filled = false,
-    target = unit,
-    surface = unit.surface,
-    draw_on_ground = true,
-    players = players
-  })
+  if get_attack_range(prototype) then
+    insert(indicators,
+    rendering.draw_circle
+    {
+      color = {r = 0.2, a = 0.1},
+      width = 4,
+      radius = get_attack_range(prototype),
+      filled = false,
+      target = unit,
+      surface = unit.surface,
+      draw_on_ground = true,
+      players = players
+    })
+  end
 
   if unit_data.destination then
     insert(indicators,
@@ -466,10 +474,12 @@ local gui_actions =
       return
     end
     local append = event.shift
+    local hold_position_queue = {command_type = next_command_type.hold_position}
+    local units = data.units
     for unit_number, unit in pairs (group) do
-      local unit_data = data.units[unit_number]
+      local unit_data = units[unit_number]
       if append and not unit_data.idle then
-        table.insert(unit_data.command_queue, {command_type = next_command_type.hold_position})
+        table.insert(unit_data.command_queue, hold_position_queue)
       else
         set_command(unit_data, hold_position_command)
         set_unit_not_idle(unit_data)
@@ -483,15 +493,17 @@ local gui_actions =
       return
     end
     local append = event.shift
+    local idle_queue = {command_type = next_command_type.idle}
+    local units = data.units
     for unit_number, unit in pairs (group) do
-      local unit_data = data.units[unit_number]
+      local unit_data = units[unit_number]
       if append and not unit_data.idle then
-        table.insert(unit_data.command_queue, {command_type = next_command_type.idle})
+        insert(unit_data.command_queue, idle_queue)
       else
         set_unit_idle(unit_data, true)
       end
     end
-    game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+    game.get_player(event.player_index).play_sound({path = tool_names.unit_move_sound})
   end,
   scout_button = function(event)
     local group = get_selected_units(event.player_index)
@@ -499,16 +511,18 @@ local gui_actions =
       return
     end
     local append = event.shift
+    local scout_queue = {command_type = next_command_type.scout}
+    local units = data.units
     for unit_number, unit in pairs (group) do
-      local unit_data = data.units[unit_number]
+      local unit_data = units[unit_number]
       if append and not unit_data.idle then
-        table.insert(unit_data.command_queue, {command_type = next_command_type.scout})
+        insert(unit_data.command_queue, scout_queue)
       else
         set_scout_command(unit_data, false, unit_number % 120)
         set_unit_not_idle(unit_data)
       end
     end
-    game.players[event.player_index].play_sound({path = tool_names.unit_move_sound})
+    game.get_player(event.player_index).play_sound({path = tool_names.unit_move_sound})
   end,
   selected_units_button = function(event, action)
     local unit_name = action.unit
@@ -1308,7 +1322,7 @@ end
 process_command_queue = function(unit_data, result)
   local entity = unit_data.entity
   if not (entity and entity.valid) then
-    game.print("Entity is nil??")
+    game.print("Entity is nil?? Please save the game and report it to Klonan!")
     return
   end
   local failed = (result == defines.behavior_result.fail)
@@ -1327,7 +1341,7 @@ process_command_queue = function(unit_data, result)
   local next_command = command_queue[1]
 
   if not (next_command) then
-    entity.ai_settings.do_separation = false
+    entity.ai_settings.do_separation = true
     if not unit_data.idle then
       set_unit_idle(unit_data)
     end
@@ -1434,27 +1448,32 @@ local on_unit_deployed = function(event)
   local unit = event.unit
   local source = event.source
   if not (source and source.valid and unit and unit.valid) then return end
-
+  print("Unit deployed: "..unit.name)
   local source_data = data.units[source.unit_number]
   if not source_data then return end
+
+  print("Unit deployer source queue found: ")
+  print(serpent.block(source_data))
   local queue = source_data.command_queue
-  data.units[unit.unit_number] =
+  local unit_data =
   {
     entity = unit,
     command_queue = util.copy(queue),
     idle = true
   }
-  for k, command in pairs (data.units[unit.unit_number].command_queue) do
+  data.units[unit.unit_number] = unit_data
+  local r = source.get_radius() + unit.get_radius()
+  for k, command in pairs (unit_data.command_queue) do
     if command.command_type == next_command_type.move then
-      command.destination = {x = command.destination.x + math.random(-6, 6), y = command.destination.y + math.random(-6, 6)}
+      command.destination = {x = command.destination.x + math.random(-r, r), y = command.destination.y + math.random(-r, r)}
     end
     if command.command_type == next_command_type.patrol then
       for k, destination in pairs (command.destinations) do
-        destination = {x = destination.x + math.random(-6, 6), y = destination.y + math.random(-6, 6)}
+        destination = {x = destination.x + math.random(-r, r), y = destination.y + math.random(-r, r)}
       end
     end
   end
-  process_command_queue(data.units[unit.unit_number])
+  process_command_queue(unit_data)
 end
 
 local suicide = function(event)
@@ -1546,6 +1565,27 @@ local validate_some_stuff = function()
   end
 end
 
+local set_map_settings = function()
+  local settings = game.map_settings
+  settings.path_finder.max_steps_worked_per_tick = 10000
+  settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
+  settings.path_finder.short_request_max_steps = 200
+  settings.path_finder.min_steps_to_check_path_find_termination = 500
+  settings.path_finder.max_clients_to_accept_any_new_request = 1000
+  settings.path_finder.use_path_cache = false
+  settings.path_finder.short_cache_size = 0
+  settings.path_finder.long_cache_size = 0
+  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.default.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 0
+  settings.steering.moving.default = 0
+  settings.max_failed_behavior_count = 5
+  settings.steering.moving.force_unit_fuzzy_goto_behavior = true
+  settings.steering.moving.radius = 1
+  settings.steering.moving.separation_force = 0.1
+  settings.steering.moving.separation_factor = 1
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -1583,6 +1623,9 @@ remote.add_interface("unit_control", {
   set_debug = function(bool)
     data.debug = bool
   end,
+  set_map_settings = function()
+    set_map_settings()
+  end
 })
 
 local register_events = function()
@@ -1596,26 +1639,7 @@ local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
-  local settings = game.map_settings
-  --settings.path_finder.max_steps_worked_per_tick = 10000
-  --settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
-  --settings.path_finder.short_request_max_steps = 200
-  --settings.path_finder.min_steps_to_check_path_find_termination = 500
-  --settings.path_finder.max_clients_to_accept_any_new_request = 1000
-  --settings.path_finder.use_path_cache = false
-  --settings.path_finder.short_cache_size = 0
-  --settings.path_finder.long_cache_size = 0
-  --settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  --settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  --settings.steering.moving.radius = 0
-  --settings.steering.moving.default = 0
-  --settings.max_failed_behavior_count = 5
---
-  --settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  --settings.steering.moving.radius = 1
-  --settings.steering.moving.separation_force = 0.1
-  --settings.steering.moving.separation_factor = 1
---
+  --set_map_settings()
   register_events()
   unit_control.on_event = handler(events)
 end

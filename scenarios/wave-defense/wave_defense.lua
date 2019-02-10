@@ -1,6 +1,6 @@
 local util = require "util"
 local mod_gui = require "mod-gui"
-local get_map_gen_settings = require "wave_defense_map_gen_settings"
+local config = require "wave_defense_config"
 local increment = util.increment
 local format_number = util.format_number
 local format_time = util.formattime
@@ -16,187 +16,10 @@ local game_state =
   victory = 4
 }
 
-local difficulty =
-{
-  easy = 1,
-  medium = 2,
-  hard = 3,
-  expert = 4
-}
-
-local difficulty_variables =
-{
-  {
-    --easy
-    starting_area_size = 1.8,
-    day_settings =
-    {
-      ticks_per_day = 27500,
-      dusk = 0.25,
-      evening = 0.45,
-      morning = 0.50,
-      dawn = 0.70
-    },
-    starting_points =
-    {
-      {x = 512 - 128, y = 512 - 128},
-      {x = -512 + 128, y = 512 - 128},
-      {x = 512 - 128, y = -512 + 128},
-      {x = -512 + 128, y = -512 + 128}
-    }
-  },
-  {
-    --normal
-    starting_area_size = 1.6,
-    day_settings =
-    {
-      ticks_per_day = 25000,
-      dusk = 0.25,
-      evening = 0.45,
-      morning = 0.6,
-      dawn = 0.75
-    },
-    starting_points =
-    {
-      {x = 512 - 96, y = 512 - 96},
-      {x = -512 + 96, y = 512 - 96},
-      {x = 512 - 96, y = -512 + 96},
-      {x = -512 + 96, y = -512 + 96}
-    },
-
-  },
-  {
-    --hard
-    starting_area_size = 1.4,
-    day_settings =
-    {
-      ticks_per_day = 22500,
-      dusk = 0.2,
-      evening = 0.40,
-      morning = 0.6,
-      dawn = 0.75
-    },
-    starting_points =
-    {
-      {x = 512 - 64, y = 0},
-      {x = -512 + 64, y = 0},
-      {x = 0, y = -512 + 64},
-      {x = 0, y = 512 - 64}
-    },
-  },
-  {
-    --expert
-    starting_area_size = 1.2,
-    day_settings =
-    {
-      ticks_per_day = 20000,
-      dusk = 0.2,
-      evening = 0.4,
-      morning = 0.65,
-      dawn = 0.8
-    },
-    starting_points =
-    {
-      {x = 0, y = 0}
-    },
-  },
-
-}
-
-local unit_first_waves =
-{
-  ["small-biter"] =      0,
-  ["medium-biter"] =     6,
-  ["big-biter"] =        12,
-  ["behemoth-biter"] =   18,
-
-  ["small-spitter"] =    3,
-  ["medium-spitter"] =   9,
-  ["big-spitter"] =      15,
-  ["behemoth-spitter"] = 20
-}
-
-local bounties =
-{
-  ["small-biter"] = 25,
-  ["medium-biter"] = 125,
-  ["big-biter"] = 350,
-  ["behemoth-biter"] = 800,
-
-  ["small-spitter"] = 35,
-  ["medium-spitter"] = 140,
-  ["big-spitter"] = 400,
-  ["behemoth-spitter"] = 1000,
-
-  ["small-worm-turret"] = 50,
-  ["medium-worm-turret"] = 150,
-  ["big-worm-turret"] = 450,
-
-  ["biter-spawner"] = 1000,
-  ["spitter-spawner"] = 1500
-}
-
-local default_starting_items = function()
-  return
-  {
-    ["iron-plate"] = 200,
-    ["pipe"] = 200,
-    ["pipe-to-ground"] = 50,
-    ["copper-plate"] = 200,
-    ["steel-plate"] = 200,
-    ["iron-gear-wheel"] = 250,
-    ["transport-belt"] = 600,
-    ["underground-belt"] = 40,
-    ["splitter"] = 40,
-    ["gun-turret"] = 8,
-    ["stone-wall"] = 50,
-    ["repair-pack"] = 20,
-    ["inserter"] = 100,
-    ["burner-inserter"] = 50,
-    ["small-electric-pole"] = 50,
-    ["medium-electric-pole"] = 50,
-    ["big-electric-pole"] = 15,
-    ["burner-mining-drill"] = 50,
-    ["electric-mining-drill"] = 50,
-    ["stone-furnace"] = 35,
-    ["steel-furnace"] = 20,
-    ["electric-furnace"] = 8,
-    ["assembling-machine-1"] = 50,
-    ["assembling-machine-2"] = 20,
-    ["assembling-machine-3"] = 8,
-    ["electronic-circuit"] = 200,
-    ["fast-inserter"] = 100,
-    ["long-handed-inserter"] = 100,
-    ["substation"] = 10,
-    ["boiler"] = 10,
-    ["offshore-pump"] = 1,
-    ["steam-engine"] = 20,
-    ["chemical-plant"] = 20,
-    ["oil-refinery"] = 5,
-    ["pumpjack"] = 10,
-    ["small-lamp"] = 20
-  }
-end
-
-local default_respawn_items = function()
-  return
-  {
-    ["submachine-gun"] = 1,
-    ["firearm-magazine"] = 40,
-    ["shotgun"] = 1,
-    ["shotgun-shell"] = 20,
-    ["construction-robot"] = 10,
-    ["modular-armor"] = 1,
-    ["exoskeleton-equipment"] = 1,
-    ["personal-roboport-equipment"] = 1,
-    ["battery-equipment"] = 1,
-    ["solar-panel-equipment"] = 11,
-
-  }
-end
-
 local script_data =
 {
+  config = config,
+  difficulty = config.difficulties.normal,
   wave_number = 0,
   spawn_interval = {300, 500},
   bounty_bonus = 1,
@@ -223,25 +46,21 @@ local script_data =
   gui_actions = {},
   spawners = {},
   state = game_state.in_preview,
-  difficulty = difficulty.medium,
   random = nil,
   wave_tick = nil,
   spawn_time = nil,
   wave_time = nil,
-  starting_chest_items = default_starting_items(),
-  respawn_items = default_respawn_items()
 }
 
 
 local get_starting_point = function()
-  local points = difficulty_variables[script_data.difficulty].starting_points
-  return points[script_data.random(#points)]
+  return {x = 0, y = 0}
 end
 
 local set_daytime_settings = function()
   local surface = script_data.surface
   if not (surface and surface.valid) then return end
-  local settings = difficulty_variables[script_data.difficulty].day_settings
+  local settings = script_data.difficulty.day_settings
   for name, value in pairs (settings) do
     surface[name] = value
   end
@@ -384,8 +203,7 @@ local get_random_seed = function()
 end
 
 local get_starting_area_radius = function()
-  local settings = difficulty_variables[script_data.difficulty]
-  return settings.starting_area_size
+  return script_data.difficulty.starting_area_size
 end
 
 function create_battle_surface(seed)
@@ -401,7 +219,7 @@ function create_battle_surface(seed)
     end
   end
 
-  local settings = get_map_gen_settings()
+  local settings = script_data.config.map_gen_settings
   local seed = seed or get_random_seed()
   script_data.random = game.create_random_generator(seed)
   settings.seed = seed
@@ -705,7 +523,7 @@ end
 
 function create_starting_chest(starting_point)
   local force = game.forces.player
-  local inventory = script_data.starting_chest_items
+  local inventory = script_data.difficulty.starting_chest_items
   if not (table_size(inventory) > 0) then return end
   local surface = script_data.surface
   local chest_name = "iron-chest"
@@ -838,14 +656,13 @@ function get_spawn_chunks()
 end
 
 local get_wave_power = function()
-  local level = script_data.wave_number
-  return (level ^ 1.15) * 400
+  return script_data.difficulty.wave_power_function(script_data.wave_number)
 end
 
 function get_wave_units()
   local wave = script_data.wave_number
   local units = {}
-  for name, first_wave in pairs (unit_first_waves) do
+  for name, first_wave in pairs (script_data.difficulty.unit_first_waves) do
     if wave >= first_wave then
       insert(units, {name = name, amount = floor(((wave - first_wave) + 1) ^ 1.25)})
     end
@@ -856,7 +673,7 @@ end
 local get_speed_multiplier = function()
   local level = script_data.wave_number
   if level == 0 then return 0.8 end
-  return (level ^ 0.1) - 0.2
+  return script_data.difficulty.speed_multiplier_function(level)
 end
 
 function spawn_units()
@@ -903,7 +720,7 @@ function spawn_units()
   for k = 1, floor((1 + script_data.wave_number) ^ 0.5) do
     insert(some_spawns, spawns[random(spawns_count)])
   end
-  local prices = bounties
+  local prices = script_data.difficulty.bounties
   while units_length > 0 do
     local k = rand(units_length)
     local unit = units[k]
@@ -971,7 +788,7 @@ end
 local insert_items = util.insert_safe
 
 give_respawn_equipment = function(player)
-  local equipment = script_data.respawn_items
+  local equipment = script_data.difficulty.respawn_items
   local items = game.item_prototypes
   local list = {items = {}, armor, equipment = {}}
   for name, count in pairs (equipment) do
@@ -1049,15 +866,20 @@ function refresh_preview_gui(player)
   label.style.right_padding = 3
   if admin then
     local config = subheader.add{type = "drop-down"}
-    config.add_item({"easy"})
-    config.add_item({"medium"})
-    config.add_item({"hard"})
-    config.add_item({"expert"})
-    config.selected_index = script_data.difficulty
+    local count = 1
+    local index
+    for name, difficulty in pairs (script_data.config.difficulties) do
+      config.add_item{name}
+      if difficulty == script_data.difficulty then
+        index = count
+      end
+      count = count + 1
+    end
+    config.selected_index = index
     register_gui_action(config, {type = "difficulty_changed"})
   else
     local key
-    for k, value in pairs (difficulty) do
+    for k, value in pairs (script_data.config.difficulties) do
       if value == script_data.difficulty then key = k break end
     end
     subheader.add{type = "label", caption = {key}, style = "caption_label"}
@@ -1136,6 +958,16 @@ local admin_button_param =
   style = mod_gui.button_style
 }
 
+local add_admin_buttons = function(player)
+
+  if not player.admin then return end
+
+  local button_flow = mod_gui.get_button_flow(player)
+  local admin_button = button_flow.add(admin_button_param)
+  script_data.gui_elements.admin_frame_button[player.index] = admin_button
+  register_gui_action(admin_button, {type = "admin_button"})
+end
+
 local add_gui_buttons= function(player)
   local button_flow = mod_gui.get_button_flow(player)
 
@@ -1153,11 +985,7 @@ local add_gui_buttons= function(player)
     register_gui_action(upgrade_button, {type = "upgrade_button"})
   end
 
-  if player.admin then
-    local admin_button = button_flow.add(admin_button_param)
-    script_data.gui_elements.admin_frame_button[player.index] = admin_button
-    register_gui_action(admin_button, {type = "admin_button"})
-  end
+  add_admin_buttons(player)
 end
 
 local delete_game_gui = function(player)
@@ -1184,6 +1012,11 @@ function gui_init(player)
   if script_data.state == game_state.in_round then
     add_gui_buttons(player)
     toggle_wave_frame(player)
+    return
+  end
+
+  if script_data.state == game_state.defeat or script_data.state == game_state.victor then
+    add_admin_buttons(player)
     return
   end
 
@@ -1524,7 +1357,7 @@ local on_entity_died = function(event)
   local died = event.entity
   if not (died and died.valid) then return end
 
-  local bounty = bounties[died.name]
+  local bounty = script_data.difficulty.bounties[died.name]
   if bounty and (event.force and event.force.name == "player") then
     local cash = floor(bounty * script_data.bounty_bonus)
     increment(script_data, "money", cash)
@@ -1664,7 +1497,15 @@ local gui_functions =
     local gui = event.element
     if not (gui and gui.valid) then return end
     if not (event.name == defines.events.on_gui_selection_state_changed) then return end
-    script_data.difficulty = gui.selected_index
+    local selected = gui.selected_index
+    local index = 1
+    for name, difficulty in pairs (script_data.config.difficulties) do
+      if index == selected then
+        script_data.difficulty = difficulty
+        break
+      end
+      index = index + 1
+    end
     create_battle_surface(script_data.surface.map_gen_settings.seed)
   end
 }
@@ -1758,21 +1599,15 @@ local add_remote_interface = function()
   if remote.interfaces["wave-defense"] then return end
   remote.add("wave_defense",
   {
-    get_starting_chest_items = function()
-      return script_data.starting_chest_items
+    set_config = function(data)
+      if type(data) ~= "table" then
+        error("Data type for 'set_config' must be a table")
+      end
+      script_data.config = data
     end,
-    set_starting_chest_items = function(map)
-      if not is_valid_map(map) then error("Map for starting chest items is not a valid item map") end
-      script_data.starting_chest_items = map
-    end,
-    get_respawn_items = function()
-      return script_data.respawn_items
-    end,
-    set_respawn_items = function(map)
-      if not is_valid_map(map) then error("Map for respawn items is not a valid item map") end
-      script_data.respawn_items = map
-    end,
-
+    get_config = function()
+      return script_data.config
+    end
   }
   )
 end
