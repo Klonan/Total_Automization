@@ -20,7 +20,7 @@ local script_data =
 {
   config = config,
   difficulty = config.difficulties.normal,
-  wave_number = 0,
+  day_number = 1,
   spawn_interval = {300, 500},
   bounty_bonus = 1,
   skipped_multiplier = 0.1,
@@ -29,8 +29,7 @@ local script_data =
   gui_elements =
   {
     preview_frame = {},
-    wave_frame_button = {},
-    wave_frame = {},
+    day_button = {},
     upgrade_frame_button = {},
     upgrade_frame = {},
     upgrade_table = {},
@@ -41,7 +40,7 @@ local script_data =
   {
     money_label = {},
     time_label = {},
-    round_label = {}
+    day_label = {}
   },
   gui_actions = {},
   spawners = {},
@@ -179,7 +178,7 @@ function start_round()
   script_data.state = game_state.in_round
   local tick = game.tick
   script_data.money = 0
-  script_data.wave_number = 0
+  script_data.day_number = 1
   --How often waves are sent
   script_data.wave_time = surface.ticks_per_day
   --How long waves last
@@ -245,7 +244,7 @@ end
 function create_silo(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
-  local silo_position = {starting_point.x * 1.1, starting_point.y * 1.1}
+  local silo_position = {starting_point.x, starting_point.y - 16}
   --todo offset out of the way from the starting patches a bit
   local silo_name = "rocket-silo"
   if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
@@ -539,7 +538,7 @@ function create_starting_chest(starting_point)
     end
   end
   local size = math.ceil(prototype.radius * 2)
-  local origin = {x = starting_point.x, y = starting_point.y - 10}
+  local origin = {x = starting_point.x, y = starting_point.y + 8}
   local index = 1
   local position = {x = origin.x + get_chest_offset(index).x * size, y = origin.y + get_chest_offset(index).y * size}
   local chest = surface.create_entity{name = chest_name, position = position, force = force, create_build_effect_smoke = false}
@@ -573,23 +572,42 @@ function create_starting_chest(starting_point)
   set_tiles_safe(surface, tiles)
 end
 
+local make_dawn_tick = function()
+  local surface = script_data.surface
+  local current_daytime = surface.daytime
+  local dawn = surface.dawn
+  local diff = dawn - current_daytime
+  if diff < 0 then diff = diff + 1 end
+  local ticks = math.ceil(diff * surface.ticks_per_day)
+  script_data.dawn_tick = game.tick + ticks
+end
+
+local check_dawn = function(tick)
+  if not script_data.dawn_tick or tick < script_data.dawn_tick then return end
+  increment(script_data, "day_number")
+  game.print({"dawn-of-new-day", script_data.day_number})
+  update_label_list(script_data.gui_labels.day_label, {"current-day", script_data.day_number})
+  script_data.dawn_tick = nil
+end
+
 function check_next_wave(tick)
   if not script_data.wave_tick then return end
   if script_data.wave_tick ~= tick then return end
-  game.print({"next-wave"})
+  --game.print({"next-wave"})
   next_wave()
 end
 
 function next_wave()
-  increment(script_data, "wave_number")
-  update_label_list(script_data.gui_labels.round_label, {"current-wave", script_data.wave_number})
+  --increment(script_data, "day_number")
+  --update_label_list(script_data.gui_labels.day_label, {"current-day", script_data.day_number})
   make_next_wave_tick()
   make_next_spawn_tick()
+  make_dawn_tick()
   spawn_units()
 end
 
 function wave_end()
-  game.print({"wave-over"})
+  --game.print({"wave-over"})
   spawn_units()
   script_data.spawn_tick = nil
   script_data.end_spawn_tick = nil
@@ -656,11 +674,11 @@ function get_spawn_chunks()
 end
 
 local get_wave_power = function()
-  return script_data.difficulty.wave_power_function(script_data.wave_number)
+  return script_data.difficulty.wave_power_function(script_data.day_number)
 end
 
 function get_wave_units()
-  local wave = script_data.wave_number
+  local wave = script_data.day_number
   local units = {}
   for name, first_wave in pairs (script_data.difficulty.unit_first_waves) do
     if wave >= first_wave then
@@ -671,7 +689,7 @@ function get_wave_units()
 end
 
 local get_speed_multiplier = function()
-  local level = script_data.wave_number
+  local level = script_data.day_number
   if level == 0 then return 0.8 end
   return script_data.difficulty.speed_multiplier_function(level)
 end
@@ -717,7 +735,7 @@ function spawn_units()
     return {x, y}
   end
   local some_spawns = {}
-  for k = 1, floor((1 + script_data.wave_number) ^ 0.5) do
+  for k = 1, floor((1 + script_data.day_number) ^ 0.5) do
     insert(some_spawns, spawns[random(spawns_count)])
   end
   local prices = script_data.difficulty.bounties
@@ -781,7 +799,7 @@ function rocket_died(event)
   script_data.state = game_state.defeat
   script_data.silo = nil
   set_up_players()
-  game.print({"you-lose"})
+  game.print({"you-lose", script_data.day_number})
 
 end
 
@@ -934,12 +952,10 @@ function make_preview_gui(player)
   refresh_preview_gui(player)
 end
 
-local wave_button_param =
+local day_button_param =
 {
-  type = "sprite-button",
-  style = mod_gui.button_style,
-  sprite = "entity/behemoth-spitter",
-  tooltip = {"visibility-button-tooltip"}
+  type = "button",
+  ignored_by_interaction = true
 }
 
 local upgrade_button_param =
@@ -947,15 +963,12 @@ local upgrade_button_param =
   type = "button",
   caption = {"upgrade-button"},
   tooltip = {"upgrade-button-tooltip"},
-  style = mod_gui.button_style
 }
 
 local admin_button_param =
 {
   type = "button",
-  caption = {"admin"},
-  tooltip = {"upgrade-button-tooltip"},
-  style = mod_gui.button_style
+  caption = {"admin"}
 }
 
 local add_admin_buttons = function(player)
@@ -971,12 +984,13 @@ end
 local add_gui_buttons= function(player)
   local button_flow = mod_gui.get_button_flow(player)
 
-  local wave_button = script_data.gui_elements.wave_frame_button[player.index]
-  if not wave_button then
-    wave_button = button_flow.add(wave_button_param)
-    script_data.gui_elements.wave_frame_button[player.index] = wave_button
-    register_gui_action(wave_button, {type = "wave_frame_button"})
+  local day_button = script_data.gui_elements.day_button[player.index]
+  if not day_button then
+    day_button = button_flow.add(day_button_param)
+    script_data.gui_elements.day_button[player.index] = day_button
   end
+  day_button.caption = {"current-day", script_data.day_number}
+  insert(script_data.gui_labels.day_label, day_button)
 
   local upgrade_button = script_data.gui_elements.upgrade_frame_button[player.index]
   if not upgrade_button then
@@ -1011,7 +1025,6 @@ function gui_init(player)
 
   if script_data.state == game_state.in_round then
     add_gui_buttons(player)
-    toggle_wave_frame(player)
     return
   end
 
@@ -1023,42 +1036,6 @@ function gui_init(player)
 end
 
 local cash_font_color = {r = 0.8, b = 0.5, g = 0.8}
-local wave_frame =
-{
-  type = "frame",
-  caption = {"wave-frame"},
-  direction = "vertical"
-}
-
-function toggle_wave_frame(player)
-
-  local frame = script_data.gui_elements.wave_frame[player.index]
-
-  if (frame and frame.valid) then
-    deregister_gui(frame)
-    script_data.gui_elements.wave_frame[player.index] = nil
-    frame.destroy()
-    return
-  end
-
-  frame = mod_gui.get_frame_flow(player).add(wave_frame)
-  script_data.gui_elements.wave_frame[player.index] = frame
-
-  frame.style.vertically_stretchable = false
-
-  local round = frame.add{type = "label", caption = {"current-wave", script_data.wave_number}}
-  insert(script_data.gui_labels.round_label, round)
-
-  local time = frame.add{type = "label", caption = {"time-to-next-wave", time_to_next_wave()}}
-  insert(script_data.gui_labels.time_label, time)
-
-  local money_table = frame.add{type = "table", column_count = 2}
-  money_table.add{type = "label", name = "force_money_label", caption = {"force-money"}}
-  local cash = money_table.add{type = "label", caption = get_money()}
-  insert(script_data.gui_labels.money_label, cash)
-  cash.style.font_color = cash_font_color
-end
-
 
 local upgrade_frame = {type = "frame", caption = {"buy-upgrades"}, direction = "vertical"}
 function toggle_upgrade_frame(player)
@@ -1227,7 +1204,7 @@ function update_connected_players(tick)
     caption = {"time-to-next-wave", time_left}
   end
 
-  update_label_list(script_data.gui_labels.time_label, caption)
+  --update_label_list(script_data.gui_labels.time_label, caption)
 end
 
 local admin_frame_param =
@@ -1336,7 +1313,7 @@ local on_init = function()
 end
 
 local round_won = function()
-  game.print({"you-win"})
+  game.print({"you-win", script_data.day_number})
 end
 
 local spawner_died = function(event)
@@ -1412,27 +1389,8 @@ end
 
 local gui_functions =
 {
-  send_next_wave = function(event)
-    local element = event.element
-    if not (element and element.valid and element.enabled) then return end
-    if script_data.end_spawn_tick then return end
-    local player = players(event.player_index)
-    local skipped = floor(script_data.skipped_multiplier * (script_data.wave_tick - event.tick) * (1.15 ^ script_data.wave_number))
-    increment(script_data, "money", skipped)
-    update_label_list(script_data.gui_labels.money_label, get_money())
-    next_wave()
-    if player.name == "" then
-      game.print({"next-wave"})
-    else
-      game.print({"sent-next-wave", player.name})
-    end
-    update_connected_players()
-  end,
   upgrade_button = function(event)
     toggle_upgrade_frame(players(event.player_index))
-  end,
-  wave_frame_button = function(event)
-    toggle_wave_frame(players(event.player_index))
   end,
   admin_button = function(event)
     toggle_admin_frame(players(event.player_index))
@@ -1552,6 +1510,7 @@ local on_tick = function(event)
     check_spawn_units(tick)
     update_connected_players(tick)
     chart_base_area(tick)
+    check_dawn(tick)
     return
   end
 
