@@ -192,7 +192,8 @@ local make_unit_gui
 
 local clear_indicators = function(unit_data)
   if not unit_data.indicators then return end
-  for k, indicator in pairs (unit_data.indicators) do
+  local rendering = rendering
+  for indicator, bool in pairs (unit_data.indicators) do
     rendering.destroy(indicator)
   end
   unit_data.indicators = nil
@@ -234,8 +235,121 @@ local get_attack_range = function(prototype)
   return attack_parameters.range
 end
 
+local highlight_box = function(indicators, box_color, source, box, players, surface)
+  local draw_line = rendering.draw_line
+  local insert = insert
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.left_top.x, box.left_top.y},
+    to = source,
+    to_offset = {box.left_top.x, box.left_top.y + 0.2},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.left_top.x, box.left_top.y},
+    to = source,
+    to_offset = {box.left_top.x, box.left_top.y + 0.2},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.left_top.x, box.left_top.y},
+    to = source,
+    to_offset = {box.left_top.x + 0.2, box.left_top.y},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.right_bottom.x, box.left_top.y},
+    to = source,
+    to_offset = {box.right_bottom.x, box.left_top.y + 0.2},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.right_bottom.x, box.left_top.y},
+    to = source,
+    to_offset = {box.right_bottom.x - 0.2, box.left_top.y},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.left_top.x, box.right_bottom.y},
+    to = source,
+    to_offset = {box.left_top.x, box.right_bottom.y - 0.2},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.left_top.x, box.right_bottom.y},
+    to = source,
+    to_offset = {box.left_top.x + 0.2, box.right_bottom.y},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.right_bottom.x, box.right_bottom.y},
+    to = source,
+    to_offset = {box.right_bottom.x, box.right_bottom.y - 0.2},
+    surface = surface,
+    players = players
+  }] = true
+
+  indicators[draw_line
+  {
+    color = box_color,
+    width = 2,
+    from = source,
+    from_offset = {box.right_bottom.x, box.right_bottom.y},
+    to = source,
+    to_offset = {box.right_bottom.x - 0.2, box.right_bottom.y},
+    surface = surface,
+    players = players
+  }] = true
+end
+
 add_unit_indicators = function(unit_data)
   clear_indicators(unit_data)
+  --if true then return end
   local player
   if unit_data.player then
     player = game.players[unit_data.player]
@@ -252,20 +366,20 @@ add_unit_indicators = function(unit_data)
   local name = "highlight-box"
   local players = {player.index}
   if unit_data.in_group then
-    insert(indicators,
-    rendering.draw_text
+    indicators[rendering.draw_text
     {
       text="In group",
       surface=surface,
       target=unit,
       color={g = 0.5},
       scale_with_zoom=true
-    })
+    }] = true
     return
   end
+  local rendering = rendering
   local prototype = unit.prototype
   local box = prototype.collision_box
-  insert(indicators,
+  --[[insert(indicators,
   rendering.draw_rectangle
   {
     color = {g = 0.5, a = 0.5},
@@ -275,10 +389,14 @@ add_unit_indicators = function(unit_data)
     left_top_offset = prototype.selection_box.left_top,
     right_bottom = unit,
     right_bottom_offset = prototype.selection_box.right_bottom,
-    surface = unit.surface,
+    surface = surface,
     players = players
-  })
+  })]]
+  local box = prototype.selection_box
+  highlight_box(indicators, {g = 1}, unit, prototype.selection_box, players, surface)
+  --local highlight_box = function(indicators, box_color, source, box, players, surface)
 
+--[[
   if prototype.vision_distance then
     insert(indicators,
     rendering.draw_circle
@@ -308,10 +426,9 @@ add_unit_indicators = function(unit_data)
       players = players
     })
   end
-
+]]
   if unit_data.destination then
-    insert(indicators,
-    rendering.draw_line
+    indicators[rendering.draw_line
     {
       color = {b = 0.1, g = 0.5, a = 0.02},
       width = 1,
@@ -319,15 +436,14 @@ add_unit_indicators = function(unit_data)
       from = unit_data.destination,
       surface = unit.surface,
       players = players,
-      gap_length = 0.5,
+      gap_length = 1.5,
       dash_length = 0.5,
       draw_on_ground = true
-    })
+    }] = true
   end
 
   if unit_data.destination_entity and unit_data.destination_entity.valid then
-    insert(indicators,
-    rendering.draw_line
+    indicators[rendering.draw_line
     {
       color = {b = 0.1, g = 0.5, a = 0.02},
       width = 1,
@@ -338,15 +454,14 @@ add_unit_indicators = function(unit_data)
       gap_length = 0.5,
       dash_length = 0.5,
       draw_on_ground = true
-    })
+    }] = true
   end
 
   local position = unit_data.destination or unit.position
   for k, command in pairs (unit_data.command_queue) do
 
     if command.command_type == next_command_type.move then
-      insert(indicators,
-      rendering.draw_line
+      indicators[rendering.draw_line
       {
         color = {b = 0.1, g = 0.5, a = 0.02},
         width = 1,
@@ -357,7 +472,7 @@ add_unit_indicators = function(unit_data)
         gap_length = 0.5,
         dash_length = 0.5,
         draw_on_ground = true
-      })
+      }] = true
       position = command.destination
     end
 
@@ -365,8 +480,7 @@ add_unit_indicators = function(unit_data)
       for k = 1, #command.destinations do
         local to = command.destinations[k]
         local from = command.destinations[k + 1] or command.destinations[1]
-        insert(indicators,
-        rendering.draw_line
+        indicators[rendering.draw_line
         {
           color = {b = 0.5, g = 0.2, a = 0.05},
           width = 1,
@@ -377,14 +491,15 @@ add_unit_indicators = function(unit_data)
           gap_length = 0.5,
           dash_length = 0.5,
           draw_on_ground = true,
-        })
+        }] = true
       end
     end
 
   end
-
-  if unit_data.target and unit_data.target.valid then
-    insert(indicators,
+  local target = unit_data.target
+  if target and target.valid then
+    highlight_box(indicators, {r = 1}, target, target.prototype.selection_box, players, surface)
+    --[[insert(indicators,
     rendering.draw_line
     {
       color = {b = 0.1, r = 0.5, a = 0.02},
@@ -395,7 +510,7 @@ add_unit_indicators = function(unit_data)
       gap_length = 0.5,
       dash_length = 0.5,
       draw_on_ground = true
-    })
+    })]]
   end
 end
 
@@ -1640,7 +1755,7 @@ local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
-  --set_map_settings()
+  set_map_settings()
   register_events()
   unit_control.on_event = handler(events)
 end
