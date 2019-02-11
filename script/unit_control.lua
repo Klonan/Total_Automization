@@ -1685,7 +1685,7 @@ local on_entity_spawned = function(event)
   {
     entity = unit,
     command_queue = util.copy(queue),
-    idle = true
+    idle = false
   }
   data.units[unit.unit_number] = unit_data
   local r = source.get_radius() + unit.get_radius()
