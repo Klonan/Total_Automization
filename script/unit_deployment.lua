@@ -4,11 +4,6 @@ local data =
   tick_check = {}
 }
 
-local unit_deployment_events =
-{
-  on_unit_deployed = script.generate_event_name()
-}
-
 local names = names.deployers
 local units = names.units
 --todo allow other mods to add deployers
@@ -18,30 +13,32 @@ for k, deployer in pairs (names) do
 end
 
 local direction_enum = {
-  [defines.direction.north] = {0, -0.6},
-  [defines.direction.south] = {0, 0.6},
-  [defines.direction.east] = {0.6, 0},
-  [defines.direction.west] = {-0.6, 0}
+  [defines.direction.north] = {0, -1},
+  [defines.direction.south] = {0, 1},
+  [defines.direction.east] = {1, 0},
+  [defines.direction.west] = {-1, 0}
 }
 
-local deploy_unit = function(source, name, count)
-  local offset = direction_enum[source.direction]
+local deploy_unit = function(source, prototype, count)
+  if not (source and source.valid) then return end
+  local direction = source.direction
+  local offset = direction_enum[direction]
+  local name = prototype.name
+  local deploy_bounding_box = prototype.collision_box
   local bounding_box = source.bounding_box
-  local offset_x = offset[1] * (bounding_box.right_bottom.x - bounding_box.left_top.x)
-  local offset_y = offset[2] * (bounding_box.right_bottom.y - bounding_box.left_top.y)
+  local offset_x = offset[1] * ((bounding_box.right_bottom.x - bounding_box.left_top.x) / 2) + ((deploy_bounding_box.right_bottom.x - deploy_bounding_box.left_top.x) / 2)
+  local offset_y = offset[2] * ((bounding_box.right_bottom.y - bounding_box.left_top.y) / 2) + ((deploy_bounding_box.right_bottom.y - deploy_bounding_box.left_top.y) / 2)
   local position = {source.position.x + offset_x, source.position.y + offset_y}
   local surface = source.surface
   local force = source.force
   local deployed = 0
+  local can_place_entity = surface.can_place_entity
+  local find_non_colliding_position = surface.find_non_colliding_position
   for k = 1, count do
-    local deploy_position = surface.find_non_colliding_position(name, position, 8, 1)
-    if deploy_position then
-      local unit = surface.create_entity{name = name, position = deploy_position, force = force}
-      script.raise_event(unit_deployment_events.on_unit_deployed, {unit = unit, source = source})
-      deployed = deployed + 1
-    else
-      break
-    end
+    local deploy_position = can_place_entity{name = name, position = position, direction = direction, force = force, build_check_type = defines.build_check_type.manual} and position or find_non_colliding_position(name, position, 0, 1)
+    local unit = surface.create_entity{name = name, position = deploy_position, force = force, direction = direction}
+    script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
+    deployed = deployed + 1
   end
   return deployed
 end
@@ -71,9 +68,10 @@ local check_deployer = function(entity)
   local entities = game.entity_prototypes
   for name, count in pairs (contents) do
     --Simplified way for now, maybe map item to entity later...
-    if entities[name] then
-      deployed_count = deploy_unit(entity, name, count)
-      if deployed_count > 0 then
+    local prototype = entities[name]
+    if prototype then
+      deployed_count = deploy_unit(entity, prototype, count)
+      if deployed_count > 0 and entity.valid then
         entity.remove_item{name = name, count = deployed_count}
       end
     end
@@ -104,8 +102,6 @@ local events =
   [defines.events.on_robot_built_entity] = on_built_entity,
   [defines.events.on_tick] = on_tick
 }
-
-remote.add_interface("unit_deployment", {get_events = function() return util.copy(unit_deployment_events) end})
 
 local unit_deployment = {}
 

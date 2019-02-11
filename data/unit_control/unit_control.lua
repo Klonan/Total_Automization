@@ -26,6 +26,9 @@ local deploy_filter = {}
 for k, name in pairs (names.deployers) do
   table.insert(deploy_filter, name)
 end
+for name, prototype in pairs (data.raw["unit-spawner"]) do
+  table.insert(deploy_filter, name)
+end
 
 local deployer_selection_tool =
 {

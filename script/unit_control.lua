@@ -192,9 +192,9 @@ local make_unit_gui
 
 local clear_indicators = function(unit_data)
   if not unit_data.indicators then return end
-  local rendering = rendering
+  local destroy = rendering.destroy
   for indicator, bool in pairs (unit_data.indicators) do
-    rendering.destroy(indicator)
+    destroy(indicator)
   end
   unit_data.indicators = nil
 end
@@ -1559,38 +1559,6 @@ local on_tick = function(event)
   --check_indicators(event.tick)
 end
 
-local on_unit_deployed = function(event)
-  local unit = event.unit
-  local source = event.source
-  if not (source and source.valid and unit and unit.valid) then return end
-  print("Unit deployed: "..unit.name)
-  local source_data = data.units[source.unit_number]
-  if not source_data then return end
-
-  print("Unit deployer source queue found: ")
-  print(serpent.block(source_data))
-  local queue = source_data.command_queue
-  local unit_data =
-  {
-    entity = unit,
-    command_queue = util.copy(queue),
-    idle = true
-  }
-  data.units[unit.unit_number] = unit_data
-  local r = source.get_radius() + unit.get_radius()
-  for k, command in pairs (unit_data.command_queue) do
-    if command.command_type == next_command_type.move then
-      command.destination = {x = command.destination.x + math.random(-r, r), y = command.destination.y + math.random(-r, r)}
-    end
-    if command.command_type == next_command_type.patrol then
-      for k, destination in pairs (command.destinations) do
-        destination = {x = destination.x + math.random(-r, r), y = destination.y + math.random(-r, r)}
-      end
-    end
-  end
-  process_command_queue(unit_data)
-end
-
 local suicide = function(event)
   local group = get_selected_units(event.player_index)
   if not group then return end
@@ -1702,6 +1670,38 @@ local set_map_settings = function()
   --settings.steering.moving.separation_factor = 1
 end
 
+local on_entity_spawned = function(event)
+  local source = event.spawner
+  local unit = event.entity
+  if not (source and source.valid and unit and unit.valid) then return end
+  print("Unit deployed: "..unit.name)
+  local source_data = data.units[source.unit_number]
+  if not source_data then return end
+
+  print("Unit deployer source queue found: ")
+  print(serpent.block(source_data))
+  local queue = source_data.command_queue
+  local unit_data =
+  {
+    entity = unit,
+    command_queue = util.copy(queue),
+    idle = true
+  }
+  data.units[unit.unit_number] = unit_data
+  local r = source.get_radius() + unit.get_radius()
+  for k, command in pairs (unit_data.command_queue) do
+    if command.command_type == next_command_type.move then
+      command.destination = {x = command.destination.x + math.random(-r, r), y = command.destination.y + math.random(-r, r)}
+    end
+    if command.command_type == next_command_type.patrol then
+      for k, destination in pairs (command.destinations) do
+        destination = {x = destination.x + math.random(-r, r), y = destination.y + math.random(-r, r)}
+      end
+    end
+  end
+  return process_command_queue(unit_data)
+end
+
 local events =
 {
   [defines.events.on_player_selected_area] = on_player_selected_area,
@@ -1726,6 +1726,8 @@ local events =
   [defines.events.on_player_changed_surface] = on_player_removed,
   [defines.events.on_surface_deleted] = validate_some_stuff,
   [defines.events.on_surface_cleared] = validate_some_stuff,
+  [defines.events.on_entity_spawned] = on_entity_spawned
+
 
 }
 
@@ -1744,19 +1746,11 @@ remote.add_interface("unit_control", {
   end
 })
 
-local register_events = function()
-  if remote.interfaces["unit_deployment"] then
-    local unit_deployment_events = remote.call("unit_deployment", "get_events")
-    events[unit_deployment_events.on_unit_deployed] = on_unit_deployed
-  end
-end
-
 local unit_control = {}
 
 unit_control.on_init = function()
   global.unit_control = data
   set_map_settings()
-  register_events()
   unit_control.on_event = handler(events)
 end
 
@@ -1764,7 +1758,6 @@ unit_control.get_events = function() return events end
 
 unit_control.on_load = function()
   data = global.unit_control
-  register_events()
   unit_control.on_event = handler(events)
 end
 
