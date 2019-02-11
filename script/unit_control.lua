@@ -1566,6 +1566,7 @@ local validate_some_stuff = function()
 end
 
 local set_map_settings = function()
+  if remote.interfaces["wave_defense"] then return end
   local settings = game.map_settings
   settings.path_finder.max_steps_worked_per_tick = 10000
   settings.path_finder.start_to_goal_cost_multiplier_to_terminate_path_find = 1000
@@ -1577,13 +1578,13 @@ local set_map_settings = function()
   settings.path_finder.long_cache_size = 0
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
   settings.steering.default.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 0
-  settings.steering.moving.default = 0
+  --settings.steering.moving.radius = 0
+  --settings.steering.moving.default = 0
   settings.max_failed_behavior_count = 5
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
-  settings.steering.moving.radius = 1
-  settings.steering.moving.separation_force = 0.1
-  settings.steering.moving.separation_factor = 1
+  --settings.steering.moving.radius = 1
+  --settings.steering.moving.separation_force = 0.1
+  --settings.steering.moving.separation_factor = 1
 end
 
 local events =

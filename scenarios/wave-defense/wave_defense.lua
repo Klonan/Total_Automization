@@ -1556,7 +1556,7 @@ local is_valid_map = function(map)
 end
 
 local add_remote_interface = function()
-  if remote.interfaces["wave-defense"] then return end
+  --if remote.interfaces["wave_defense"] then return end
   remote.add("wave_defense",
   {
     set_config = function(data)
@@ -1602,11 +1602,13 @@ end
 
 lib.on_load = function()
   script_data = global.wave_defense or script_data
+  add_remote_interface()
 end
 
 lib.on_init = function()
   global.wave_defense = global.wave_defense or script_data
   on_init()
+  add_remote_interface()
 end
 
 lib.get_events = function()
