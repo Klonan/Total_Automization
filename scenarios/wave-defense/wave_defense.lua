@@ -1557,7 +1557,7 @@ end
 
 local add_remote_interface = function()
   --if remote.interfaces["wave_defense"] then return end
-  remote.add("wave_defense",
+  remote.add_interface("wave_defense",
   {
     set_config = function(data)
       if type(data) ~= "table" then
