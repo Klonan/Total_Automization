@@ -51,10 +51,18 @@ local script_data =
   wave_time = nil,
 }
 
-
 local get_starting_point = function()
   return {x = 0, y = 0}
 end
+
+local get_preview_size = function()
+  return 32 * 10
+end
+
+local script_events =
+{
+  on_round_started = script.generate_event_name()
+}
 
 local set_daytime_settings = function()
   local surface = script_data.surface
@@ -66,7 +74,7 @@ local set_daytime_settings = function()
 end
 
 local max_seed = 2^32 - 2
-local initial_seed = 1383170748 -- Something nice?
+local initial_seed = 1383170748
 
 local players = function(index)
   return (index and game.get_player(index)) or game.players
@@ -91,11 +99,10 @@ function register_gui_action(gui, param)
   player_gui_actions[gui.index] = param
 end
 
-function init_force(force)
-
+function init_force()
+  local force = game.forces.player
   set_research(force)
   set_recipes(force)
-  --force.friendly_fire = false
 
   for name, upgrade in pairs (get_upgrades()) do
     script_data.team_upgrades[name] = 0
@@ -187,7 +194,9 @@ function start_round()
   script_data.wave_tick = tick + ceil(surface.ticks_per_day * surface.evening) + ceil((1 - surface.dawn) * surface.ticks_per_day)
   script_data.dawn_tick = nil
   set_up_players()
+  init_force()
   game.print({"start-round-message"})
+  script.raise_event(script_events.on_round_started, {})
 end
 
 function restart_round()
@@ -202,8 +211,12 @@ local get_random_seed = function()
   return (32452867 * game.tick) % max_seed
 end
 
-local get_starting_area_radius = function()
+local get_starting_area_size = function()
   return script_data.difficulty.starting_area_size
+end
+
+local get_base_radius = function()
+  return (32 * (floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
 end
 
 function create_battle_surface(seed)
@@ -223,20 +236,21 @@ function create_battle_surface(seed)
   local seed = seed or get_random_seed()
   script_data.random = game.create_random_generator(seed)
   settings.seed = seed
-  settings.starting_area = get_starting_area_radius()
+  settings.starting_area = get_starting_area_size()
   local starting_point = get_starting_point()
   settings.starting_points = {starting_point}
   local surface = game.create_surface(name, settings)
-  local size = surface.get_starting_area_radius()
+  local size = get_preview_size()
   script_data.surface = surface
   set_daytime_settings()
-  surface.request_to_generate_chunks(starting_point, ceil(size / 32))
+  surface.request_to_generate_chunks(starting_point, ceil(get_base_radius() / 32))
   surface.force_generate_chunk_requests()
-  game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + size, starting_point.y + size}})
+  --Must force generate the starting chunks before placing the silo, walls etc.
   create_silo(starting_point)
   create_wall(starting_point)
   create_turrets(starting_point)
   create_starting_chest(starting_point)
+  game.forces.player.chart(surface, {{starting_point.x - size, starting_point.y - size},{starting_point.x + (size - 32), starting_point.y + (size - 32)}})
   for k, player in pairs (players()) do
     refresh_preview_gui(player)
   end
@@ -286,10 +300,6 @@ function create_silo(starting_point)
   end
 
   set_tiles_safe(surface, tiles_2)
-end
-
-local get_base_radius = function()
-  return (32 * (floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
 end
 
 local is_in_map = function(width, height, position)
@@ -615,7 +625,9 @@ function wave_end()
 end
 
 function make_next_spawn_tick()
-  script_data.spawn_tick = game.tick + script_data.random(script_data.spawn_interval[1], script_data.spawn_interval[2])
+  local interval = script_data.difficulty.spawn_interval
+  local addition = script_data.random(interval[1], interval[2])
+  script_data.spawn_tick = game.tick + addition
 end
 
 function check_spawn_units(tick)
@@ -918,7 +930,7 @@ function refresh_preview_gui(player)
     seed_flow.add{type = "label", style = "caption_label", caption = surface.map_gen_settings.seed}
   end
   local max = (math.min(player.display_resolution.width, player.display_resolution.height) / player.display_scale) * 0.75
-  local size = surface.get_starting_area_radius()
+  local size = get_preview_size()
   local position = player.force.get_spawn_position(surface)
   local minimap = inner.add
   {
@@ -956,7 +968,8 @@ end
 local day_button_param =
 {
   type = "button",
-  ignored_by_interaction = true
+  ignored_by_interaction = true,
+  style = mod_gui.button_style
 }
 
 local upgrade_button_param =
@@ -964,12 +977,14 @@ local upgrade_button_param =
   type = "button",
   caption = {"upgrade-button"},
   tooltip = {"upgrade-button-tooltip"},
+  style = mod_gui.button_style
 }
 
 local admin_button_param =
 {
   type = "button",
-  caption = {"admin"}
+  caption = {"admin"},
+  style = mod_gui.button_style
 }
 
 local add_admin_buttons = function(player)
@@ -1060,7 +1075,7 @@ function toggle_upgrade_frame(player)
   insert(script_data.gui_labels.money_label, cash)
   cash.style.font_color = {r = 0.8, b = 0.5, g = 0.8}
   local scroll = frame.add{type = "scroll-pane"}
-  scroll.style.maximal_height = 450
+  --scroll.style.natural_height = 450
   local upgrade_table = scroll.add{type = "table", column_count = 2}
   upgrade_table.style.horizontal_spacing = 0
   upgrade_table.style.vertical_spacing = 0
@@ -1083,31 +1098,18 @@ function update_upgrade_listing(player)
     register_gui_action(sprite, {type = "purchase_button", name = name})
     local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
     flow.style.horizontally_stretchable = true
-    flow.style.maximal_height = 75
-    local another_table = flow.add{type = "table", name = name.."_label_table", column_count = 1}
-    another_table.style.vertical_spacing = 2
-    local label = another_table.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
+    flow.style.vertically_stretchable = true
+    --flow.style.maximal_height = 75
+    local label = flow.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
     label.style.font = "default-bold"
-    local level = another_table.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
+    local level = flow.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
   end
 end
-
-upgrade_research =
-{
-  ["physical-projectile-damage"] = 2000,
-  ["stronger-explosives"] = 2000,
-  ["refined-flammables"] = 2000,
-  ["energy-weapons-damage"] = 2000,
-  ["weapon-shooting-speed"] = 2000,
-  ["laser-turret-speed"] = 2000,
-  ["follower-robot-count"] = 500,
-  ["mining-productivity"] = 750
-}
 
 function get_upgrades()
   local list = {}
   local tech = game.forces["player"].technologies
-  for name, price in pairs (upgrade_research) do
+  for name, price in pairs (script_data.config.upgrade_research) do
     local append = name.."-1"
     if tech[append] then
       local base = tech[append]
@@ -1161,9 +1163,8 @@ function get_upgrades()
   bonus.sprite = "technology/energy-shield-equipment"
   bonus.price = function(x) return floor((1 + x)) * 2500 end
   bonus.effect = {}
-  bonus.effect[1] =  function (event)
+  bonus.effect[1] =  function(event)
     increment(script_data, "bounty_bonus", 0.1)
-    increment(script_data.team_upgrades, "bounty_bonus")
     return true
   end
   bonus.caption = {"bounty-bonus"}
@@ -1243,6 +1244,8 @@ local toggle_admin_frame = function(player)
   end
   local gui = mod_gui.get_frame_flow(player)
   frame = gui.add(admin_frame_param)
+  frame.style.vertically_stretchable = false
+  frame.style.horizontally_stretchable = false
   script_data.gui_elements.admin_frame[player.index] = frame
   for k, button in pairs (admin_buttons) do
     local butt = frame.add(button.param)
@@ -1255,7 +1258,7 @@ end
 function set_research(force)
   force.research_all_technologies()
   local tech = force.technologies
-  for name in pairs (upgrade_research) do
+  for name in pairs (script_data.config.upgrade_research) do
     for i = 1, 20 do
       local full_name = name.."-"..i
       if tech[full_name] then
@@ -1310,7 +1313,6 @@ end
 
 local on_init = function()
   init_map_settings()
-  init_force(game.forces.player)
 end
 
 local round_won = function()
@@ -1505,7 +1507,6 @@ end
 
 local on_tick = function(event)
   local tick = event.tick
-
   if script_data.state == game_state.in_round then
     check_next_wave(tick)
     check_spawn_units(tick)
@@ -1513,6 +1514,13 @@ local on_tick = function(event)
     chart_base_area(tick)
     check_dawn(tick)
     return
+  end
+
+  
+  if script_data.state == game_state.in_preview then
+    if script_data.surface and script_data.surface.valid then
+      script_data.surface.force_generate_chunk_requests()
+    end
   end
 
 end
@@ -1556,20 +1564,22 @@ local is_valid_map = function(map)
 end
 
 local add_remote_interface = function()
-  --if remote.interfaces["wave_defense"] then return end
   remote.add_interface("wave_defense",
   {
     set_config = function(data)
       if type(data) ~= "table" then
         error("Data type for 'set_config' must be a table")
       end
+      log("Wave defense config set my remote call, can expect script errors after this point.")
       script_data.config = data
     end,
     get_config = function()
       return script_data.config
+    end,
+    get_events = function()
+      return script_events
     end
-  }
-  )
+  })
 end
 
 local events =
@@ -1588,8 +1598,7 @@ local events =
   [defines.events.on_player_promoted] = refresh_player_gui_event,
   [defines.events.on_player_display_resolution_changed] = refresh_player_gui_event,
   [defines.events.on_player_display_scale_changed] = refresh_player_gui_event,
-  [defines.events.on_player_demoted] = refresh_player_gui_event,
-
+  [defines.events.on_player_demoted] = refresh_player_gui_event
 }
 
 local lib = {}

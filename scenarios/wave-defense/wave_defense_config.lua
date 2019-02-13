@@ -109,11 +109,15 @@ local default_speed_multiplier_function = function()
   end
 end
 
+local default_spawn_interval = function()
+  return {300, 500}
+end
+
 config.difficulties =
 {
 
   easy = {
-    starting_area_size = 1.8,
+    starting_area_size = 2.25,
     day_settings =
     {
       ticks_per_day = 28000,
@@ -127,11 +131,12 @@ config.difficulties =
     bounties = default_bounties(),
     unit_first_waves = default_unit_first_waves(),
     wave_power_function = default_wave_power_function(),
-    speed_multiplier_function = default_speed_multiplier_function()
+    speed_multiplier_function = default_speed_multiplier_function(),
+    spawn_interval = default_spawn_interval()
   },
 
   normal = {
-    starting_area_size = 1.6,
+    starting_area_size = 1.75,
     day_settings =
     {
       ticks_per_day = 25000,
@@ -145,11 +150,12 @@ config.difficulties =
     bounties = default_bounties(),
     unit_first_waves = default_unit_first_waves(),
     wave_power_function = default_wave_power_function(),
-    speed_multiplier_function = default_speed_multiplier_function()
+    speed_multiplier_function = default_speed_multiplier_function(),
+    spawn_interval = default_spawn_interval()
   },
 
   hard = {
-    starting_area_size = 1.4,
+    starting_area_size = 1.5,
     day_settings =
     {
       ticks_per_day = 22000,
@@ -165,7 +171,8 @@ config.difficulties =
     wave_power_function = function(level)
       return (level ^ 1.2) * 500
     end,
-    speed_multiplier_function = default_speed_multiplier_function()
+    speed_multiplier_function = default_speed_multiplier_function(),
+    spawn_interval = default_spawn_interval()
   }
 
 }
@@ -269,6 +276,18 @@ config.map_gen_settings =
   terrain_segmentation = 2,
   water = 1.3,
   width = 1024
+}
+
+config.upgrade_research =
+{
+  ["physical-projectile-damage"] = 2000,
+  ["stronger-explosives"] = 2000,
+  ["refined-flammables"] = 2000,
+  ["energy-weapons-damage"] = 2000,
+  ["weapon-shooting-speed"] = 2000,
+  ["laser-turret-speed"] = 2000,
+  ["follower-robot-count"] = 500,
+  ["mining-productivity"] = 750
 }
 
 return config
