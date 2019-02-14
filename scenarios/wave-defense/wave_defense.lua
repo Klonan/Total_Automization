@@ -583,14 +583,18 @@ function create_starting_chest(starting_point)
   set_tiles_safe(surface, tiles)
 end
 
-local make_dawn_tick = function()
+local get_ticks_till_dawn = function()
   local surface = script_data.surface
   local current_daytime = surface.daytime
   local dawn = surface.dawn
   local diff = dawn - current_daytime
   if diff < 0 then diff = diff + 1 end
   local ticks = math.ceil(diff * surface.ticks_per_day)
-  script_data.dawn_tick = game.tick + ticks
+  return ticks
+end
+
+local make_next_dawn_tick = function()
+  script_data.dawn_tick = game.tick + get_ticks_till_dawn()
 end
 
 local check_dawn = function(tick)
@@ -613,7 +617,6 @@ function next_wave()
   --update_label_list(script_data.gui_labels.day_label, {"current-day", script_data.day_number})
   make_next_wave_tick()
   make_next_spawn_tick()
-  make_dawn_tick()
   spawn_units()
 end
 
@@ -1526,11 +1529,18 @@ local on_tick = function(event)
 end
 
 local oh_no_you_dont = {game_finished = false}
+
 local on_player_died = function(event)
-  if game.is_multiplayer() then return end
+  if not game.is_multiplayer() then 
+    game.set_game_state(oh_no_you_dont)
+  end
+  game.print("Player died")
   local player = players(event.player_index)
-  if not player then return end
-  game.set_game_state(oh_no_you_dont)
+  if not (player and player.valid) then return end
+  local surface = script_data.surface
+  if surface.daytime > surface.evening and surface.daytime < surface.dawn then
+    player.ticks_to_respawn = get_ticks_till_dawn()
+  end
 end
 
 local on_chunk_generated = function(event)
