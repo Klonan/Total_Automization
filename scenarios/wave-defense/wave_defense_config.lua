@@ -195,21 +195,9 @@ config.map_gen_settings =
     },
     ["crude-oil"] =
     {
-      frequency = 10,
+      frequency = 2,
       richness = 2,
       size = 2
-    },
-    desert =
-    {
-      frequency = 6,
-      richness = 1,
-      size = 0
-    },
-    dirt =
-    {
-      frequency = 6,
-      richness = 1,
-      size = 0
     },
     ["enemy-base"] =
     {
@@ -217,23 +205,11 @@ config.map_gen_settings =
       richness = 1,
       size = 1
     },
-    grass =
-    {
-      frequency = 6,
-      richness = 1,
-      size = 6
-    },
     ["iron-ore"] =
     {
       frequency = 1,
       richness = 2,
       size = 2
-    },
-    sand =
-    {
-      frequency = 6,
-      richness = 1,
-      size = 0
     },
     stone =
     {
@@ -257,13 +233,16 @@ config.map_gen_settings =
   autoplace_settings = {},
   cliff_settings =
   {
-    cliff_elevation_0 = 20,
-    cliff_elevation_interval = 2,
-    name = "cliff"
+    cliff_elevation_0 = 25,
+    cliff_elevation_interval = 20,
+    name = "cliff",
+    richness = 10
   },
-  height = 1024,
+  height = 2000000,
   property_expression_names =
-  {},
+  {
+    elevation = "0_17-island",
+  },
   research_queue_from_the_start = "after-victory",
   starting_area = 1.2,
   starting_points =
@@ -273,21 +252,21 @@ config.map_gen_settings =
       y = 0
     },
   },
-  terrain_segmentation = 2,
-  water = 1.3,
-  width = 1024
+  terrain_segmentation = 1,
+  water = 1,
+  width = 2000000
 }
 
 config.upgrade_research =
 {
-  ["physical-projectile-damage"] = 2000,
-  ["stronger-explosives"] = 2000,
-  ["refined-flammables"] = 2000,
-  ["energy-weapons-damage"] = 2000,
-  ["weapon-shooting-speed"] = 2000,
-  ["laser-turret-speed"] = 2000,
-  ["follower-robot-count"] = 500,
-  ["mining-productivity"] = 750
+  ["physical-projectile-damage"] = 2500,
+  ["stronger-explosives"] = 2500,
+  ["refined-flammables"] = 5000,
+  ["energy-weapons-damage"] = 2500,
+  ["weapon-shooting-speed"] = 2500,
+  ["laser-turret-speed"] = 2500,
+  ["follower-robot-count"] = 1000,
+  ["mining-productivity"] = 1000
 }
 
 return config

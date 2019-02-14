@@ -74,7 +74,7 @@ local set_daytime_settings = function()
 end
 
 local max_seed = 2^32 - 2
-local initial_seed = 1383170748
+local initial_seed = 3124436716
 
 local players = function(index)
   return (index and game.get_player(index)) or game.players
@@ -155,6 +155,7 @@ local set_up_player = function(player)
     player.teleport(spawn, surface)
     player.character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
     give_respawn_equipment(player)
+    player.print({"wave-defense-intro"})
     return
   end
 
@@ -193,9 +194,9 @@ function start_round()
   --First spawn
   script_data.wave_tick = tick + ceil(surface.ticks_per_day * surface.evening) + ceil((1 - surface.dawn) * surface.ticks_per_day)
   script_data.dawn_tick = nil
+  game.print({"start-round-message"})
   set_up_players()
   init_force()
-  game.print({"start-round-message"})
   script.raise_event(script_events.on_round_started, {})
 end
 
@@ -1162,12 +1163,12 @@ function get_upgrades()
     end
   end
   local bonus = {}
-  bonus.modifier = "+10%"
+  bonus.modifier = "+5%"
   bonus.sprite = "technology/energy-shield-equipment"
   bonus.price = function(x) return floor((1 + x)) * 2500 end
   bonus.effect = {}
   bonus.effect[1] =  function(event)
-    increment(script_data, "bounty_bonus", 0.1)
+    increment(script_data, "bounty_bonus", 0.05)
     return true
   end
   bonus.caption = {"bounty-bonus"}

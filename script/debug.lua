@@ -16,7 +16,7 @@ local get_position = function(n)
 end
 
 local on_player_created = function(event)
-
+  if true then return end
   local player = game.players[event.player_index]
   player.force = "player"
   --player.insert(names.entities.buy_chest)
