@@ -57,7 +57,7 @@ local get_starting_point = function()
 end
 
 local get_preview_size = function()
-  return 32 * 40
+  return 32 * 10
 end
 
 local script_events =
