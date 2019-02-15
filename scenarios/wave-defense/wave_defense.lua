@@ -44,6 +44,7 @@ local script_data =
   },
   gui_actions = {},
   spawners = {},
+  spawner_path_requests = {},
   state = game_state.in_preview,
   random = nil,
   wave_tick = nil,
@@ -56,7 +57,7 @@ local get_starting_point = function()
 end
 
 local get_preview_size = function()
-  return 32 * 10
+  return 32 * 40
 end
 
 local script_events =
@@ -101,12 +102,15 @@ end
 
 function init_force()
   local force = game.forces.player
+  force.reset()
   set_research(force)
   set_recipes(force)
 
   for name, upgrade in pairs (get_upgrades()) do
     script_data.team_upgrades[name] = 0
   end
+
+  force.disable_research()
 
 end
 
@@ -141,6 +145,7 @@ local set_up_player = function(player)
     end
     player.spectator = true
     player.teleport({0,0}, game.surfaces.nauvis)
+    player.set_controller{type = defines.controllers.spectator}
     return
   end
 
@@ -153,7 +158,8 @@ local set_up_player = function(player)
     local force = game.forces.player
     local spawn = force.get_spawn_position(surface)
     player.teleport(spawn, surface)
-    player.character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
+    local character = surface.create_entity{name = "player", position = surface.find_non_colliding_position("player", spawn, 0, 1), force = force}
+    player.set_controller{type = defines.controllers.character, character = character}
     give_respawn_equipment(player)
     player.print({"wave-defense-intro"})
     return
@@ -165,8 +171,8 @@ local set_up_player = function(player)
     end
     local surface = script_data.surface
     local force = game.forces.player
-    local position = script_data.silo and script_data.silo.valid and script_data.silo.position or force.get_spawn_position(surface)
-    player.set_controller({type = defines.controllers.spectator})
+    local position = force.get_spawn_position(surface)
+    player.set_controller{type = defines.controllers.spectator}
     player.teleport(position, surface)
     return
   end
@@ -933,23 +939,20 @@ function refresh_preview_gui(player)
   else
     seed_flow.add{type = "label", style = "caption_label", caption = surface.map_gen_settings.seed}
   end
-  local max = (math.min(player.display_resolution.width, player.display_resolution.height) / player.display_scale) * 0.75
   local size = get_preview_size()
+  local max = (math.min(size * 2, player.display_resolution.width * 0.8, player.display_resolution.height * 0.8) / player.display_scale)
+  local zoom = max / (size * 2)
   local position = player.force.get_spawn_position(surface)
   local minimap = inner.add
   {
     type = "minimap",
     surface_index = surface.index,
-    zoom = max / (size * 2),
+    zoom = zoom,
     force = player.force.name,
     position = position
   }
   minimap.style.natural_width = max
   minimap.style.natural_height = max
-  --minimap.style.top_margin = 0
-
-  --minimap.style.vertically_stretchable = true
-  --minimap.style.horizontally_stretchable = true
 
   local button_flow = frame.add{type = "flow"}
   button_flow.style.horizontal_align = "right"
@@ -964,6 +967,8 @@ function make_preview_gui(player)
   if not (frame and frame.valid) then
     frame = gui.add{type = "frame", caption = {"setup-frame"}, direction = "vertical"}
     frame.style.horizontal_align = "right"
+    frame.style.maximal_height = player.display_resolution.height / player.display_scale
+    frame.style.vertically_stretchable = true
     script_data.gui_elements.preview_frame[player.index] = frame
   end
   refresh_preview_gui(player)
@@ -1091,19 +1096,19 @@ function update_upgrade_listing(player)
   local gui = script_data.gui_elements.upgrade_table[player.index]
   if not (gui and gui.valid) then return end
   local upgrades = script_data.team_upgrades
-  local array = get_upgrades()
   gui.clear()
-  for name, upgrade in pairs (array) do
+  for name, upgrade in pairs (get_upgrades()) do
     local level = upgrades[name]
     local sprite = gui.add{type = "sprite-button", name = name, sprite = upgrade.sprite, tooltip = {"purchase"}, style = "play_tutorial_button"}
-    sprite.style.minimal_height = 75
-    sprite.style.minimal_width = 75
+    sprite.style.left_padding = 0
+    sprite.style.right_padding = 0
+    sprite.style.minimal_height = 60
+    sprite.style.minimal_width = 60
     sprite.number = upgrade.price(level)
     register_gui_action(sprite, {type = "purchase_button", name = name})
     local flow = gui.add{type = "frame", name = name.."_flow", direction = "vertical"}
     flow.style.horizontally_stretchable = true
     flow.style.vertically_stretchable = true
-    --flow.style.maximal_height = 75
     local label = flow.add{type = "label", name = name.."_name", caption = {"", upgrade.caption, " "..upgrade.modifier}}
     label.style.font = "default-bold"
     local level = flow.add{type = "label", name = name.."_level", caption = {"upgrade-level", level}}
@@ -1190,29 +1195,6 @@ function update_label_list(list, caption)
   end
 end
 
-function update_connected_players(tick)
-
-  if tick and tick % 60 ~= 0 then return end
-
-  local time_left
-  if script_data.spawn_tick then
-    time_left = time_to_wave_end()
-  elseif script_data.wave_tick then
-    time_left = time_to_next_wave()
-  else
-    time_left = "Somethings gone wrong here... ?"
-  end
-
-  local caption
-  if script_data.spawn_tick then
-    caption = {"time-to-wave-end", time_left}
-  elseif script_data.wave_tick then
-    caption = {"time-to-next-wave", time_left}
-  end
-
-  --update_label_list(script_data.gui_labels.time_label, caption)
-end
-
 local admin_frame_param =
 {
   type = "frame",
@@ -1230,10 +1212,10 @@ local admin_buttons =
     param = {type = "button", caption = {"restart-round"}},
     action = {type = "restart_round"}
   },
-  {
+  --[[{
     param = {type = "button", caption = "Dev only: Send wave"},
     action = {type = "send_wave"}
-  },
+  },]]
 
 }
 
@@ -1271,7 +1253,6 @@ function set_research(force)
     end
   end
   force.reset_technology_effects()
-  force.disable_research()
 end
 
 function set_recipes(force)
@@ -1317,6 +1298,7 @@ end
 
 local on_init = function()
   init_map_settings()
+  game.forces.player.disable_research()
 end
 
 local round_won = function()
@@ -1408,6 +1390,7 @@ local gui_functions =
     local upgrades = script_data.team_upgrades
     local player = players(event.player_index)
     local price = list[name].price(upgrades[name])
+
     if script_data.money < price then
       player.print({"not-enough-money"})
       return
@@ -1417,9 +1400,9 @@ local gui_functions =
     for k, effect in pairs (list[name].effect) do
       effect(event)
     end
+
     increment(script_data.team_upgrades, name)
     game.print({"purchased-team-upgrade", player.name, list[name].caption, upgrades[name]})
-    update_connected_players()
     for k, player in pairs (game.connected_players) do
       update_upgrade_listing(player)
     end
@@ -1511,16 +1494,15 @@ end
 
 local on_tick = function(event)
   local tick = event.tick
+
   if script_data.state == game_state.in_round then
     check_next_wave(tick)
     check_spawn_units(tick)
-    update_connected_players(tick)
     chart_base_area(tick)
     check_dawn(tick)
     return
   end
 
-  
   if script_data.state == game_state.in_preview then
     if script_data.surface and script_data.surface.valid then
       script_data.surface.force_generate_chunk_requests()
@@ -1532,7 +1514,7 @@ end
 local oh_no_you_dont = {game_finished = false}
 
 local on_player_died = function(event)
-  if not game.is_multiplayer() then 
+  if not game.is_multiplayer() then
     game.set_game_state(oh_no_you_dont)
   end
   game.print("Player died")
@@ -1545,33 +1527,35 @@ local on_player_died = function(event)
 end
 
 local on_chunk_generated = function(event)
-  local area = event.area
   local surface = event.surface
   if not (surface and surface.valid and surface == script_data.surface) then return end
+  local silo = script_data.silo
+  if not (silo and silo.valid) then return end
+  local area = event.area
+  local force = game.forces.enemy
+  local mask = {"colliding-with-tiles-only", "water-tile"}
+  local box = {{0,0},{0,0}}
+  local position = silo.position
+  local radius = get_base_radius()
+  local request_path = surface.request_path
   for k, spawner in pairs (surface.find_entities_filtered{area = area, type = "unit-spawner"}) do
-    script_data.spawners[spawner.unit_number] = spawner
-    rendering.draw_light
+    --So, we check that biters will even be able to get to the silo over water etc.
+    --If they can't they won't be a candidate for the spawning logic, or counted for the victory.
+    local key = request_path
     {
-      sprite = "utility/light_medium",
-      target = spawner,
-      surface = surface,
-      scale = 2,
-      intensity = 1,
-      color = {r = 0.5, a = 1}
+      bounding_box = box,
+      collision_mask = mask,
+      start = spawner.position,
+      goal = position,
+      radius = radius,
+      force = force
     }
+    script_data.spawner_path_requests[key] = spawner
   end
 end
 
 local refresh_player_gui_event = function(event)
   return gui_init(players(event.player_index))
-end
-
-local is_valid_map = function(map)
-  for string, number in pairs (map) do
-    if type(string) ~= "string" then return end
-    if type(number) ~= "number" then return end
-  end
-  return true
 end
 
 local add_remote_interface = function()
@@ -1581,7 +1565,7 @@ local add_remote_interface = function()
       if type(data) ~= "table" then
         error("Data type for 'set_config' must be a table")
       end
-      log("Wave defense config set my remote call, can expect script errors after this point.")
+      log("Wave defense config set by remote call, can expect script errors after this point.")
       script_data.config = data
     end,
     get_config = function()
@@ -1593,23 +1577,36 @@ local add_remote_interface = function()
   })
 end
 
+local on_script_path_request_finished = function(event)
+  local id = event.id
+  local spawner = script_data.spawner_path_requests[id]
+  if not (spawner and spawner.valid) then return end
+  if not event.path then
+    --pathing from the spawner to the silo failed, so we don't add it to our list of spawn/kill candidates.
+    return
+  end
+  script_data.spawners[spawner.unit_number] = spawner
+end
+
 local events =
 {
-  [defines.events.on_entity_died] = on_entity_died,
-  [defines.events.on_tick] = on_tick,
-  [defines.events.on_player_respawned] = on_player_respawned,
-  [defines.events.on_player_joined_game] = on_player_joined_game,
-  [defines.events.on_rocket_launched] = on_rocket_launched,
-  [defines.events.on_gui_text_changed] = generic_gui_event,
-  [defines.events.on_gui_click] = generic_gui_event,
-  [defines.events.on_gui_selection_state_changed] = generic_gui_event,
-  [defines.events.on_player_died] = on_player_died,
   [defines.events.on_chunk_generated] = on_chunk_generated,
+  [defines.events.on_entity_died] = on_entity_died,
+  [defines.events.on_gui_click] = generic_gui_event,
   [defines.events.on_gui_closed] = on_gui_closed,
-  [defines.events.on_player_promoted] = refresh_player_gui_event,
+  [defines.events.on_gui_selection_state_changed] = generic_gui_event,
+  [defines.events.on_gui_text_changed] = generic_gui_event,
+  [defines.events.on_player_demoted] = refresh_player_gui_event,
+  [defines.events.on_player_died] = on_player_died,
   [defines.events.on_player_display_resolution_changed] = refresh_player_gui_event,
   [defines.events.on_player_display_scale_changed] = refresh_player_gui_event,
-  [defines.events.on_player_demoted] = refresh_player_gui_event
+  [defines.events.on_player_joined_game] = on_player_joined_game,
+  [defines.events.on_player_promoted] = refresh_player_gui_event,
+  [defines.events.on_player_respawned] = on_player_respawned,
+  [defines.events.on_rocket_launched] = on_rocket_launched,
+  [defines.events.on_tick] = on_tick,
+  [defines.events.on_script_path_request_finished] = on_script_path_request_finished,
+
 }
 
 local lib = {}
