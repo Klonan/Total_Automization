@@ -1548,7 +1548,8 @@ local on_chunk_generated = function(event)
       start = spawner.position,
       goal = position,
       radius = radius,
-      force = force
+      force = force,
+      path_resolution_modifier = -1
     }
     script_data.spawner_path_requests[key] = spawner
   end
