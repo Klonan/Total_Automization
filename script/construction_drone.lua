@@ -1339,7 +1339,7 @@ local check_no_network_drones = function()
     index = index or next(drones)
     local drone = drones[index]
     if drone then
-      drone.surface.create_entity{name = "flying-text", text = "!", position = drone.position}
+      --drone.surface.create_entity{name = "flying-text", text = "!", position = drone.position}
       local old_index = index
       index = next(drones, index)
       drones[old_index] = nil
