@@ -31,6 +31,7 @@ machine.scale_entity_info_icon = true
 machine.always_draw_idle_animation = false
 machine.working_visualisations = nil
 machine.energy_source = {type = "void"}
+machine.is_deployer = true
 
 local item = {
   type = "item",

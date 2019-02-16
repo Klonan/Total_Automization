@@ -16,7 +16,6 @@ util = require("script/script_util")
 local libs = {
   debug = require "script/debug",
   unit_deployment = require("script/unit_deployment"),
-  unit_control = require "script/unit_control",
   command_center = require("script/command_center"),
   killcam = require("script/killcam"),
   pvp_interface = require("script/pvp_interface"),

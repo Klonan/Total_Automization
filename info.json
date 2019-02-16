@@ -6,6 +6,6 @@
   "contact": "",
   "homepage": "",
   "description": "Combat and battle overhaul mod",
-  "dependencies": ["base >= 0.17.0"],
+  "dependencies": ["base >= 0.17.0", "Unit_Control >= 0.1.0"],
   "factorio_version": "0.17"
 }

@@ -105,28 +105,7 @@ data.class_names =
 
 data.hotkeys =
 {
-  change_class = "Change class",
-  --unit_move = "Move unit",
-  suicide = "Suicide",
   shoo = "Shoo!"
-}
-
-data.unit_tools =
-{
-  unit_selection_tool = "Select units",
-  deployer_selection_tool = "Select deployers",
-  unit_move_tool = "Move to position",
-  unit_patrol_tool = "Add patrol waypoint",
-  unit_move_sound = "Unit move sound",
-  unit_attack_move_tool = "Attack move to position",
-  unit_attack_tool = "Attack targets",
-  unit_force_attack_tool = "Force attack targets",
-  unit_follow_tool = "Follow target",
-  move_indicator = "Move Indicator",
-  attack_move_indicator = "Attack Move Indicator",
-  unit_selection_sticker = "Unit Selection Sticker",
-  deployer_selection_sticker = "Deployer Selection Sticker",
-  enemy_selection_sticker = "Enemy Selection Sticker"
 }
 
 data.units =
