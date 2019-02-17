@@ -39,11 +39,11 @@ local bot =
   collision_mask = util.flying_unit_collision_mask(),
   render_layer = "air-object",
   max_pursue_distance = 64,
-  min_persue_time = SU(60 * 15),
+  min_persue_time = (60 * 15),
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
-  distraction_cooldown = SU(15),
+  distraction_cooldown = (15),
   move_while_shooting = true,
   can_open_gates = false,
   ai_settings =
@@ -56,7 +56,7 @@ local bot =
   {
     type = "beam",
     ammo_category = util.ammo_category(name),
-    cooldown = SU(100),
+    cooldown = (100),
     cooldown_deviation = 0.15,
     range = 32,
     min_attack_distance = 28,
@@ -76,7 +76,7 @@ local bot =
           type = "beam",
           beam = name.." Beam",
           max_length = 40,
-          duration = SU(40),
+          duration = (40),
           --source_offset = {0.15, -0.5},
         }
       }
@@ -97,7 +97,7 @@ local bot =
       { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
     },
     max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
+    probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
   dying_sound =
   {
@@ -115,7 +115,7 @@ local bot =
 
 local beam = util.copy(data.raw.beam["laser-beam"])
 beam.name = name.." Beam"
-beam.damage_interval = SU(20)
+beam.damage_interval = (20)
 beam.action =
 {
   type = "direct",

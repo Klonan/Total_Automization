@@ -24,11 +24,11 @@ local bot =
   healing_per_tick = 0,
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
-  min_persue_time = SU(60 * 15),
+  min_persue_time = (60 * 15),
   collision_box = {{-0.6, -0.6}, {0.6, 0.6}},
   selection_box = {{-0.8, -2.2}, {0.8, 0.4}},
   sticker_box = {{-0.3, -1.5}, {0.3, 0.2}},
-  distraction_cooldown = SU(15),
+  distraction_cooldown = (15),
   move_while_shooting = false,
   can_open_gates = true,
   ai_settings =
@@ -40,7 +40,7 @@ local bot =
   {
     type = "projectile",
     ammo_category = util.ammo_category(name),
-    cooldown = SU(125),
+    cooldown = (125),
     cooldown_deviation = 0.25,
     lead_target_for_projectile_speed = 0.5,
     range = 28,
@@ -72,8 +72,8 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = SD(0.1),
-          starting_speed_deviation = SD(0.05),
+          starting_speed = (0.1),
+          starting_speed_deviation = (0.05),
           --direction_deviation = 0.1,
           range_deviation = 0.1,
           max_range = 40
@@ -95,7 +95,7 @@ local bot =
   },
   vision_distance = 40,
   has_belt_immunity = true,
-  movement_speed = SD(0.15),
+  movement_speed = (0.15),
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
@@ -107,7 +107,7 @@ local bot =
       { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
     },
     max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
+    probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
   dying_sound =
   {
@@ -129,7 +129,7 @@ util.recursive_hack_scale(bot, 1.5)
 
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
-projectile.acceleration = SD(0.01)
+projectile.acceleration = (0.01)
 projectile.max_speed = 0.5
 projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
 projectile.force_condition = "not-same"

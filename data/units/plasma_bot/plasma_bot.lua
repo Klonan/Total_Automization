@@ -113,7 +113,7 @@ local bot =
       { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
     },
     max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
+    probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
   dying_sound =
   {
@@ -164,8 +164,8 @@ projectile.action =
     {
       type = "projectile",
       projectile = name.." Small Projectile",
-      starting_speed = SD(0.35),
-      starting_speed_deviation = SD(0.35),
+      starting_speed = (0.35),
+      starting_speed_deviation = (0.35),
     }
   }
 }
@@ -336,7 +336,7 @@ local splash =
       frame_count = 10,
       line_length = 5,
       shift = {-0.437, 0.5},
-      animation_speed = SD(0.35),
+      animation_speed = (0.35),
       blend_mode = "additive-soft",
       run_mode = "backward",
       scale = 1.5
@@ -353,7 +353,7 @@ local animation =
   frame_count = 10,
   line_length = 5,
   shift = {-0.437, 0.5},
-  animation_speed = SD(0.25),
+  animation_speed = (0.25),
   blend_mode = "additive-soft",
   run_mode = "backward",
   scale = 1

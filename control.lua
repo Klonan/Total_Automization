@@ -1,12 +1,3 @@
-SU = function(v)
-  return v  -- * settings.startup["game-speed"].value
-end
-
-SD = function(v)
-  return v -- / settings.startup["game-speed"].value
-end
-
-
 handler = require("script/event_handler")
 names = require("shared")
 util = require("script/script_util")
@@ -16,21 +7,7 @@ util = require("script/script_util")
 local libs = {
   debug = require "script/debug",
   unit_deployment = require("script/unit_deployment"),
-  command_center = require("script/command_center"),
   killcam = require("script/killcam"),
-  pvp_interface = require("script/pvp_interface"),
-  auto_request = require("script/auto_request"),
-  construction_done = require("script/construction_drone"),
-  freeplay_interface = require("script/freeplay_interface"),
-  --logistic_beacon = require("script/logistic_beacon"),
-  --teleporters = require "script/teleporters",
-  --setup = require("script/setup"),
-  --classes = require "script/classes/classes",
-  --stickybomb_launcher = require "script/stickybomb_launcher",
-  --setup_time = require("script/setup_time"),
-  --ammo_pack = require("script/ammo_pack"),
-  --damage_indicator = require("script/damage_indicator"),
-  --trade_chests = require("script/trade_chests")
 }
 
 

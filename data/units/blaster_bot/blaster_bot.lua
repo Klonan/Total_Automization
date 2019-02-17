@@ -114,7 +114,7 @@ local bot =
       { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
     },
     max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
+    probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
   dying_sound =
   {

@@ -114,9 +114,9 @@ end
 util.base_player = function()
 
   local player = util.table.deepcopy(data.raw.player.player or error("Wat man cmon why"))
-  player.ticks_to_keep_gun = SU(600)
-  player.ticks_to_keep_aiming_direction = SU(100)
-  player.ticks_to_stay_in_combat = SU(600)
+  player.ticks_to_keep_gun = (600)
+  player.ticks_to_keep_aiming_direction = (100)
+  player.ticks_to_stay_in_combat = (600)
   util.remove_flag(player, "not-flammable")
   return player
 end
@@ -182,7 +182,7 @@ end
 
 local base_speed = 0.25
 util.speed = function(multiplier)
-  return multiplier * SD(base_speed)
+  return multiplier * (base_speed)
 end
 
 util.remove_from_list = function(list, name)

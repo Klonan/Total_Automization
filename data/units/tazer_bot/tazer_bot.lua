@@ -46,7 +46,7 @@ local bot =
   selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
-  distraction_cooldown = SU(15),
+  distraction_cooldown = (15),
   move_while_shooting = true,
   can_open_gates = false,
   minable = {result = name, mining_time = 2},
@@ -58,7 +58,7 @@ local bot =
   {
     type = "beam",
     ammo_category = util.ammo_category(name),
-    cooldown = SU(150),
+    cooldown = (150),
     cooldown_deviation = 0.15,
     range = 20,
     min_attack_distance = 16,
@@ -75,7 +75,7 @@ local bot =
           beam = name.." Beam",
           add_to_shooter = false,
           max_length = 30,
-          duration = SU(45),
+          duration = (45),
           source_offset = {0, 0.5},
         }
       }
@@ -99,7 +99,7 @@ local bot =
       { filename = "__base__/sound/flying-robot-5.ogg", volume = 0.6 }
     },
     max_sounds_per_type = 3,
-    probability = SU(1 / (3 * 60)) -- average pause between the sound is 3 seconds
+    probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
   dying_sound =
   {
@@ -119,7 +119,7 @@ local beam = util.copy(data.raw.beam["electric-beam"])
 
 beam.name = name.." Beam"
 beam.localised_name = name.." Beam"
-beam.damage_interval = SU(45)
+beam.damage_interval = (45)
 --beam.random_target_offset = true
 beam.action =
 {
@@ -143,7 +143,7 @@ beam.action =
             beam = name.." Small Beam",
             add_to_shooter = false,
             max_length = 30,
-            duration = SU(45),
+            duration = (45),
             source_offset = {0, 0.5},
           }
         }
@@ -165,7 +165,7 @@ local small_beam = util.copy(beam)
 
 small_beam.name = name.." Small Beam"
 small_beam.localised_name = name.." Small Beam"
-small_beam.damage_interval = SU(45)
+small_beam.damage_interval = (45)
 small_beam.random_target_offset = true
 small_beam.action =
 {
@@ -190,9 +190,9 @@ small_beam.action =
 local sticker = util.copy(data.raw.sticker["fire-sticker"])
 sticker.name = name.." Sticker"
 
-sticker.duration_in_ticks = SU(2 * 60)
+sticker.duration_in_ticks = (2 * 60)
 sticker.target_movement_modifier = 0.66
-sticker.damage_per_tick = {type = "electric", amount = SD(0.25)}
+sticker.damage_per_tick = {type = "electric", amount = (0.25)}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0
@@ -202,7 +202,7 @@ sticker.animation =
   width = 37,
   height = 35,
   frame_count = 16,
-  animation_speed = SD(1)
+  animation_speed = (1)
 }
 sticker.stickers_per_square_meter = 15
 
