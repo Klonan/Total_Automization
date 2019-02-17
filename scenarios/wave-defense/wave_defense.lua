@@ -75,7 +75,7 @@ local set_daytime_settings = function()
 end
 
 local max_seed = 2^32 - 2
-local initial_seed = 3124436716
+local initial_seed = 2390375328
 
 local players = function(index)
   return (index and game.get_player(index)) or game.players
@@ -223,7 +223,7 @@ local get_starting_area_size = function()
 end
 
 local get_base_radius = function()
-  return (32 * (floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2^0.5))))
+  return (32 * (floor(((script_data.surface.get_starting_area_radius() / 32) - 1) / (2 ^ 0.5))))
 end
 
 function create_battle_surface(seed)
@@ -266,8 +266,7 @@ end
 function create_silo(starting_point)
   local force = game.forces.player
   local surface = script_data.surface
-  local silo_position = {starting_point.x, starting_point.y - 16}
-  --todo offset out of the way from the starting patches a bit
+  local silo_position = {starting_point.x, starting_point.y - 8}
   local silo_name = "rocket-silo"
   if not game.entity_prototypes[silo_name] then log("Silo not created as "..silo_name.." is not a valid entity prototype") return end
   local silo = surface.create_entity{name = silo_name, position = silo_position, force = force, raise_built = true, create_build_effect_smoke = false}
@@ -284,7 +283,6 @@ function create_silo(starting_point)
     silo.backer_name = ""
   end
   script_data.silo = silo
-  --force.set_spawn_position(silo.position, surface)
 
   local tile_name = "concrete"
   if not game.tile_prototypes[tile_name] then tile_name = get_walkable_tile() end
@@ -556,7 +554,7 @@ function create_starting_chest(starting_point)
     end
   end
   local size = math.ceil(prototype.radius * 2)
-  local origin = {x = starting_point.x, y = starting_point.y + 8}
+  local origin = {x = starting_point.x, y = starting_point.y + 4}
   local index = 1
   local position = {x = origin.x + get_chest_offset(index).x * size, y = origin.y + get_chest_offset(index).y * size}
   local chest = surface.create_entity{name = chest_name, position = position, force = force, create_build_effect_smoke = false}
@@ -654,36 +652,7 @@ function check_spawn_units(tick)
   end
 end
 
-local get_all_spawn_chunks = function()
-  local surface = script_data.surface
-  local force = game.forces.player
-  local check = force.is_chunk_charted
-  local height = surface.map_gen_settings.height / 2
-  local width = surface.map_gen_settings.width / 2
-  local positions = {}
-  for chunk in surface.get_chunks() do
-    local position = {x = (chunk.x * 32), y = (chunk.y * 32)}
-    if is_in_map(width, height, position) and not check(surface, chunk) then
-      insert(positions, position)
-    end
-  end
-
-  if #positions > 0 then
-    return positions
-  end
-
-  check = force.is_chunk_visible
-  for chunk in surface.get_chunks() do
-    local position = {x = (chunk.x * 32), y = (chunk.y * 32)}
-    if is_in_map(width, height, position) and not check(surface, chunk) then
-      insert(positions, position)
-    end
-  end
-
-  return positions
-end
-
-function get_spawn_chunks()
+function get_spawn_positions()
   local spawners = script_data.spawners
   local positions = {}
   for k, spawner in pairs (spawners) do
@@ -726,30 +695,27 @@ function spawn_units()
   {
     type = defines.command.compound,
     structure_type = defines.compound_command.return_last,
-    distraction = defines.distraction.by_anything,
     commands =
     {
       {
         type = defines.command.go_to_location,
         destination_entity = silo,
         distraction = defines.distraction.by_anything,
-        radius = 20,
-        pathfind_flags = path_find_flags
+        radius = get_base_radius(),
       },
       {
         type = defines.command.attack,
         target = silo,
-        distraction = defines.distraction.by_anything
+        distraction = defines.distraction.by_damage
       },
     }
   }
   local power = get_wave_power()
-  local spawns = get_spawn_chunks()
+  local spawns = get_spawn_positions()
   local spawns_count = #spawns
   if spawns_count == 0 then return end
   local units = get_wave_units()
   local units_length = #units
-  local unit_count = 0
   local random = script_data.random
   local random_chunk_position = function(spawns)
     local position = spawns[random(#spawns)]
@@ -762,6 +728,8 @@ function spawn_units()
     insert(some_spawns, spawns[random(spawns_count)])
   end
   local prices = script_data.difficulty.bounties
+  local find_non_colliding_position = surface.find_non_colliding_position
+  local create_entity = surface.create_entity
   while units_length > 0 do
     local k = rand(units_length)
     local unit = units[k]
@@ -772,26 +740,15 @@ function spawn_units()
         units_length = units_length - 1
         break
       else
-        local position = surface.find_non_colliding_position(unit.name, random_chunk_position(some_spawns), 16, 1.5)
+        local position = find_non_colliding_position(unit.name, random_chunk_position(some_spawns), 16, 1.5)
         if not position then return end
-        local entity = surface.create_entity{name = unit.name, position = position}
-        --rendering.draw_light
-        --{
-        --  sprite = "utility/light_small",
-        --  target = unit,
-        --  surface = unit.surface,
-        --  scale = 1,
-        --  intensity = 0.5,
-        --  color = {g = 1}
-        --}
+        local entity = create_entity{name = unit.name, position = position}
         local ai_settings = entity.ai_settings
         ai_settings.allow_try_return_to_spawner = false
         ai_settings.path_resolution_modifier = -2
-
-        entity.set_command(command)
         entity.speed = entity.speed * get_speed_multiplier()
+        entity.set_command(command)
         power = power - cost
-        unit_count = unit_count + 1
       end
     end
 
@@ -1281,9 +1238,12 @@ local init_map_settings = function()
   local settings = game.map_settings
   settings.pollution.enabled = false
   settings.enemy_expansion.enabled = false
-  settings.path_finder.use_path_cache = false
-  settings.path_finder.max_steps_worked_per_tick = 500
-  settings.path_finder.max_clients_to_accept_any_new_request = 100
+  settings.path_finder.use_path_cache = true
+  settings.path_finder.max_steps_worked_per_tick = 1000
+  settings.short_request_max_steps = 1000000
+  settings.short_request_ratio = 1
+  settings.path_finder.max_clients_to_accept_any_new_request = 1000000
+  settings.path_finder.short_cache_size = 50
 
   settings.steering.moving.force_unit_fuzzy_goto_behavior = true
   settings.steering.moving.radius = 6
@@ -1353,8 +1313,7 @@ local on_player_joined_game = function(event)
 end
 
 local on_player_respawned = function(event)
-  local player = players(event.player_index)
-  give_respawn_equipment(player)
+  give_respawn_equipment(players(event.player_index))
 end
 
 local is_reasonable_seed = function(string)
@@ -1537,6 +1496,11 @@ local on_chunk_generated = function(event)
   local box = {{0,0},{0,0}}
   local position = silo.position
   local radius = get_base_radius()
+  local flags =
+  {
+    cache = true,
+    low_priority = true
+  }
   local request_path = surface.request_path
   for k, spawner in pairs (surface.find_entities_filtered{area = area, type = "unit-spawner"}) do
     --So, we check that biters will even be able to get to the silo over water etc.
@@ -1549,7 +1513,8 @@ local on_chunk_generated = function(event)
       goal = position,
       radius = radius,
       force = force,
-      path_resolution_modifier = -1
+      path_resolution_modifier = -1,
+      pathfind_flags = flags
     }
     script_data.spawner_path_requests[key] = spawner
   end
@@ -1582,10 +1547,21 @@ local on_script_path_request_finished = function(event)
   local id = event.id
   local spawner = script_data.spawner_path_requests[id]
   if not (spawner and spawner.valid) then return end
+  if event.try_again_later then
+    --I tested it, and when they 'try again later', the game will send another event later. (So maybe its a bit pointless?).
+    return
+  end
   if not event.path then
     --pathing from the spawner to the silo failed, so we don't add it to our list of spawn/kill candidates.
     return
   end
+  --[[rendering.draw_text{
+    text = "Pathed",
+    surface = spawner.surface,
+    target = spawner,
+    color = {r = 1, g = 1},
+    scale_with_zoom = true,
+  }]]
   script_data.spawners[spawner.unit_number] = spawner
 end
 
@@ -1605,9 +1581,8 @@ local events =
   [defines.events.on_player_promoted] = refresh_player_gui_event,
   [defines.events.on_player_respawned] = on_player_respawned,
   [defines.events.on_rocket_launched] = on_rocket_launched,
-  [defines.events.on_tick] = on_tick,
   [defines.events.on_script_path_request_finished] = on_script_path_request_finished,
-
+  [defines.events.on_tick] = on_tick
 }
 
 local lib = {}

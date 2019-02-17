@@ -236,9 +236,9 @@ config.map_gen_settings =
     cliff_elevation_0 = 25,
     cliff_elevation_interval = 20,
     name = "cliff",
-    richness = 10
+    richness = 0.2
   },
-  height = 2000000,
+  height = 3072,
   property_expression_names =
   {
     elevation = "0_17-island",
@@ -254,7 +254,7 @@ config.map_gen_settings =
   },
   terrain_segmentation = 1,
   water = 1,
-  width = 2000000
+  width = 3072
 }
 
 config.upgrade_research =
