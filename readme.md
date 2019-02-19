@@ -1,5 +1,7 @@
 ## Total Automization
 
+![](thumbnail.png)
+
 --------------------------------------
 
 This mod adds units you can control in classic RTS fashion.
