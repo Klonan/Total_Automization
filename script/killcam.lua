@@ -4,6 +4,7 @@ local data =
 }
 
 local make_killcam = function(player, cause)
+  local scale = player.display_scale
   local gui = player.gui.center
   gui.clear()
   local name = cause.name
@@ -12,9 +13,10 @@ local make_killcam = function(player, cause)
   else
     name = game.entity_prototypes[name].localised_name
   end
+  
   local outer = gui.add{type = "frame", style = "image_frame"}
-  outer.style.width = player.display_resolution.width
-  outer.style.height = player.display_resolution.height
+  outer.style.width = player.display_resolution.width / scale
+  outer.style.height = player.display_resolution.height / scale
   outer.style.horizontal_align = "center"
   outer.style.vertical_align = "center"
 
@@ -23,8 +25,8 @@ local make_killcam = function(player, cause)
   frame.style.horizontally_stretchable = false
   frame.style.vertically_stretchable = false
   local camera = frame.add{type = "camera", position = cause.position, zoom = 1}
-  camera.style.width = math.floor(player.display_resolution.width * 0.8)
-  camera.style.height = math.floor(player.display_resolution.height * 0.8)
+  camera.style.width = math.floor(player.display_resolution.width * 0.8) / scale
+  camera.style.height = math.floor(player.display_resolution.height * 0.8) / scale
   local cams = data.killcams
   cams[player.index] = {gui = camera, cause = cause, frame = outer}
 end
