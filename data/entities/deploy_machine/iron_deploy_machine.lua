@@ -27,6 +27,7 @@ machine.fluid_boxes =
 }
 machine.scale_entity_info_icon = true
 machine.energy_source = {type = "void"}
+machine.is_deployer = true
 
 local item = {
   type = "item",
