@@ -5,16 +5,12 @@ util = require("script/script_util")
 --error(serpent.block(defines.events))
 
 local libs = {
-  debug = require "script/debug",
+  --debug = require "script/debug",
   unit_deployment = require("script/unit_deployment"),
   killcam = require("script/killcam"),
 }
 
-
-remote.add_interface("tf", {get = function(func) func(libs) end})
-remote.add_interface("debug", {dump = function() log(serpent.block(global)) end})
-
-libs.debug.libs = libs
+--libs.debug.libs = libs
 
 local on_event = function(event)
   --local tick = game.tick
