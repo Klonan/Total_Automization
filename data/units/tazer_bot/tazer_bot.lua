@@ -23,6 +23,7 @@ base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
 util.shift_layer(base.shadow_idle, shadow_shift)
 base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
 
+local attack_range = 10
 local bot =
 {
   type = "unit",
@@ -60,11 +61,11 @@ local bot =
     ammo_category = util.ammo_category(name),
     cooldown = (150),
     cooldown_deviation = 0.15,
-    range = 20,
-    min_attack_distance = 16,
+    range = attack_range,
+    min_attack_distance = attack_range - 3,
     ammo_type =
     {
-      category = "bullet",
+      category = util.ammo_category(name),
       action =
       {
         force = "not-same",
@@ -74,7 +75,7 @@ local bot =
           type = "beam",
           beam = name.." Beam",
           add_to_shooter = false,
-          max_length = 30,
+          max_length = attack_range  + 3,
           duration = (45),
           source_offset = {0, 0.5},
         }

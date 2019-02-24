@@ -22,6 +22,7 @@ base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
 util.shift_layer(base.shadow_idle, shadow_shift)
 base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
 
+local attack_range = 14
 local bot =
 {
   type = "unit",
@@ -59,8 +60,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = 45,
     cooldown_deviation = 0.5,
-    range = 24,
-    min_attack_distance = 18,
+    range = attack_range,
+    min_attack_distance = attack_range - 2,
     projectile_creation_distance = 1,
     lead_target_for_projectile_speed = 0.8,
     projectile_center = {0, 1.2},
@@ -94,7 +95,7 @@ local bot =
           starting_speed = 0.8,
           direction_deviation = 0.05,
           range_deviation = 0.05,
-          max_range = 28
+          max_range = attack_range + 2
           }
         }
       }

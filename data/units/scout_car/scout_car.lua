@@ -39,7 +39,7 @@ for k, layer in pairs (turret_base.layers) do
 end
 local path = util.path("data/units/scout_car/")
 
-
+local attack_range = 21
 local unit =
 {
   type = "unit",
@@ -76,9 +76,9 @@ local unit =
     ammo_category = "bullet",
     cooldown = (100),
     cooldown_deviation = 0.1,
-    range = 30,
+    range = attack_range,
     lead_target_for_projectile_speed = 1,
-    min_attack_distance = 25,
+    min_attack_distance = attack_range - 3,
     projectile_creation_distance = 1.5,
     sound =
     {
@@ -127,7 +127,7 @@ local unit =
               direction_deviation = 0.1,
               --range_deviation = 0.05,
               --starting_frame_deviation = 5,
-              max_range = 30
+              max_range = attack_range + 3
             },
             {
               type = "instant",

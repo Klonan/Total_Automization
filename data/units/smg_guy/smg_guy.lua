@@ -5,6 +5,7 @@ local base = util.copy(data.raw.player.player)
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
 --  layer.frame_count = 1
 --end
+local attack_range = 16
 local bot =
 {
   type = "unit",
@@ -42,8 +43,8 @@ local bot =
     ammo_category = "bullet",
     cooldown = 15,
     cooldown_deviation = 0.5,
-    range = 24,
-    min_attack_distance = 18,
+    range = attack_range,
+    min_attack_distance = attack_range - 2,
     projectile_creation_distance = 0.5,
     lead_target_for_projectile_speed = 1,
     sound =
@@ -83,7 +84,7 @@ local bot =
           starting_speed_deviation = 0.05,
           direction_deviation = 0.1,
           range_deviation = 0.1,
-          max_range = 28
+          max_range = attack_range + 2,
           },
           {
             type = "instant",

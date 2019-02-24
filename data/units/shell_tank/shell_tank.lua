@@ -76,7 +76,7 @@ local shifts = require(path.."shell_tank_creation_parameters")
 for k, shift in pairs (shifts) do
   shift[2][2] = shift[2][2] - 1.3
 end
-
+local attack_range = 36
 local unit =
 {
   type = "unit",
@@ -114,8 +114,8 @@ local unit =
     warmup = (30),
     cooldown = (145),
     cooldown_deviation = 0.1,
-    range = 56,
-    min_attack_distance = 40,
+    range = attack_range,
+    min_attack_distance = attack_range - 8,
     lead_target_for_projectile_speed = 1,
     --projectile_creation_distance = 1.5,
     --projectile_center = {0, -1.5},
