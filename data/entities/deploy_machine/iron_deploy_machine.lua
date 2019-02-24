@@ -1,7 +1,7 @@
 local machine = util.copy(data.raw["assembling-machine"]["assembling-machine-3"])
 local name = names.deployers.iron_unit
 machine.name = name
-machine.localised_name = name
+machine.localised_name = {name}
 local scale = 2
 util.recursive_hack_make_hr(machine)
 util.recursive_hack_scale(machine, scale)
@@ -57,7 +57,7 @@ local subgroup =
 local recipe = {
   type = "recipe",
   name = name,
-  localised_name = name,
+  localised_name = {name},
   enabled = false,
   ingredients =
   {
@@ -74,7 +74,7 @@ local technology_name = names.technologies.iron_units
 local technology_1 = {
   type = "technology",
   name = technology_name,
-  localised_name = technology_name,
+  localised_name = {technology_name},
   localised_description = "",
   icon_size = machine.icon_size,
   icon = machine.icon,

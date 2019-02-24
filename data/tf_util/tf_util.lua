@@ -145,14 +145,14 @@ end
 
 util.damage_type = function(name)
   if not data.raw["damage-type"][name] then
-    data:extend{{type = "damage-type", name = name, localised_name = name}}
+    data:extend{{type = "damage-type", name = name, localised_name = {name}}}
   end
   return name
 end
 
 util.ammo_category = function(name)
   if not data.raw["ammo-category"][name] then
-    data:extend{{type = "ammo-category", name = name, localised_name = name}}
+    data:extend{{type = "ammo-category", name = name, localised_name = {name}}}
   end
   return name
 end
@@ -161,7 +161,7 @@ util.base_gun = function(name)
   return
   {
     name = name,
-    localised_name = name,
+    localised_name = {name},
     type = "gun",
     stack_size = 1,
     flags = {}
@@ -172,7 +172,7 @@ util.base_ammo = function(name)
   return
   {
     name = name,
-    localised_name = name,
+    localised_name = {name},
     type = "ammo",
     stack_size = 1,
     magazine_size = 1,

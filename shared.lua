@@ -4,35 +4,31 @@ local data = {}
 
 data.hotkeys =
 {
-  shoo = "Shoo!"
+  shoo = "shoo"
 }
 
 data.units =
 {
-  tazer_bot = "Tazer Bot",
-  blaster_bot = "Blaster Bot",
-  laser_bot = "Laser Bot",
-  plasma_bot = "Plasma Bot",
-  scatter_spitter = "Scatter Spitter",
-  smg_guy = "SMG Guy",
-  rocket_guy = "Rocket Guy",
-  scout_car = "Scout Car",
-  acid_worm = "Acid Worm",
-  beetle = "Beetle",
-  piercing_biter = "Piercing Biter",
-  shell_tank = "Shell Tank",
+  tazer_bot = "tazer-bot",
+  blaster_bot = "blaster-bot",
+  laser_bot = "laser-bot",
+  plasma_bot = "plasma-bot",
+  smg_guy = "smg-guy",
+  rocket_guy = "rocket-guy",
+  scout_car = "scout-car",
+  shell_tank = "shell-tank",
 }
 
 data.technologies =
 {
-  iron_units = "Iron Units",
-  circuit_units = "Circuit Units",
+  iron_units = "iron-units",
+  circuit_units = "circuit-units",
 }
 
 data.deployers =
 {
-  iron_unit = "Iron Unit Deployer",
-  circuit_unit = "Circuit Unit Deployer"
+  iron_unit = "iron-unit-deployer",
+  circuit_unit = "circuit-unit-deployer"
 }
 
 return data
