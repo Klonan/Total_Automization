@@ -13,7 +13,7 @@ local bot =
   localised_name = {name},
   icon = "__base__/graphics/icons/player.png",
   icon_size = 32,
-  flags = {"player-creation"},
+  flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 80,
@@ -27,6 +27,14 @@ local bot =
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
+  resistances =
+  {
+    {
+      type = "acid",
+      decrease = 2,
+      percent = 40
+    }
+  },
   min_persue_time = 60 * 15,
   selection_box = {{-0.5, -1.6}, {0.5, 0.3}},
   sticker_box = {{-0.3, -1}, {0.2, 0.3}},

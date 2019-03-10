@@ -13,7 +13,7 @@ local bot =
   localised_name = {name},
   icon = path.."rocket_guy_icon.png",
   icon_size = 107,
-  flags = {"player-creation"},
+  flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 140,
@@ -31,6 +31,14 @@ local bot =
   distraction_cooldown = (15),
   move_while_shooting = false,
   can_open_gates = true,
+  resistances =
+  {
+    {
+      type = "acid",
+      decrease = 5,
+      percent = 50
+    }
+  },
   ai_settings =
   {
     do_separation = true
