@@ -16,7 +16,7 @@ local bot =
   flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 140,
+  max_health = 240,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -48,9 +48,10 @@ local bot =
   {
     type = "projectile",
     ammo_category = util.ammo_category(name),
-    cooldown = (125),
+    warmup = 15,
+    cooldown = (105),
     cooldown_deviation = 0.25,
-    lead_target_for_projectile_speed = 0.5,
+    --lead_target_for_projectile_speed = 0.5,
     range = attack_range,
     min_attack_distance = attack_range - 3,
     projectile_creation_distance = 0.5,
@@ -71,7 +72,7 @@ local bot =
     ammo_type =
     {
       category = util.ammo_category(name),
-      target_type = "position",
+      target_type = "entity",
       action =
       {
         type = "direct",
@@ -80,8 +81,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = (0.1),
-          starting_speed_deviation = (0.05),
+          starting_speed = 1/3,
           --direction_deviation = 0.1,
           range_deviation = 0.1,
           max_range = attack_range + 3,
@@ -102,14 +102,15 @@ local bot =
     animation = base.animations[2].idle_with_gun
   },
   vision_distance = 40,
-  has_belt_immunity = true,
-  movement_speed = (0.15),
+  has_belt_immunity = false,
+  affected_by_tiles = true,
+  movement_speed = 0.15,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
   destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
-  working_sound = {
+  no_working_sound = {
     sound =
     {
       { filename = "__base__/sound/flying-robot-1.ogg", volume = 0 }
@@ -132,18 +133,18 @@ local bot =
 }
 
 util.recursive_hack_make_hr(bot)
-util.recursive_hack_scale(bot, 1.5)
+util.recursive_hack_scale(bot, 1.25)
 
 
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
-projectile.acceleration = (0.01)
+projectile.acceleration = 0
 projectile.max_speed = 0.5
-projectile.collision_box = {{-0.1, -0.25}, {0.1, 0.25}}
+projectile.collision_box = nil-- {{-0.1, -0.25}, {0.1, 0.25}}
 projectile.force_condition = "not-same"
 projectile.direction_only = false
 projectile.hit_at_collision_position = true
-projectile.hit_collision_mask = util.projectile_collision_mask()
+projectile.hit_collision_mask = nil --util.projectile_collision_mask()
 projectile.action =
 {
   type = "direct",
@@ -231,6 +232,77 @@ projectile.action =
     }
   }
 }
+projectile.animation =
+{
+  filename = util.path("data/units/rocket_guy/rocket_guy_rocket.png"),
+  frame_count = 13,
+  line_length = 1,
+  width = 32,
+  height = 62,
+  shift = {0, 0},
+  priority = "high",
+  scale = 0.4
+}
+projectile.shadow =
+{
+  filename = util.path("data/units/rocket_guy/rocket_guy_rocket.png"),
+  frame_count = 13,
+  line_length = 1,
+  width = 32,
+  height = 62,
+  shift = {0, 0},
+  priority = "high",
+  scale = 0.4,
+  draw_as_shadow = true
+}
+
+projectile.smoke =
+{
+  {
+    name = "rocket-guy-smoke",
+    deviation = {0.1, 0.1},
+    frequency = 2,
+    position = {0, -1},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+  {
+    name = "rocket-guy-smoke",
+    deviation = {0.2, 0.2},
+    frequency = 2,
+    position = {0, -1},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+}
+
+local rocket_smoke = {
+  type = "trivial-smoke",
+  name = "rocket-guy-smoke",
+  flags = {"not-on-map"},
+  animation =
+  {
+    filename = "__base__/graphics/entity/flamethrower-fire-stream/flamethrower-explosion.png",
+    priority = "extra-high",
+    width = 64,
+    height = 64,
+    frame_count = 32,
+    line_length = 8,
+    scale = 0.25,
+    animation_speed = 32 / 100,
+    blend_mode = "additive"
+  },
+  movement_slow_down_factor = 0.95,
+  duration = 8,
+  fade_away_duration = 3,
+  show_when_smoke_off = true
+}
 
 local explosion = util.copy(data.raw.explosion.explosion)
 explosion.name = name.." Explosion"
@@ -290,4 +362,12 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, item, recipe, explosion}
+data:extend
+{
+  bot,
+  projectile,
+  item,
+  recipe,
+  explosion,
+  rocket_smoke
+}

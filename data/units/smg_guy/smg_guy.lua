@@ -16,12 +16,11 @@ local bot =
   flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 80,
+  max_health = 150,
   radar_range = 1,
   order="b-b-b",
   subgroup="enemies",
   can_open_gates = true,
-  resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
@@ -49,12 +48,13 @@ local bot =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = 15,
-    cooldown_deviation = 0.5,
+    warmup = 10,
+    cooldown = 10,
+    cooldown_deviation = 0.25,
     range = attack_range,
     min_attack_distance = attack_range - 2,
     projectile_creation_distance = 0.5,
-    lead_target_for_projectile_speed = 1,
+    --lead_target_for_projectile_speed = 1,
     sound =
     {
       variations =
@@ -79,21 +79,21 @@ local bot =
     ammo_type =
     {
       category = util.ammo_category(name),
-      target_type = "direction",
+      target_type = "entity",
       action =
       {
         type = "direct",
         action_delivery =
         {
-          {
-          type = "projectile",
-          projectile = name.." Projectile",
-          starting_speed = 1,
-          starting_speed_deviation = 0.05,
-          direction_deviation = 0.1,
-          range_deviation = 0.1,
-          max_range = attack_range + 2,
-          },
+          --{
+          --type = "projectile",
+          --projectile = name.." Projectile",
+          --starting_speed = 1,
+          --starting_speed_deviation = 0.05,
+          --direction_deviation = 0.1,
+          --range_deviation = 0.1,
+          --max_range = attack_range + 2,
+          --},
           {
             type = "instant",
             source_effects =
@@ -101,6 +101,19 @@ local bot =
               {
                 type = "create-explosion",
                 entity_name = "explosion-gunshot"
+              }
+            },
+            target_effects =
+            {
+              {
+                type = "damage",
+                damage = {amount = 2.5 , type = util.damage_type(name)}
+              },
+              {
+                type = "create-entity",
+                offset_deviation = {{-0.5, -0.5},{0.5, 0.5}},
+                offsets = {{0,0}},
+                entity_name = "explosion-hit"
               }
             }
           }
@@ -110,11 +123,11 @@ local bot =
     animation = base.animations[1].idle_with_gun
   },
   vision_distance = 40,
-  has_belt_immunity = true,
-  movement_speed = 0.2,
+  has_belt_immunity = false,
+  affected_by_tiles = true,
+  movement_speed = 0.15,
   distance_per_frame = 0.15,
   pollution_to_join_attack = 1000,
-  destroy_when_commands_fail = false,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
   dying_sound =
@@ -186,4 +199,10 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, item, recipe}
+data:extend
+{
+  bot,
+  --projectile,
+  item,
+  recipe
+}
