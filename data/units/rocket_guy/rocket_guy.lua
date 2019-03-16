@@ -71,7 +71,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("rocket"),
       target_type = "entity",
       action =
       {
@@ -161,25 +161,7 @@ projectile.action =
             type = "area",
             target_entities = false,
             trigger_from_target = true,
-            repeat_count = 2 * math.pi * 1 * 1,
-            radius = 1,
-            action_delivery =
-            {
-              type = "instant",
-              target_effects =
-              {
-                {
-                  type = "create-entity",
-                  entity_name = name.." Explosion"
-                }
-              }
-            }
-          },
-          {
-            type = "area",
-            target_entities = false,
-            trigger_from_target = true,
-            repeat_count = math.pi * 2 * 2,
+            repeat_count = math.pi * 2 * 3,
             radius = 2,
             action_delivery =
             {
@@ -205,25 +187,30 @@ projectile.action =
               {
                 {
                   type = "damage",
-                  damage = {amount = 5, type = util.damage_type(name)}
+                  damage = {amount = 8, type = util.damage_type("explosion")}
                 }
               }
             }
           },
           {
-            type = "area",
-            radius = 1,
-            ignore_collision_condition = true,
-            force = "not-same",
+            type = "direct",
             action_delivery =
             {
-              type = "instant",
-              target_effects =
               {
+                type = "instant",
+                target_effects =
                 {
-                  type = "damage",
-                  damage = {amount = 10, type = util.damage_type(name)}
-                },
+                  {
+                    type = "damage",
+                    damage = {amount = 20 , type = util.damage_type("explosion")}
+                  },
+                  {
+                    type = "create-entity",
+                    offset_deviation = {{-0.5, -0.5},{0.5, 0.5}},
+                    offsets = {{0,0}},
+                    entity_name = "explosion-hit"
+                  }
+                }
               }
             }
           }
@@ -262,7 +249,7 @@ projectile.smoke =
     name = "rocket-guy-smoke",
     deviation = {0.1, 0.1},
     frequency = 2,
-    position = {0, -1},
+    position = {-0.05, 2/6},
     slow_down_factor = 1,
     --starting_frame = 1,
     --starting_frame_deviation = 0,
@@ -273,7 +260,18 @@ projectile.smoke =
     name = "rocket-guy-smoke",
     deviation = {0.2, 0.2},
     frequency = 2,
-    position = {0, -1},
+    position = {-0.1, 3/6},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+  {
+    name = "smoke-fast",
+    deviation = {0.1, 0.1},
+    frequency = 1,
+    position = {-0.05, 4/6},
     slow_down_factor = 1,
     --starting_frame = 1,
     --starting_frame_deviation = 0,
