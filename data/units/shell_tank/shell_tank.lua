@@ -118,9 +118,9 @@ local unit =
   attack_parameters =
   {
     type = "projectile",
-    ammo_category = "bullet",
-    warmup = (30),
-    cooldown = (145),
+    ammo_category = util.ammo_category("cannon-shell"),
+    warmup = 30,
+    cooldown = 145,
     cooldown_deviation = 0.1,
     range = attack_range,
     min_attack_distance = attack_range - 8,
@@ -141,7 +141,7 @@ local unit =
     },
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("cannon-shell"),
       target_type = "direction",
       action =
       {
@@ -287,7 +287,7 @@ stream.action =
       {
         {
           type = "damage",
-          damage = {amount = 15 , type = util.damage_type(name)}
+          damage = {amount = 15 , type = util.damage_type("explosion")}
         }
       }
     }
@@ -304,7 +304,7 @@ stream.action =
       {
         {
           type = "damage",
-          damage = {amount = 15 , type = util.damage_type(name)}
+          damage = {amount = 15 , type = util.damage_type("explosion")}
         }
       }
     }

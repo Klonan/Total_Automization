@@ -67,7 +67,7 @@ local bot =
     --source_offset = {0, -0.1},
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("combat-robot-laser"),
       energy_consumption = "800kJ",
       action =
       {

@@ -78,7 +78,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("bullet"),
       target_type = "entity",
       action =
       {
@@ -107,7 +107,7 @@ local bot =
             {
               {
                 type = "damage",
-                damage = {amount = 2.5 , type = util.damage_type(name)}
+                damage = {amount = 2.5 , type = util.damage_type("physical")}
               },
               {
                 type = "create-entity",
