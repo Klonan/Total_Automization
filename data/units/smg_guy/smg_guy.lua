@@ -30,8 +30,8 @@ local bot =
   {
     {
       type = "acid",
-      decrease = 2,
-      percent = 40
+      decrease = 5,
+      percent = 50
     }
   },
   min_persue_time = 60 * 15,

@@ -50,7 +50,7 @@ local unit =
   flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 155,
+  max_health = 315,
   radar_range = 2,
   order="b-b-b",
   subgroup="enemies",
@@ -69,8 +69,8 @@ local unit =
   {
     {
       type = "acid",
-      decrease = 5,
-      percent = 50
+      decrease = 8,
+      percent = 60
     }
   },
   ai_settings =
@@ -82,7 +82,8 @@ local unit =
   {
     type = "projectile",
     ammo_category = "bullet",
-    cooldown = (100),
+    warmup = 10,
+    cooldown = 100,
     cooldown_deviation = 0.1,
     range = attack_range,
     lead_target_for_projectile_speed = 1,
@@ -118,19 +119,19 @@ local unit =
     },
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("bullet"),
       target_type = "direction",
       action =
       {
         {
           type = "direct",
-          repeat_count = 2,
+          repeat_count = 1,
           action_delivery =
           {
             {
               type = "projectile",
               projectile = name.." Projectile",
-              starting_speed = 1,
+              starting_speed = 0.6,
               starting_speed_deviation = 0.05,
               direction_deviation = 0.1,
               --range_deviation = 0.05,
@@ -186,7 +187,7 @@ local unit =
 
 local projectile = util.copy(data.raw.projectile["shotgun-pellet"])
 projectile.name = name.." Projectile"
-projectile.collision_box = {{-0.1, -0.1},{0.1, 0.1}}
+projectile.collision_box = {{-0.2, -0.2},{0.2, 0.2}}
 projectile.force_condition = "not-same"
 projectile.height = 1
 projectile.hit_at_collision_position = true
@@ -205,15 +206,95 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 10 , type = util.damage_type(name)}
+        damage = {amount = 10 , type = util.damage_type("physical")}
       }
     }
   }
 }
+projectile.animation.height = 1
+projectile.animation.width = 1
 projectile.acceleration = 0
 projectile.final_action = nil
 projectile.animation.blend_mode = "additive"
 util.recursive_hack_scale(projectile, 1.5)
+
+
+local make_smoke_source = function(position)
+  return
+  {
+    name = name.."-smoke",
+    deviation = {0.1, 0.1},
+    frequency = 1,
+    position = position,
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  }
+end
+projectile.smoke = {}
+
+for k = 0.1, 0.6, 0.1 do
+  table.insert( projectile.smoke,
+  {
+    name = name.."-smoke",
+    deviation = {0.05, 0.05},
+    frequency = 2,
+    position = {-0.2, -k},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  })
+  table.insert( projectile.smoke,
+  {
+    name = name.."-smoke",
+    deviation = {0.05, 0.05},
+    frequency = 2,
+    position = {0.2, -k},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  })
+end
+
+
+fast ={
+  name = "smoke-fast",
+  deviation = {0.05, 0.05},
+  frequency = 2,
+  position = {-0.05, 4/6},
+  slow_down_factor = 1,
+  --starting_frame = 1,
+  --starting_frame_deviation = 0,
+  --starting_frame_speed = 0,
+  --starting_frame_speed_deviation = 0
+}
+local smoke = {
+  type = "trivial-smoke",
+  name = name.."-smoke",
+  flags = {"not-on-map"},
+  animation =
+  {
+    filename = "__base__/graphics/entity/flamethrower-fire-stream/flamethrower-explosion.png",
+    priority = "extra-high",
+    width = 64,
+    height = 64,
+    frame_count = 8,
+    line_length = 8,
+    scale = 0.15,
+    animation_speed = 1,
+    blend_mode = "additive"
+  },
+  movement_slow_down_factor = 0.95,
+  duration = 8,
+  fade_away_duration = 8,
+  show_when_smoke_off = true
+}
 
 local explosion = util.copy(data.raw.explosion.explosion)
 util.recursive_hack_scale(explosion, 0.5)
@@ -250,4 +331,4 @@ local recipe = {
 }
 
 
-data:extend{unit, projectile, item, recipe, explosion}
+data:extend{unit, projectile, item, recipe, explosion, smoke}

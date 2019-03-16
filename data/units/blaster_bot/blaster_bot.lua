@@ -33,7 +33,7 @@ local bot =
   flags = {"player-creation"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 45,
+  max_health = 85,
   radar_range = 1,
   order="b-b-b",
   subgroup="enemies",

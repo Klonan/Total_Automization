@@ -87,11 +87,10 @@ local unit =
   flags = {"player-creation", "placeable-off-grid"},
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 225,
+  max_health = 525,
   radar_range = 3,
   order="b-b-b",
   subgroup="enemies",
-  resistances = nil,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
   collision_box = {{-1, -1}, {1, 1}},
@@ -102,8 +101,8 @@ local unit =
   {
     {
       type = "acid",
-      decrease = 8,
-      percent = 60
+      decrease = 10,
+      percent = 80
     }
   },
   min_persue_time = (60 * 15),

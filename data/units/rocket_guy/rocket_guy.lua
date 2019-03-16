@@ -35,8 +35,8 @@ local bot =
   {
     {
       type = "acid",
-      decrease = 5,
-      percent = 50
+      decrease = 8,
+      percent = 60
     }
   },
   ai_settings =
