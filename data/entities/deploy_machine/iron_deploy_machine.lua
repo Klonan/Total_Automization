@@ -12,7 +12,7 @@ machine.crafting_speed = (1)
 machine.ingredient_count = nil
 machine.module_specification = nil
 machine.minable = {result = name, mining_time = 1}
-machine.flags = {"placeable-neutral", "player-creation"}
+machine.flags = {"placeable-neutral", "player-creation", "no-automated-item-removal"}
 machine.fluid_boxes =
 {
   {
@@ -105,7 +105,7 @@ local technology_1 = {
 local technology_2 = {
   type = "technology",
   name = technology_name.."-2",
-  localised_name = technology_name.." 2",
+  localised_name = {technology_name},
   localised_description = "",
   icon_size = machine.icon_size,
   icon = machine.icon,
@@ -138,7 +138,7 @@ local technology_2 = {
 local technology_3 = {
   type = "technology",
   name = technology_name.."-3",
-  localised_name = technology_name.." 3",
+  localised_name = {technology_name},
   localised_description = "",
   icon_size = machine.icon_size,
   icon = machine.icon,

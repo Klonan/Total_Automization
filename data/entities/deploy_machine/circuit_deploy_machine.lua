@@ -14,7 +14,7 @@ machine.module_specification = nil
 machine.animation = machine.idle_animation
 machine.idle_animation = nil
 machine.minable = {result = name, mining_time = 1}
-machine.flags = {"placeable-neutral", "player-creation"}
+machine.flags = {"placeable-neutral", "player-creation", "no-automated-item-removal"}
 machine.fluid_boxes =
 {
   {

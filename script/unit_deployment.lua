@@ -34,9 +34,11 @@ local deploy_unit = function(source, prototype, count)
   local deployed = 0
   local can_place_entity = surface.can_place_entity
   local find_non_colliding_position = surface.find_non_colliding_position
+  local create_entity = surface.create_entity
   for k = 1, count do
+    if not surface.valid then break end
     local deploy_position = can_place_entity{name = name, position = position, direction = direction, force = force, build_check_type = defines.build_check_type.manual} and position or find_non_colliding_position(name, position, 0, 1)
-    local unit = surface.create_entity{name = name, position = deploy_position, force = force, direction = direction}
+    local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction}
     script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
     deployed = deployed + 1
   end
@@ -56,8 +58,7 @@ local check_deployer = function(entity)
     return
   end
   local progress = entity.crafting_progress
-  local prototype = game.entity_prototypes[entity.name]
-  local speed = prototype.crafting_speed --How much energy per second
+  local speed = entity.crafting_speed --How much energy per second
   local remaining_ticks = 1 + math.ceil(((recipe.energy * (1 - progress)) / speed) * 60)
   local check_tick = game.tick + remaining_ticks
   data.tick_check[check_tick] = data.tick_check[check_tick] or {}
