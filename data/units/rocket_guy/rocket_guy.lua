@@ -31,7 +31,8 @@ local bot =
   distraction_cooldown = (15),
   move_while_shooting = false,
   can_open_gates = true,
-  resistances =
+  resistances = nil,
+  old_resistances =
   {
     {
       type = "acid",

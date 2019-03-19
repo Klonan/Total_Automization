@@ -65,7 +65,8 @@ local unit =
   distraction_cooldown = (30),
   move_while_shooting = true,
   can_open_gates = true,
-  resistances =
+  resistances = nil,
+  old_resistances =
   {
     {
       type = "acid",

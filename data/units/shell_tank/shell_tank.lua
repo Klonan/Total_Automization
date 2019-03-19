@@ -97,7 +97,8 @@ local unit =
   selection_box = {{-2, -2}, {2, 2}},
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
-  resistances =
+  resistances = nil,
+  old_resistances =
   {
     {
       type = "acid",

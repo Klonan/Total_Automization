@@ -26,8 +26,8 @@ local bot =
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
-  resistances =
-  {
+  resistances = nil,
+  old_resistances = {
     {
       type = "acid",
       decrease = 5,
