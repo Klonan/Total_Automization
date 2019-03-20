@@ -28,13 +28,13 @@ local bot =
   localised_name = {name},
   icon = base.icon,
   icon_size = base.icon_size,
-  flags = {"player-creation"},
+  flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 200,
   radar_range = 2,
-  order="b-b-b",
-  subgroup="enemies",
+  order= "c-c",
+  subgroup = "circuit-units",
   resistances = nil,
   healing_per_tick = 0,
   collision_mask = util.flying_unit_collision_mask(),
@@ -127,7 +127,7 @@ beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 12, type = util.damage_type(name)}
+        damage = { amount = 12, type = util.damage_type("laser")}
       }
     }
   }

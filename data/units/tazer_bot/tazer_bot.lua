@@ -31,13 +31,13 @@ local bot =
   localised_name = {name},
   icon = "__base__/graphics/icons/distractor.png",
   icon_size = 32,
-  flags = {"player-creation"},
+  flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 160,
   radar_range = 2,
   order="b-b-b",
-  subgroup="enemies",
+  subgroup = "circuit-units",
   resistances = nil,
   healing_per_tick = 0,
   collision_mask = util.flying_unit_collision_mask(),
@@ -65,7 +65,7 @@ local bot =
     min_attack_distance = attack_range - 3,
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("combat-robot-beam"),
       action =
       {
         force = "not-same",
@@ -151,7 +151,7 @@ beam.action =
       },
       {
         type = "damage",
-        damage = { amount = 10, type = util.damage_type(name)}
+        damage = { amount = 10, type = util.damage_type("electric")}
       },
       {
         type = "create-sticker",
@@ -178,7 +178,7 @@ small_beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 5, type = util.damage_type(name)}
+        damage = { amount = 5, type = util.damage_type("electric")}
       },
       {
         type = "create-sticker",
@@ -193,7 +193,7 @@ sticker.name = name.." Sticker"
 
 sticker.duration_in_ticks = (2 * 60)
 sticker.target_movement_modifier = 0.66
-sticker.damage_per_tick = {type = "electric", amount = (0.25)}
+sticker.damage_per_tick = {type = "electric", amount = 0}--(0.25)}
 sticker.spread_fire_entity = nil
 sticker.fire_spread_cooldown = 0
 sticker.fire_spread_radius = 0

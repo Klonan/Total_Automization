@@ -30,13 +30,13 @@ local bot =
   localised_name = {name},
   icon = base.icon,
   icon_size = base.icon_size,
-  flags = {"player-creation"},
+  flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 85,
   radar_range = 1,
-  order="b-b-b",
-  subgroup="enemies",
+  order="c-a",
+  subgroup = "circuit-units",
   resistances = nil,
   healing_per_tick = 0,
   collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
@@ -150,7 +150,7 @@ projectile.action =
       },
       {
         type = "damage",
-        damage = {amount = 8 , type = util.damage_type(name)}
+        damage = {amount = 8 , type = util.damage_type("laser")}
       }
     }
   }

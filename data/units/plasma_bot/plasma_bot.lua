@@ -28,13 +28,13 @@ local bot =
   localised_name = {name},
   icon = base.icon,
   icon_size = base.icon_size,
-  flags = {"player-creation"},
+  flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
   max_health = 320,
   radar_range = 3,
-  order="b-b-b",
-  subgroup="enemies",
+  order="c-d",
+  subgroup = "circuit-units",
   resistances = nil,
   healing_per_tick = 0,
   collision_mask = util.flying_unit_collision_mask(),
@@ -78,7 +78,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category(name),
+      category = util.ammo_category("combat-robot-beam"),
       target_type = "position",
       action =
       {
@@ -232,6 +232,8 @@ projectile.animation =
 projectile.acceleration = 0.02
 
 
+
+
 local small_projectile = util.copy(projectile)
 small_projectile.name = name.." Small Projectile"
 small_projectile.force_condition = "not-same"
@@ -269,7 +271,7 @@ small_projectile.action =
             {
               {
                 type = "damage",
-                damage = {amount = 1 , type = util.damage_type(name)}
+                damage = {amount = 1 , type = util.damage_type("electric")}
               }
             }
           }
@@ -280,6 +282,57 @@ small_projectile.action =
 }
 small_projectile.final_action = nil
 util.recursive_hack_scale(small_projectile, 0.5)
+
+
+
+small_projectile.smoke =
+{
+  {
+    name = name.." smoke",
+    deviation = {0.1, 0.1},
+    frequency = 2,
+    position = {-0.05, 2/6},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+  {
+    name = name.." smoke",
+    deviation = {0.2, 0.2},
+    frequency = 2,
+    position = {-0.1, 3/6},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+}
+
+local small_projectile_smoke = {
+  type = "trivial-smoke",
+  name = name.." smoke",
+  flags = {"not-on-map"},
+  animation =
+  {
+    filename = "__base__/graphics/entity/flamethrower-fire-stream/flamethrower-explosion.png",
+    priority = "extra-high",
+    width = 64,
+    height = 64,
+    frame_count = 32,
+    line_length = 8,
+    scale = 0.1,
+    animation_speed = 32 / 100,
+    blend_mode = "additive",
+    tint = {g = 1, b = 1}
+  },
+  movement_slow_down_factor = 0.95,
+  duration = 16,
+  fade_away_duration = 4,
+  show_when_smoke_off = true
+}
 
 local animation = util.copy(small_projectile.animation)
 local make_animation = function(scale)
@@ -412,4 +465,14 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, splash, item, recipe, small_projectile, small_splash}
+data:extend
+{
+  bot,
+  projectile,
+  splash,
+  item,
+  recipe,
+  small_projectile,
+  small_splash,
+  small_projectile_smoke
+}

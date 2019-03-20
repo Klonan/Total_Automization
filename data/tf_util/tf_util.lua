@@ -233,6 +233,10 @@ util.projectile_collision_mask = function()
   return {"layer-15", "player-layer", "train-layer"}
 end
 
+util.unit_flags = function()
+  return {"player-creation", "placeable-off-grid"}
+end
+
 util.shift_box = function(box, shift)
   local left_top = box[1]
   local right_bottom = box[2]
