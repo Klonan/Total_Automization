@@ -63,7 +63,7 @@ local bot =
     range = attack_range,
     min_attack_distance = attack_range - 2,
     projectile_creation_distance = 1,
-    lead_target_for_projectile_speed = 0.8,
+    --lead_target_for_projectile_speed = 0.8,
     projectile_center = {0, 1.2},
     sound =
     {
@@ -92,8 +92,8 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = 0.8,
-          direction_deviation = 0.05,
+          starting_speed = 0.4,
+          --direction_deviation = 0.05,
           range_deviation = 0.05,
           max_range = attack_range + 2
           }
@@ -133,9 +133,9 @@ local bot =
 
 local projectile = util.copy(data.raw.projectile["laser"])
 projectile.name = name.." Projectile"
-projectile.force_condition = "not-same"
-projectile.collision_box = {{-0.05, -0.25}, {0.05, 0.25}}
-projectile.direction_only = true
+projectile.collision_box = nil
+projectile.direction_only = false
+projectile.acceleration = 0
 projectile.action =
 {
   type = "direct",
@@ -155,7 +155,66 @@ projectile.action =
     }
   }
 }
+projectile.animation = util.empty_sprite()
 projectile.final_action = nil
+projectile.smoke =
+{
+  {
+    name = name.." smoke",
+    frequency = 2,
+    position = {0, 0},
+    slow_down_factor = 1
+  },
+  {
+    name = name.." smoke",
+    frequency = 2,
+    position = {0, 0.05},
+    slow_down_factor = 1
+  },
+  {
+    name = name.." smoke",
+    frequency = 2,
+    position = {0, 0.15},
+    slow_down_factor = 1
+  },
+  {
+    name = name.." smoke",
+    frequency = 2,
+    position = {0, 0.25},
+    slow_down_factor = 1
+  },
+  {
+    name = name.." smoke",
+    frequency = 2,
+    position = {0, 0.35},
+    slow_down_factor = 1
+  }
+}
+
+local blaster_smoke = {
+  type = "trivial-smoke",
+  name = name.." smoke",
+  flags = {"not-on-map"},
+  animation =
+  {
+    filename = "__base__/graphics/entity/flamethrower-fire-stream/flamethrower-explosion.png",
+    priority = "extra-high",
+    width = 64,
+    height = 64,
+    frame_count = 32,
+    line_length = 8,
+    scale = 0.1,
+    animation_speed = 32 / 100,
+    blend_mode = "additive",
+    tint = {b = 1, g = 1}
+  },
+  movement_slow_down_factor = 0.95,
+  duration = 12,
+  fade_away_duration = 12,
+  affected_by_wind = false,
+  show_when_smoke_off = true
+}
+
 
 local item = {
   type = "item",
@@ -186,4 +245,11 @@ local recipe = {
   result = name
 }
 
-data:extend{bot, projectile, item, recipe}
+data:extend
+{
+  bot,
+  projectile,
+  blaster_smoke,
+  item,
+  recipe
+}
