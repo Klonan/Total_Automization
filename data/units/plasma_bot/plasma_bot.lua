@@ -55,9 +55,10 @@ local bot =
   {
     type = "projectile",
     ammo_category = "bullet",
+    projectile_center = {0, 2},
     cooldown = 150,
     cooldown_deviation = 0.2,
-    lead_target_for_projectile_speed = 1.5,--tricky...
+    --lead_target_for_projectile_speed = 0.5,--tricky...
     range = attack_range,
     min_attack_distance = attack_range - 4,
     projectile_creation_distance = 0.5,
@@ -79,7 +80,7 @@ local bot =
     ammo_type =
     {
       category = util.ammo_category("combat-robot-beam"),
-      target_type = "position",
+      target_type = "entity",
       action =
       {
         type = "direct",
@@ -88,7 +89,7 @@ local bot =
           {
           type = "projectile",
           projectile = name.." Projectile",
-          starting_speed = 0,
+          starting_speed = 0.5,
           direction_deviation = 0.05,
           range_deviation = 0.05,
           max_range = attack_range + 4
@@ -134,7 +135,7 @@ projectile.name = name.." Projectile"
 projectile.force_condition = "not-same"
 projectile.collision_box = nil --{{-0.25, -0.25}, {0.25, 0.25}}
 projectile.direction_only = false
-projectile.height = 0.5
+projectile.height = 2
 projectile.max_speed = 0.75
 projectile.hit_at_collision_position = true
 projectile.hit_collision_mask = util.projectile_collision_mask()
@@ -148,73 +149,57 @@ projectile.action =
       target_effects =
       {
         {
-          type = "create-entity",
-          entity_name = name.." Splash"
+          type = "create-particle",
+          entity_name = name.." Small Projectile",
+          initial_height = projectile.height,
+          --speed_from_center = 1
+          type = "create-particle",
+          repeat_count = 100,
+          --entity_name = "explosion-remnants-particle",
+          --initial_height = 0.5,
+          speed_from_center = 0.4,
+          speed_from_center_deviation = 0.2,
+          initial_vertical_speed = -0.2,
+          initial_vertical_speed_deviation = 0.05,
+          offset_deviation = {{-0.2, -0.2}, {0.2, 0.2}}
+        },
+        {
+          type = "create-trivial-smoke",
+          smoke_name = name.." smoke",
+          offset_deviation = {{-0.1, -0.1}, {0.1, 0.1}},
+          repeat_count = 4,
+          offsets =
+          {
+            {0, -projectile.height}
+          }
         }
       }
     }
   },
   {
     type = "area",
-    target_entities = false,
-    trigger_from_target = true,
-    repeat_count = 100,
-    radius = 1,
+    target_entities = true,
+    trigger_from_target = false,
+    repeat_count = 1,
+    radius = 4,
+    force = "not-same",
+    ignore_collision_condition = true,
     action_delivery =
     {
-      type = "projectile",
-      projectile = name.." Small Projectile",
-      starting_speed = (0.35),
-      starting_speed_deviation = (0.35),
+      type = "instant",
+      target_effects =
+      {
+        {
+          type = "damage",
+          damage = {amount = 20 , type = util.damage_type("electric")}
+        }
+      }
     }
   }
 }
 projectile.final_action = nil
---[[{
-  type = "area",
-  radius = 2.5,
-  force = "not-same",
-  collision_mode = "distance-from-center",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = name.." Splash"
-      },
-      {
-        type = "damage",
-        damage = {amount = 30 , type = util.damage_type("plasma_bot")}
-      },
-      {
-        type = "play-sound",
-        sound =
-        {
-          {
-            filename = "__base__/sound/creatures/projectile-acid-burn-1.ogg",
-            volume = 0.8
-          },
-          {
-            filename = "__base__/sound/creatures/projectile-acid-burn-2.ogg",
-            volume = 0.8
-          },
-          {
-            filename = "__base__/sound/creatures/projectile-acid-burn-long-1.ogg",
-            volume = 0.8
-          },
-          {
-            filename = "__base__/sound/creatures/projectile-acid-burn-long-2.ogg",
-            volume = 0.8
-          }
-        }
-      },
-    }
-  }
-}]]
-projectile.animation =
-{
+projectile.animation = util.empty_sprite()
+old = {
   filename = path.."plasma_bot_projectile.png",
   line_length = 5,
   frame_count = 33,
@@ -225,70 +210,14 @@ projectile.animation =
   blend_mode = "additive-soft"
 
 }
---projectile.animation.filename = path.."plasma_bot_projectile.png"
---projectile.animation.blend_mode =
---projectile.animation.animation_speed = 3
---projectile.animation.scale = 2
-projectile.acceleration = 0.02
+projectile.acceleration = 0
 
 
 
-
-local small_projectile = util.copy(projectile)
-small_projectile.name = name.." Small Projectile"
-small_projectile.force_condition = "not-same"
---small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
-small_projectile.collision_box = nil
-small_projectile.direction_only = true
-small_projectile.height = 0
-small_projectile.max_speed = 1
-small_projectile.acceleration = -0.02
-small_projectile.action =
-{
-  type = "direct",
-  action_delivery =
-  {
-    type = "instant",
-    target_effects =
-    {
-      {
-        type = "create-entity",
-        entity_name = name.." Small Splash"
-      },
-      {
-        type = "nested-result",
-        action =
-        {
-          type = "area",
-          radius = 1,
-          ignore_collision_condition = true,
-          --collision_mode = "distance-from-center",
-          force = "not-same",
-          action_delivery =
-          {
-            type = "instant",
-            target_effects =
-            {
-              {
-                type = "damage",
-                damage = {amount = 1 , type = util.damage_type("electric")}
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-small_projectile.final_action = nil
-util.recursive_hack_scale(small_projectile, 0.5)
-
-
-
-small_projectile.smoke =
+projectile.smoke =
 {
   {
-    name = name.." smoke",
+    name = name.." big smoke",
     deviation = {0.1, 0.1},
     frequency = 2,
     position = {-0.05, 2/6},
@@ -299,10 +228,111 @@ small_projectile.smoke =
     --starting_frame_speed_deviation = 0
   },
   {
-    name = name.." smoke",
+    name = name.." big smoke",
     deviation = {0.2, 0.2},
     frequency = 2,
     position = {-0.1, 3/6},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+}
+
+local projectile_smoke = {
+  type = "trivial-smoke",
+  name = name.." big smoke",
+  flags = {"not-on-map"},
+  animation =
+  {
+    filename = "__base__/graphics/entity/flamethrower-fire-stream/flamethrower-explosion.png",
+    priority = "extra-high",
+    width = 64,
+    height = 64,
+    frame_count = 32,
+    line_length = 8,
+    scale = 0.8,
+    animation_speed = 32 / 100,
+    blend_mode = "additive",
+    tint = {g = 1, b = 1}
+  },
+  movement_slow_down_factor = 0.95,
+  duration = 16,
+  fade_away_duration = 8,
+  show_when_smoke_off = true
+}
+
+
+
+
+local small_projectile = util.copy(data.raw.particle["explosion-remnants-particle"])
+small_projectile.name = name.." Small Projectile"
+--small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
+small_projectile.collision_box = nil
+small_projectile.direction_only = true
+small_projectile.height = 0
+small_projectile.max_speed = 1
+small_projectile.acceleration = -0.02
+small_projectile.action = nil
+small_projectile.final_action = nil
+small_projectile.pictures = util.empty_sprite()
+small_projectile.shadows = util.empty_sprite()
+
+small_projectile.regular_trigger_effect =
+{
+  {
+    type = "create-trivial-smoke",
+    smoke_name = name.." smoke",
+    offset_deviation = {{-0.1, -0.1}, {0.1, 0.1}},
+    speed_from_center = 0.02
+  },
+  {
+    type = "create-trivial-smoke",
+    smoke_name = name.." smoke",
+    offset_deviation = {{-0.1, -0.1}, {0.1, 0.1}},
+    speed_from_center = 0.02
+  },
+  {
+    type = "create-trivial-smoke",
+    smoke_name = name.." smoke",
+    offset_deviation = {{-0.1, -0.1}, {0.1, 0.1}},
+    speed_from_center = 0.02
+  },
+  {
+    type = "create-trivial-smoke",
+    smoke_name = name.." smoke",
+    offset_deviation = {{-0.1, -0.1}, {0.1, 0.1}},
+    speed_from_center = 0.02
+  }
+}
+small_projectile.regular_trigger_effect_frequency = 1
+small_projectile.ended_in_water_trigger_effect = nil
+small_projectile.movement_modifier_when_on_ground = 1
+--util.recursive_hack_scale(small_projectile, 0.3)
+
+
+
+small_projectile.smoke =
+{
+  {
+    name = name.." smoke",
+    deviation = {0.1, 0.1},
+    frequency = 2,
+    --position = {-0.05, 2/6},
+    position = {0,0},
+    slow_down_factor = 1,
+    --starting_frame = 1,
+    --starting_frame_deviation = 0,
+    --starting_frame_speed = 0,
+    --starting_frame_speed_deviation = 0
+  },
+  {
+    name = name.." smoke",
+    deviation = {0.2, 0.2},
+    frequency = 2,
+    --position = {-0.1, 3/6},
+    position = {0,0},
     slow_down_factor = 1,
     --starting_frame = 1,
     --starting_frame_deviation = 0,
@@ -328,10 +358,13 @@ local small_projectile_smoke = {
     blend_mode = "additive",
     tint = {g = 1, b = 1}
   },
-  movement_slow_down_factor = 0.95,
-  duration = 16,
-  fade_away_duration = 4,
-  show_when_smoke_off = true
+  movement_slow_down_factor = 0,
+  duration = 32,
+  fade_away_duration = 12,
+  affected_by_wind = false,
+  show_when_smoke_off = true,
+  start_scale = 1,
+  end_scale = 0
 }
 
 local animation = util.copy(small_projectile.animation)
@@ -347,31 +380,31 @@ local make_shadow = function(scale)
   return data
 end
 
-small_projectile.animation =
-{
-  make_animation(0.8),
-  make_animation(0.85),
-  make_animation(0.9),
-  make_animation(0.95),
-  make_animation(1.0),
-  make_animation(1.05),
-  make_animation(1.10),
-  make_animation(1.15),
-  make_animation(1.2)
-}
-small_projectile.shadow =
-{
-  make_shadow(0.8),
-  make_shadow(0.85),
-  make_shadow(0.9),
-  make_shadow(0.95),
-  make_shadow(1.0),
-  make_shadow(1.05),
-  make_shadow(1.10),
-  make_shadow(1.15),
-  make_shadow(1.2)
-}
-
+--small_projectile.animation =
+--{
+--  make_animation(0.8),
+--  make_animation(0.85),
+--  make_animation(0.9),
+--  make_animation(0.95),
+--  make_animation(1.0),
+--  make_animation(1.05),
+--  make_animation(1.10),
+--  make_animation(1.15),
+--  make_animation(1.2)
+--}
+--small_projectile.shadow =
+--{
+--  make_shadow(0.8),
+--  make_shadow(0.85),
+--  make_shadow(0.9),
+--  make_shadow(0.95),
+--  make_shadow(1.0),
+--  make_shadow(1.05),
+--  make_shadow(1.10),
+--  make_shadow(1.15),
+--  make_shadow(1.2)
+--}
+--
 
 local splash =
 {
@@ -469,6 +502,7 @@ data:extend
 {
   bot,
   projectile,
+  projectile_smoke,
   splash,
   item,
   recipe,
