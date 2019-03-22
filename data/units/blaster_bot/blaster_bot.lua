@@ -94,8 +94,8 @@ local bot =
           projectile = name.." Projectile",
           starting_speed = 0.4,
           --direction_deviation = 0.05,
-          range_deviation = 0.05,
-          max_range = attack_range + 2
+          --range_deviation = 0.05,
+          max_range = attack_range + 4
           }
         }
       }
@@ -144,10 +144,6 @@ projectile.action =
     type = "instant",
     target_effects =
     {
-      {
-        type = "create-entity",
-        entity_name = "laser-bubble"
-      },
       {
         type = "damage",
         damage = {amount = 8 , type = util.damage_type("laser")}
