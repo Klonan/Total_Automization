@@ -23,7 +23,7 @@ base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
 util.shift_layer(base.shadow_idle, shadow_shift)
 base.shadow_idle.scale = (base.shadow_idle.scale or 1) * 0.8
 
-local attack_range = 10
+local attack_range = 14
 local bot =
 {
   type = "unit",
@@ -34,7 +34,7 @@ local bot =
   flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 160,
+  max_health = 220,
   radar_range = 2,
   order="b-b-b",
   subgroup = "circuit-units",
@@ -58,8 +58,9 @@ local bot =
   attack_parameters =
   {
     type = "beam",
-    cooldown = (150),
-    cooldown_deviation = 0.15,
+    warmup = 30,
+    cooldown = (40),
+    cooldown_deviation = 0.2,
     range = attack_range,
     min_attack_distance = attack_range - 3,
     ammo_type =
@@ -150,7 +151,7 @@ beam.action =
       },
       {
         type = "damage",
-        damage = { amount = 10, type = util.damage_type("electric")}
+        damage = { amount = 15, type = util.damage_type("electric")}
       },
       {
         type = "create-sticker",
@@ -177,7 +178,7 @@ small_beam.action =
     {
       {
         type = "damage",
-        damage = { amount = 5, type = util.damage_type("electric")}
+        damage = { amount = 10, type = util.damage_type("electric")}
       },
       {
         type = "create-sticker",
@@ -204,7 +205,7 @@ sticker.animation =
   frame_count = 16,
   animation_speed = (1)
 }
-sticker.stickers_per_square_meter = 15
+sticker.stickers_per_square_meter = 8
 
 local item = {
   type = "item",

@@ -16,7 +16,7 @@ local get_position = function(n)
 end
 
 local on_player_created = function(event)
-  if true then return end
+  --if true then return end
   local player = game.players[event.player_index]
   player.force = "player"
   --player.insert(names.entities.buy_chest)
@@ -33,10 +33,11 @@ local on_player_created = function(event)
     --scout_car = 20,
     --beetle = 80,
     --plasma_bot = 1,
-    --tazer_bot = 20,
-    blaster_bot = 500
+    tazer_bot = 20,
+    laser_bot = 20,
+    blaster_bot = 30,
     --shell_tank = 500,
-    --plasma_bot = 10,
+    plasma_bot = 10,
     --acid_worm = 20,
     --piercing_biter = 50
     --scatter_spitter = 20
@@ -60,10 +61,10 @@ local on_player_created = function(event)
     --blaster_bot = 30,
     --laser_bot = 20,
     --tazer_bot = 100,
-    --smg_guy = 30,
-    --scout_car = 30,
-    --rocket_guy = 20,
-    --shell_tank = 80
+    smg_guy = 30,
+    scout_car = 20,
+    rocket_guy = 20,
+    shell_tank = 10
     --scatter_spitter = 100,
     --piercing_biter = 30,
     --rocket_guy = 30,

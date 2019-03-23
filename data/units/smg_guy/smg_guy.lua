@@ -107,7 +107,7 @@ local bot =
             {
               {
                 type = "damage",
-                damage = {amount = 2.5 , type = util.damage_type("physical")}
+                damage = {amount = 5 , type = util.damage_type("physical")}
               },
               {
                 type = "create-entity",

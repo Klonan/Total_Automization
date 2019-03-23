@@ -31,7 +31,7 @@ local bot =
   flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
-  max_health = 200,
+  max_health = 160,
   radar_range = 2,
   order= "c-c",
   subgroup = "circuit-units",

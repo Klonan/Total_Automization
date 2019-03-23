@@ -4,7 +4,7 @@ local name = names.units.blaster_bot
 
 local base = util.copy(data.raw["combat-robot"]["defender"])
 util.recursive_hack_make_hr(base)
-util.recursive_hack_scale(base, 2)
+util.recursive_hack_scale(base, 1.5)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
 
@@ -39,12 +39,12 @@ local bot =
   subgroup = "circuit-units",
   resistances = nil,
   healing_per_tick = 0,
-  collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
+  collision_box = {{-0.15, -0.15}, {0.15, 0.15}},
   collision_mask = util.flying_unit_collision_mask(),
   render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = 60 * 15,
-  selection_box = {{-1.0, -1.0}, {1.0, 1.0}},
+  selection_box = {{-0.6, -0.6}, {0.6, 0.6}},
   sticker_box = {{-0.3, -0.3}, {0.3, 0.3}},
   distraction_cooldown = 15,
   move_while_shooting = true,
