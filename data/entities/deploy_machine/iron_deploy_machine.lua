@@ -10,7 +10,11 @@ machine.selection_box = {{-2.9, -2.9},{2.9, 2.9}}
 machine.crafting_categories = {name}
 machine.crafting_speed = (1)
 machine.ingredient_count = nil
-machine.module_specification = nil
+machine.allowed_effects = {"consumption", "speed", "pollution"}
+machine.module_specification =
+{
+  module_slots = 2
+}
 machine.minable = {result = name, mining_time = 1}
 machine.flags = {"placeable-neutral", "player-creation", "no-automated-item-removal"}
 machine.fluid_boxes =
@@ -26,7 +30,13 @@ machine.fluid_boxes =
   off_when_no_fluid_recipe = false
 }
 machine.scale_entity_info_icon = true
-machine.energy_source = {type = "void"}
+machine.energy_usage = "400kW"
+machine.energy_source =
+{
+  type = "electric",
+  usage_priority = "secondary-input",
+  emissions_per_second_per_watt = 1 / 180000
+}
 machine.is_deployer = true
 
 local item = {

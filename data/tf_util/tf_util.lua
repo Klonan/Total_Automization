@@ -163,7 +163,7 @@ util.base_gun = function(name)
     name = name,
     localised_name = {name},
     type = "gun",
-    stack_size = 1,
+    stack_size = 10,
     flags = {}
   }
 end
@@ -174,7 +174,7 @@ util.base_ammo = function(name)
     name = name,
     localised_name = {name},
     type = "ammo",
-    stack_size = 1,
+    stack_size = 10,
     magazine_size = 1,
     flags = {}
   }

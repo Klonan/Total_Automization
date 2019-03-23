@@ -380,7 +380,7 @@ local item = {
   flags = {},
   subgroup = "iron-units",
   order = "e-"..name,
-  stack_size = 1,
+  stack_size = 10,
   place_result = name
 }
 

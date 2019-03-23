@@ -10,7 +10,10 @@ machine.selection_box = {{-2.9, -2.9},{2.9, 2.9}}
 machine.crafting_categories = {name}
 machine.crafting_speed = (1)
 machine.ingredient_count = 100
-machine.module_specification = nil
+machine.module_specification =
+{
+  module_slots = 2
+}
 machine.animation = machine.idle_animation
 machine.idle_animation = nil
 machine.minable = {result = name, mining_time = 1}
@@ -30,8 +33,14 @@ machine.fluid_boxes =
 machine.scale_entity_info_icon = true
 machine.always_draw_idle_animation = false
 machine.working_visualisations = nil
-machine.energy_source = {type = "void"}
 machine.is_deployer = true
+machine.energy_usage = "400kW"
+machine.energy_source =
+{
+  type = "electric",
+  usage_priority = "secondary-input",
+  emissions_per_second_per_watt = 1 / 180000
+}
 
 local item = {
   type = "item",

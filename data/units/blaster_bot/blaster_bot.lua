@@ -221,7 +221,7 @@ local item = {
   flags = {},
   subgroup = "circuit-units",
   order = "b-"..name,
-  stack_size = 1,
+  stack_size = 10,
   place_result = name
 }
 
