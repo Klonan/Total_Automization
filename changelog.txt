@@ -6,3 +6,4 @@ Date: 2019-03-23
     - Disabled base game worms/spitters acid on ground damage effect, as it was severely over-powered.
     - Some units attack in a slightly different way, E.G rocket guys rockets will track the target, SMG guy will hit instantly.
     - Added damage upgrade technologies.
+    - Generally balanced the units and damage. They mostly do more damage now.
