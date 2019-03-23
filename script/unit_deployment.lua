@@ -59,13 +59,6 @@ local check_deployer = function(entity)
   end
   local progress = entity.crafting_progress
   local speed = entity.crafting_speed --How much energy per second
-  if speed < 0.01 then
-    --IDK, maybe power is low or something, I don't trust it.
-    local check_tick = game.tick + no_recipe_check_again
-    data.tick_check[check_tick] = data.tick_check[check_tick] or {}
-    data.tick_check[check_tick][entity.unit_number] = entity
-    return
-  end
   local remaining_ticks = 1 + math.ceil(((recipe.energy * (1 - progress)) / speed) * 60)
   local check_tick = game.tick + remaining_ticks
   data.tick_check[check_tick] = data.tick_check[check_tick] or {}
