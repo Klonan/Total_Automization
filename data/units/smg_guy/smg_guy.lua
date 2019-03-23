@@ -78,7 +78,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category("bullet"),
+      category = util.ammo_category("iron-units"),
       target_type = "entity",
       action =
       {

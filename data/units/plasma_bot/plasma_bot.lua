@@ -54,7 +54,6 @@ local bot =
   attack_parameters =
   {
     type = "projectile",
-    ammo_category = "bullet",
     projectile_center = {0, 2},
     cooldown = 150,
     cooldown_deviation = 0.2,
@@ -79,7 +78,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category("combat-robot-beam"),
+      category = util.ammo_category("circuit-units"),
       target_type = "entity",
       action =
       {

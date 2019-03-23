@@ -27,9 +27,9 @@ for k, layer in pairs (sprite_base.animation.layers) do
 end
 
 util.recursive_hack_make_hr(turret_base)
-util.recursive_hack_scale(turret_base, 0.75)
+util.recursive_hack_scale(turret_base, 0.66)
 
-local turret_shift = {0.1, 0}
+local turret_shift = {0.18, 0}
 
 for k, layer in pairs (turret_base.layers) do
   layer.shift = layer.shift or {0,0}
@@ -120,7 +120,7 @@ local unit =
     },
     ammo_type =
     {
-      category = util.ammo_category("bullet"),
+      category = util.ammo_category("iron-units"),
       target_type = "direction",
       action =
       {

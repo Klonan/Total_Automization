@@ -175,6 +175,207 @@ local technology_3 = {
   upgrade = true
 }
 
+local damage_technology_name = names.technologies.iron_units_damage
+local damage_technology_icon =
+{
+  {
+    icon = machine.icon,
+    icon_size = machine.icon_size,
+  },
+  {
+    icon = data.raw.technology["physical-projectile-damage-7"].icon,
+    icon_size = data.raw.technology["physical-projectile-damage-7"].icon_size,
+    scale = 0.8 * (32 / data.raw.technology["physical-projectile-damage-7"].icon_size)
+  }
+}
+
+local iron_unit_damage_1 =
+{
+  type = "technology",
+  name = damage_technology_name.."-1",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count = 250,
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      --{"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {technology_name},
+  order = "y-d",
+  upgrade = false
+}
+
+local iron_unit_damage_2 =
+{
+  type = "technology",
+  name = damage_technology_name.."-2",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count = 250,
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {iron_unit_damage_1.name},
+  order = "y-e",
+  upgrade = true
+}
+
+local iron_unit_damage_3 =
+{
+  type = "technology",
+  name = damage_technology_name.."-3",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count = 250,
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"military-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {iron_unit_damage_2.name},
+  order = "y-f",
+  upgrade = true
+}
+
+local iron_unit_damage_4 =
+{
+  type = "technology",
+  name = damage_technology_name.."-4",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count = 250,
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"military-science-pack", 1},
+      {"chemical-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {iron_unit_damage_3.name},
+  order = "y-g",
+  upgrade = true
+}
+
+local iron_unit_damage_5 =
+{
+  type = "technology",
+  name = damage_technology_name.."-5",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count = 250,
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"military-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"utility-science-pack", 1},
+    },
+    time = 30
+  },
+  prerequisites = {iron_unit_damage_4.name},
+  order = "y-h",
+  upgrade = true
+}
+
+local iron_unit_damage_6 =
+{
+  type = "technology",
+  name = damage_technology_name.."-6",
+  localised_name = {damage_technology_name},
+  localised_description = "",
+  icons = damage_technology_icon,
+  effects =
+  {
+    {
+      type = "ammo-damage",
+      ammo_category = "iron-units",
+      modifier = 0.2
+    }
+  },
+  unit =
+  {
+    count_formula = "2^(L-5)*250",
+    ingredients = {
+      {"automation-science-pack", 1},
+      {"logistic-science-pack", 1},
+      {"military-science-pack", 1},
+      {"chemical-science-pack", 1},
+      {"utility-science-pack", 1},
+    },
+    time = 30
+  },
+  max_level = "infinite",
+  upgrade = true,
+  prerequisites = {iron_unit_damage_5.name},
+  order = "y-h",
+  upgrade = true
+}
+
 data:extend
 {
   machine,
@@ -184,5 +385,11 @@ data:extend
   recipe,
   technology_1,
   technology_2,
-  technology_3
+  technology_3,
+  iron_unit_damage_1,
+  iron_unit_damage_2,
+  iron_unit_damage_3,
+  iron_unit_damage_4,
+  iron_unit_damage_5,
+  iron_unit_damage_6
 }

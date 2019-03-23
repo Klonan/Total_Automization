@@ -56,7 +56,6 @@ local bot =
   attack_parameters =
   {
     type = "beam",
-    ammo_category = util.ammo_category(name),
     cooldown = (100),
     cooldown_deviation = 0.15,
     range = attack_range,
@@ -67,7 +66,7 @@ local bot =
     --source_offset = {0, -0.1},
     ammo_type =
     {
-      category = util.ammo_category("combat-robot-laser"),
+      category = util.ammo_category("circuit-units"),
       energy_consumption = "800kJ",
       action =
       {

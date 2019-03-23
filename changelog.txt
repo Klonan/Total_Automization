@@ -3,6 +3,6 @@ Version: 0.1.5
 Date: 2019-03-23
   Changes:
     - Buffed all units health by about 80%.
-    - All units are not affected by related base game technologies. E.G, SMG guys will do more damage when you research projectile damage.
     - Disabled base game worms/spitters acid on ground damage effect, as it was severely over-powered.
----------------------------------------------------------------------------------------------------
+    - Some units attack in a slightly different way, E.G rocket guys rockets will track the target, SMG guy will hit instantly.
+    - Added damage upgrade technologies.

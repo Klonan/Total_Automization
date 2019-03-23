@@ -58,14 +58,13 @@ local bot =
   attack_parameters =
   {
     type = "beam",
-    ammo_category = util.ammo_category("combat-robot-beam"),
     cooldown = (150),
     cooldown_deviation = 0.15,
     range = attack_range,
     min_attack_distance = attack_range - 3,
     ammo_type =
     {
-      category = util.ammo_category("combat-robot-beam"),
+      category = util.ammo_category("circuit-units"),
       action =
       {
         force = "not-same",

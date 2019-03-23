@@ -82,7 +82,7 @@ local bot =
     },
     ammo_type =
     {
-      category = util.ammo_category("combat-robot-laser"),
+      category = util.ammo_category("circuit-units"),
       target_type = "direction",
       action =
       {

@@ -118,7 +118,6 @@ local unit =
   attack_parameters =
   {
     type = "projectile",
-    ammo_category = util.ammo_category("cannon-shell"),
     warmup = 30,
     cooldown = 145,
     cooldown_deviation = 0.1,
@@ -141,7 +140,7 @@ local unit =
     },
     ammo_type =
     {
-      category = util.ammo_category("cannon-shell"),
+      category = util.ammo_category("iron-units"),
       target_type = "direction",
       action =
       {

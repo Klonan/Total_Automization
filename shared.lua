@@ -22,7 +22,9 @@ data.units =
 data.technologies =
 {
   iron_units = "iron-units",
+  iron_units_damage = "iron-units-damage",
   circuit_units = "circuit-units",
+  circuit_units_damage = "circuit-units-damage",
 }
 
 data.deployers =
