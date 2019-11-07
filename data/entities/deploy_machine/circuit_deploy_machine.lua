@@ -181,17 +181,20 @@ local technology_3 = {
 
 local damage_technology_name = names.technologies.circuit_units_damage
 
+local damage_icon =
+{
+  icon = "__base__/graphics/technology/physical-projectile-damage-2.png",
+  icon_size = 128,
+  scale = 0.8 * (32 / 128)
+}
+
 local damage_technology_icon =
 {
   {
     icon = machine.icon,
     icon_size = machine.icon_size
   },
-  {
-    icon = data.raw.technology["energy-weapons-damage-7"].icon,
-    icon_size = data.raw.technology["energy-weapons-damage-7"].icon_size,
-    scale = 0.8 * (32 / data.raw.technology["energy-weapons-damage-7"].icon_size)
-  }
+  damage_icon
 }
 
 
