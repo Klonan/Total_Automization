@@ -1,11 +1,11 @@
 {
   "name": "Total_Automization",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "title": "Total Automization",
   "author": "Klonan",
   "contact": "",
   "homepage": "",
   "description": "Add RTS units and deployment mechanics.",
-  "dependencies": ["base >= 0.17.0", "Unit_Control >= 0.1.0"],
+  "dependencies": ["base >= 0.17.35", "Unit_Control >= 0.1.0"],
   "factorio_version": "0.17"
 }

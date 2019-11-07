@@ -1,7 +1,7 @@
 local path = util.path("data/units/rocket_guy/")
 local name = names.units.rocket_guy
 
-local base = util.copy(data.raw.player.player)
+local base = util.copy(data.raw.character.character)
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
 --  layer.frame_count = 1
 --end

@@ -4,7 +4,7 @@ require "data/units/units"
 require "data/entities/entities"
 require "data/variety_explosions"
 
-data.raw.player.player.collision_mask = util.ground_unit_collision_mask()
+data.raw.character.character.collision_mask = util.ground_unit_collision_mask()
 
 -- The base game acid splashes are OP.
 -- Just turn off the damage and sticker on ground effect.

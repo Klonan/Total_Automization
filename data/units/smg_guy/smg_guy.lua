@@ -1,7 +1,7 @@
 local path = util.path("data/units/smg_guy/")
 local name = names.units.smg_guy
 
-local base = util.copy(data.raw.player.player)
+local base = util.copy(data.raw.character.character)
 --for k, layer in pairs (base.animations[1].idle_with_gun.layers) do
 --  layer.frame_count = 1
 --end
@@ -11,8 +11,9 @@ local bot =
   type = "unit",
   name = name,
   localised_name = {name},
-  icon = "__base__/graphics/icons/player.png",
-  icon_size = 32,
+  icon = base.icon,
+  icon_size = base.icon_size,
+  icons = base.icons,
   flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
