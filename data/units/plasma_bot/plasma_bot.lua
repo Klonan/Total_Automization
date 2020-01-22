@@ -45,7 +45,7 @@ local bot =
   collision_box = {{-1.5, -1.5}, {1.5, 1.5}},
   sticker_box = {{-1.5, -1.5}, {1.5, 1.5}},
   distraction_cooldown = 15,
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = false,
   ai_settings =
   {
@@ -149,10 +149,9 @@ projectile.action =
       {
         {
           type = "create-particle",
-          entity_name = name.." Small Projectile",
+          particle_name = name.." Small Projectile",
           initial_height = projectile.height,
           --speed_from_center = 1
-          type = "create-particle",
           repeat_count = 100,
           --entity_name = "explosion-remnants-particle",
           --initial_height = 0.5,
@@ -265,7 +264,7 @@ local projectile_smoke = {
 
 
 
-local small_projectile = util.copy(data.raw.particle["explosion-remnants-particle"])
+local small_projectile = util.copy(data.raw["optimized-particle"]["explosion-remnants-particle"])
 small_projectile.name = name.." Small Projectile"
 --small_projectile.collision_box = {{-0.15, -0.15}, {0.15, 0.15}}
 small_projectile.collision_box = nil
@@ -305,7 +304,7 @@ small_projectile.regular_trigger_effect =
     speed_from_center = 0.02
   }
 }
-small_projectile.regular_trigger_effect_frequency = 1
+small_projectile.regular_trigger_effect_frequency = 2
 small_projectile.ended_in_water_trigger_effect = nil
 small_projectile.movement_modifier_when_on_ground = 1
 --util.recursive_hack_scale(small_projectile, 0.3)

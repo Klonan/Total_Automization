@@ -364,6 +364,7 @@ add_sprites(0.6, 1.1)
 add_sprites(0.5, 1.2)
 
 explosion.animations = new_animations
+util.recursive_hack_make_hr(new_animations)
 explosion.light = nil
 explosion.smoke = nil
 explosion.smoke_count = 0

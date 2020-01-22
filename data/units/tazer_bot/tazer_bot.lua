@@ -30,7 +30,7 @@ local bot =
   name = name,
   localised_name = {name},
   icon = "__base__/graphics/icons/distractor.png",
-  icon_size = 32,
+  icon_size = 64,
   flags = util.unit_flags(),
   map_color = {b = 0.5, g = 1},
   enemy_map_color = {r = 1},
@@ -48,7 +48,7 @@ local bot =
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = (15),
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = false,
   minable = {result = name, mining_time = 2},
   ai_settings =

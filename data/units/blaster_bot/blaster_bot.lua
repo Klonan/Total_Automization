@@ -47,7 +47,7 @@ local bot =
   selection_box = {{-0.6, -0.6}, {0.6, 0.6}},
   sticker_box = {{-0.3, -0.3}, {0.3, 0.3}},
   distraction_cooldown = 15,
-  move_while_shooting = true,
+  move_while_shooting = false,
   can_open_gates = false,
   ai_settings =
   {
