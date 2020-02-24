@@ -7,14 +7,14 @@ util.recursive_hack_scale(base, 2)
 table.insert(base.idle.layers, base.shadow_idle)
 table.insert(base.in_motion.layers, base.shadow_in_motion)
 
-local sprite_shift = {0, 1}
+local sprite_shift = {0, 0}
 for k, layer in pairs (base.idle.layers) do
   util.shift_layer(layer, sprite_shift)
 end
 for k, layer in pairs (base.in_motion.layers) do
   util.shift_layer(layer, sprite_shift)
 end
-local shadow_shift = {2, 4}
+local shadow_shift = {2, 3}
 util.shift_layer(base.shadow_in_motion, shadow_shift)
 base.shadow_in_motion.scale = (base.shadow_in_motion.scale or 1) * 0.8
 util.shift_layer(base.shadow_idle, shadow_shift)
@@ -98,17 +98,6 @@ local bot =
     },
     max_sounds_per_type = 3,
     probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
-  },
-  dying_sound =
-  {
-    {
-      filename = "__base__/sound/fight/small-explosion-1.ogg",
-      volume = 0.5
-    },
-    {
-      filename = "__base__/sound/fight/small-explosion-2.ogg",
-      volume = 0.5
-    }
   },
   run_animation = base.in_motion
 }

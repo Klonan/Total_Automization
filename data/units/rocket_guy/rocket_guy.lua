@@ -119,17 +119,6 @@ local bot =
     max_sounds_per_type = 3,
     probability = (1 / (3 * 60)) -- average pause between the sound is 3 seconds
   },
-  dying_sound =
-  {
-    {
-      filename = "__base__/sound/fight/small-explosion-1.ogg",
-      volume = 0.5
-    },
-    {
-      filename = "__base__/sound/fight/small-explosion-2.ogg",
-      volume = 0.5
-    }
-  },
   run_animation = base.animations[2].running
 }
 

@@ -131,17 +131,6 @@ local bot =
   pollution_to_join_attack = 1000,
   --corpse = name.." Corpse",
   dying_explosion = "explosion",
-  dying_sound =
-  {
-    {
-      filename = "__base__/sound/fight/small-explosion-1.ogg",
-      volume = 0.5
-    },
-    {
-      filename = "__base__/sound/fight/small-explosion-2.ogg",
-      volume = 0.5
-    }
-  },
   run_animation = base.animations[1].running
 }
 

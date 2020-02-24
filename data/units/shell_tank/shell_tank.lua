@@ -174,17 +174,6 @@ local unit =
   {
     sound = sprite_base.working_sound.sound
   },
-  dying_sound =
-  {
-    {
-      filename = "__base__/sound/fight/small-explosion-1.ogg",
-      volume = 0.5
-    },
-    {
-      filename = "__base__/sound/fight/small-explosion-2.ogg",
-      volume = 0.5
-    }
-  },
   run_animation = sprite_base.animation
 }
 
