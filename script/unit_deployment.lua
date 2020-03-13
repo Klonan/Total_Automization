@@ -1,3 +1,5 @@
+
+
 local data =
 {
   machines = {},
@@ -97,7 +99,9 @@ local on_tick = function(event)
   data.tick_check[event.tick] = nil
 end
 
-local events =
+local unit_deployment = {}
+
+unit_deployment.events =
 {
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_robot_built_entity] = on_built_entity,
@@ -107,18 +111,12 @@ local events =
   [defines.events.on_tick] = on_tick
 }
 
-local unit_deployment = {}
-
-unit_deployment.get_events = function() return events end
-
 unit_deployment.on_init = function()
   global.unit_deployment = global.unit_deployment or data
-  unit_deployment.on_event = handler(events)
 end
 
 unit_deployment.on_load = function()
   data = global.unit_deployment
-  unit_deployment.on_event = handler(events)
 end
 
 return unit_deployment

@@ -51,24 +51,20 @@ local on_tick = function(event)
   end
 end
 
-local events =
+local killcam = {}
+
+killcam.events =
 {
   [defines.events.on_player_died] = on_player_died,
   [defines.events.on_tick] = on_tick
 }
 
-local killcam = {}
-
-killcam.get_events = function() return events end
-
 killcam.on_init = function()
   global.killcam = data
-  killcam.on_event = handler(events)
 end
 
 killcam.on_load = function()
   data = global.killcam or data
-  killcam.on_event = handler(events)
 end
 
 return killcam
