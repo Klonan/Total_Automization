@@ -81,7 +81,7 @@ local check_deployer = function(entity)
 end
 
 local on_built_entity = function(event)
-  local entity = event.created_entity
+  local entity = event.created_entity or event.entity or event.destination
   if not (entity and entity.valid) then return end
   if not (map[entity.name]) then return end
   data.machines[entity.unit_number] = entity
@@ -101,6 +101,9 @@ local events =
 {
   [defines.events.on_built_entity] = on_built_entity,
   [defines.events.on_robot_built_entity] = on_built_entity,
+  [defines.events.script_raised_built] = on_built_entity,
+  [defines.events.script_raised_revive] = on_built_entity,
+  [defines.events.on_entity_cloned] = on_built_entity,
   [defines.events.on_tick] = on_tick
 }
 
