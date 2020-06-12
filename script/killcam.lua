@@ -13,8 +13,8 @@ local make_killcam = function(player, cause)
   else
     name = game.entity_prototypes[name].localised_name
   end
-  
-  local outer = gui.add{type = "frame", style = "image_frame"}
+
+  local outer = gui.add{type = "frame", style = "inside_deep_frame"}
   outer.style.width = player.display_resolution.width / scale
   outer.style.height = player.display_resolution.height / scale
   outer.style.horizontal_align = "center"
