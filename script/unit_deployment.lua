@@ -40,8 +40,7 @@ local deploy_unit = function(source, prototype, count)
   for k = 1, count do
     if not surface.valid then break end
     local deploy_position = can_place_entity{name = name, position = position, direction = direction, force = force, build_check_type = defines.build_check_type.manual} and position or find_non_colliding_position(name, position, 0, 1)
-    local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction}
-    script.raise_event(defines.events.on_entity_spawned, {entity = unit, spawner = source})
+    local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction, raise_built = true}
     deployed = deployed + 1
   end
   return deployed
