@@ -94,7 +94,7 @@ local unit =
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
   collision_box = {{-1, -1}, {1, 1}},
-  selection_box = {{-2, -2}, {2, 2}},
+  selection_box = {{-1, -1}, {1, 1}},
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   resistances = nil,

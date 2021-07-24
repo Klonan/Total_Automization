@@ -24,7 +24,7 @@ local bot =
   can_open_gates = true,
   healing_per_tick = 0,
   minable = {result = name, mining_time = 2},
-  collision_box = {{-0.25, -0.25}, {0.25, 0.25}},
+  collision_box = {{-0.5, -0.5}, {0.5, 0.5}},
   collision_mask = util.ground_unit_collision_mask(),
   max_pursue_distance = 64,
   resistances = nil,
@@ -36,7 +36,7 @@ local bot =
     }
   },
   min_persue_time = 60 * 15,
-  selection_box = {{-0.5, -1.6}, {0.5, 0.3}},
+  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},,
   sticker_box = {{-0.3, -1}, {0.2, 0.3}},
   distraction_cooldown = (15),
   move_while_shooting = false,

@@ -41,11 +41,11 @@ local bot =
   render_layer = "air-object",
   max_pursue_distance = 64,
   min_persue_time = (60 * 15),
-  selection_box = {{-1.2, -1.2}, {1.2, 1.2}},
+  selection_box = {{-0.8, -0.8}, {0.8, 0.8}},
   collision_box = {{-0.8, -0.8}, {0.8, 0.8}},
   sticker_box = {{-0.8, -0.8}, {0.8, 0.8}},
   distraction_cooldown = (15),
-  move_while_shooting = false,
+  move_while_shooting = true,
   can_open_gates = false,
   ai_settings =
   {
