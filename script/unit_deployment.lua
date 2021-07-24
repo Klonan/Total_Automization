@@ -1,6 +1,6 @@
 
 
-local data =
+local script_data =
 {
   machines = {},
   tick_check = {}
@@ -8,11 +8,23 @@ local data =
 
 local names = names.deployers
 local units = names.units
---todo allow other mods to add deployers
-local map = {}
-for k, deployer in pairs (names) do
-  map[deployer] = true
+
+local deployer_map
+
+local get_deployer_map = function()
+  if deployer_map then
+    return deployer_map
+  end
+  deployer_map = {}
+  for name, prototype in pairs (game.item_prototypes["select-units"].entity_filters) do
+    if prototype.type ~= "unit" then
+      deployer_map[name] = true
+    end
+  end
+  return deployer_map
 end
+
+local unit_spawned_event
 
 local direction_enum = {
   [defines.direction.north] = {0, -1},
@@ -39,8 +51,12 @@ local deploy_unit = function(source, prototype, count)
   local create_entity = surface.create_entity
   for k = 1, count do
     if not surface.valid then break end
+    if not source.valid then break end
     local deploy_position = can_place_entity{name = name, position = position, direction = direction, force = force, build_check_type = defines.build_check_type.manual} and position or find_non_colliding_position(name, position, 0, 1)
     local unit = create_entity{name = name, position = deploy_position, force = force, direction = direction, raise_built = true}
+    if unit and unit.valid then
+      script.raise_event(unit_spawned_event, {entity = unit, spawner = source})
+    end
     deployed = deployed + 1
   end
   return deployed
@@ -54,16 +70,16 @@ local check_deployer = function(entity)
   if not recipe then
     --No recipe, so lets check this guy again in some ticks
     local check_tick = game.tick + no_recipe_check_again
-    data.tick_check[check_tick] = data.tick_check[check_tick] or {}
-    data.tick_check[check_tick][entity.unit_number] = entity
+    script_data.tick_check[check_tick] = script_data.tick_check[check_tick] or {}
+    script_data.tick_check[check_tick][entity.unit_number] = entity
     return
   end
   local progress = entity.crafting_progress
   local speed = entity.crafting_speed --How much energy per second
   local remaining_ticks = 1 + math.ceil(((recipe.energy * (1 - progress)) / speed) * 60)
   local check_tick = game.tick + remaining_ticks
-  data.tick_check[check_tick] = data.tick_check[check_tick] or {}
-  data.tick_check[check_tick][entity.unit_number] = entity
+  script_data.tick_check[check_tick] = script_data.tick_check[check_tick] or {}
+  script_data.tick_check[check_tick][entity.unit_number] = entity
 
   local inventory = entity.get_inventory(defines.inventory.assembling_machine_output)
   local contents = inventory.get_contents()
@@ -84,18 +100,22 @@ end
 local on_built_entity = function(event)
   local entity = event.created_entity or event.entity or event.destination
   if not (entity and entity.valid) then return end
-  if not (map[entity.name]) then return end
-  data.machines[entity.unit_number] = entity
+  if not (get_deployer_map()[entity.name]) then return end
+  script_data.machines[entity.unit_number] = entity
   check_deployer(entity)
 end
 
 local on_tick = function(event)
-  local entities = data.tick_check[event.tick]
+  local entities = script_data.tick_check[event.tick]
   if not entities then return end
   for unit_number, entity in pairs (entities) do
-    check_deployer(entity)
+    if entity.valid then
+      check_deployer(entity)
+    else
+      entities[unit_number] = nil
+    end
   end
-  data.tick_check[event.tick] = nil
+  script_data.tick_check[event.tick] = nil
 end
 
 local unit_deployment = {}
@@ -111,11 +131,13 @@ unit_deployment.events =
 }
 
 unit_deployment.on_init = function()
-  global.unit_deployment = global.unit_deployment or data
+  global.unit_deployment = global.unit_deployment or script_data
 end
 
 unit_deployment.on_load = function()
-  data = global.unit_deployment
+  script_data = global.unit_deployment
+  local control_events = remote.call("unit_control", "get_events")
+  unit_spawned_event = control_events.on_unit_spawned
 end
 
 return unit_deployment
