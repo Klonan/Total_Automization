@@ -17,7 +17,7 @@ local get_deployer_map = function()
   end
   deployer_map = {}
   for name, prototype in pairs (game.item_prototypes["select-units"].entity_filters) do
-    if prototype.type ~= "unit" then
+    if prototype.crafting_speed then
       deployer_map[name] = true
     end
   end
