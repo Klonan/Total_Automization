@@ -129,6 +129,7 @@ util.recursive_hack_scale(bot, 1.25)
 local projectile = util.copy(data.raw.projectile.rocket)
 projectile.name = name.." Projectile"
 projectile.acceleration = 0
+projectile.turning_speed_increases_exponentially_with_projectile_speed = false
 projectile.max_speed = 0.5
 projectile.collision_box = nil-- {{-0.1, -0.25}, {0.1, 0.25}}
 projectile.force_condition = "not-same"
