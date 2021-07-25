@@ -36,7 +36,7 @@ local bot =
     }
   },
   min_persue_time = 60 * 15,
-  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},,
+  selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
   sticker_box = {{-0.3, -1}, {0.2, 0.3}},
   distraction_cooldown = (15),
   move_while_shooting = false,
